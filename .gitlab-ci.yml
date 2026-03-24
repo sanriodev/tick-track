@@ -10,13 +10,13 @@
       - $CI_PROJECT_DIR/output
   before_script:
     - alias flutter="/opt/homebrew/bin/flutter"
-    - CURRENT_DIR=$(pwd)
-    - FLUTTER_BIN=$(which flutter)
-    - FLUTTER_DIR=$(dirname $FLUTTER_BIN) 
-    - cd $FLUTTER_DIR/..
-    - git checkout $FLUTTER_VERSION
-    - cd $CURRENT_DIR
-    - flutter pub get
+    # - CURRENT_DIR=$(pwd)
+    # - FLUTTER_BIN=$(which flutter)
+    # - FLUTTER_DIR=$(dirname $FLUTTER_BIN) 
+    # - cd $FLUTTER_DIR/..
+    # - git checkout $FLUTTER_VERSION
+    # - cd $CURRENT_DIR
+    # - flutter pub get
     - curl --silent "https://gitlab.com/gitlab-org/incubation-engineering/mobile-devops/download-secure-files/-/raw/main/installer" | bash
   after_script:
     - mkdir $CI_PROJECT_DIR/output
