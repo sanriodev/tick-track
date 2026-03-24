@@ -1,7 +1,7 @@
 .app_build_template: &app_build_template
   variables:
     SECURE_FILES_DOWNLOAD_PATH: '.'
-    FLUTTER_VERSION: '3.29.1'
+    FLUTTER_VERSION: '3.38.2'
   tags:
     - macOS
   artifacts:
@@ -9,13 +9,14 @@
     paths:
       - $CI_PROJECT_DIR/output
   before_script:
-    # - CURRENT_DIR=$(pwd)
-    # - FLUTTER_BIN=$(which flutter)
-    # - FLUTTER_DIR=$(dirname $FLUTTER_BIN) 
-    # - cd $FLUTTER_DIR/..
-    # - git checkout $FLUTTER_VERSION
-    # - cd $CURRENT_DIR
-    # - flutter pub get
+    - alias flutter="/opt/homebrew/bin/flutter"
+    - CURRENT_DIR=$(pwd)
+    - FLUTTER_BIN=$(which flutter)
+    - FLUTTER_DIR=$(dirname $FLUTTER_BIN) 
+    - cd $FLUTTER_DIR/..
+    - git checkout $FLUTTER_VERSION
+    - cd $CURRENT_DIR
+    - flutter pub get
     - curl --silent "https://gitlab.com/gitlab-org/incubation-engineering/mobile-devops/download-secure-files/-/raw/main/installer" | bash
   after_script:
     - mkdir $CI_PROJECT_DIR/output
