@@ -47,7 +47,7 @@ app_release:
   script:
     # - flutter build apk --no-tree-shake-icons --build-name=release --build-number=$CI_PIPELINE_IID
     # - flutter build appbundle --no-tree-shake-icons --build-name=release --build-number=$CI_PIPELINE_IID
-    - security unlock-keychain -p "$KEYCHAIN" ${HOME}/Library/Keychains/login.keychain
+    - security unlock-keychain -p $KEYCHAIN ${HOME}/Library/Keychains/login.keychain
     - flutter build ipa --export-options-plist ios/ExportOptionsAdHoc.plist --no-tree-shake-icons --build-name=release --build-number=$CI_PIPELINE_IID
 
 app_appstore:
@@ -58,7 +58,7 @@ app_appstore:
   script:
     # - flutter build apk --no-tree-shake-icons --build-name=$CI_COMMIT_TAG --build-number=$CI_PIPELINE_IID
     # - flutter build appbundle --no-tree-shake-icons --build-name=$CI_COMMIT_TAG --build-number=$CI_PIPELINE_IID
-    - security unlock-keychain -p "$KEYCHAIN" ${HOME}/Library/Keychains/login.keychain
+    - security unlock-keychain -p $KEYCHAIN ${HOME}/Library/Keychains/login.keychain
     - flutter build ipa --export-options-plist ios/ExportOptionsAppStore.plist --no-tree-shake-icons --build-name=$CI_COMMIT_TAG --build-number=$CI_PIPELINE_IID
     # - cd $CI_PROJECT_DIR/android/
   release:
