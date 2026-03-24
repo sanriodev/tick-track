@@ -1,0 +1,106 @@
+.app_build_template: &app_build_template
+  variables:
+    SECURE_FILES_DOWNLOAD_PATH: '.'
+    FLUTTER_VERSION: '3.29.1'
+  tags:
+    - macOS
+  artifacts:
+    name: Packages
+    paths:
+      - $CI_PROJECT_DIR/output
+  before_script:
+    # - CURRENT_DIR=$(pwd)
+    # - FLUTTER_BIN=$(which flutter)
+    # - FLUTTER_DIR=$(dirname $FLUTTER_BIN) 
+    # - cd $FLUTTER_DIR/..
+    # - git checkout $FLUTTER_VERSION
+    # - cd $CURRENT_DIR
+    # - flutter pub get
+    - curl --silent "https://gitlab.com/gitlab-org/incubation-engineering/mobile-devops/download-secure-files/-/raw/main/installer" | bash
+  after_script:
+    - mkdir $CI_PROJECT_DIR/output
+    # - cp $CI_PROJECT_DIR/build/app/outputs/flutter-apk/app-release.apk $CI_PROJECT_DIR/output/app-release.apk
+    # - cp $CI_PROJECT_DIR/build/app/outputs/bundle/release/app-release.aab $CI_PROJECT_DIR/output/app-release.aab
+    - cp $CI_PROJECT_DIR/build/ios/ipa/em\ Monitor.ipa $CI_PROJECT_DIR/output/app-release.ipa
+
+stages:
+  - build
+  - release
+  - upload
+
+app_development:
+  <<: *app_build_template
+  stage: build
+  only:
+    - dev
+  script:
+    # - flutter build apk --no-tree-shake-icons --build-name=dev --build-number=$CI_PIPELINE_IID
+    # - flutter build appbundle --no-tree-shake-icons --build-name=dev --build-number=$CI_PIPELINE_IID
+    - security unlock-keychain -p "test" ${HOME}/Library/Keychains/login.keychain
+    - flutter build ipa --export-options-plist ios/ExportOptionsDevelopment.plist --no-tree-shake-icons --build-name=dev --build-number=$CI_PIPELINE_IID
+
+app_release:
+  <<: *app_build_template
+  stage: build
+  only:
+    - master
+  script:
+    # - flutter build apk --no-tree-shake-icons --build-name=release --build-number=$CI_PIPELINE_IID
+    # - flutter build appbundle --no-tree-shake-icons --build-name=release --build-number=$CI_PIPELINE_IID
+    - security unlock-keychain -p "test" ${HOME}/Library/Keychains/login.keychain
+    - flutter build ipa --export-options-plist ios/ExportOptionsAdHoc.plist --no-tree-shake-icons --build-name=release --build-number=$CI_PIPELINE_IID
+
+app_appstore:
+  <<: *app_build_template
+  stage: release
+  only:
+    - tags
+  script:
+    # - flutter build apk --no-tree-shake-icons --build-name=$CI_COMMIT_TAG --build-number=$CI_PIPELINE_IID
+    # - flutter build appbundle --no-tree-shake-icons --build-name=$CI_COMMIT_TAG --build-number=$CI_PIPELINE_IID
+    - security unlock-keychain -p "test" ${HOME}/Library/Keychains/login.keychain
+    - flutter build ipa --export-options-plist ios/ExportOptionsAppStore.plist --no-tree-shake-icons --build-name=$CI_COMMIT_TAG --build-number=$CI_PIPELINE_IID
+    # - cd $CI_PROJECT_DIR/android/
+  release:
+    tag_name: $CI_COMMIT_TAG
+    description: $CI_COMMIT_TAG
+    ref: $CI_COMMIT_SHA
+    assets:
+      links:
+        # - name: 'APK'
+          # url: '$CI_JOB_URL/artifacts/file/output/app-release.apk'
+        # - name: 'AAB'
+          # url: '$CI_JOB_URL/artifacts/file/output/app-release.aab'
+        - name: 'IPA'
+          url: '$CI_JOB_URL/artifacts/file/output/app-release.ipa'
+
+upload_to_apple_appstore:
+  stage: upload
+  when: manual
+  only:
+    - tags
+  tags:
+    - macOS
+  dependencies:
+    - app_appstore
+  script:
+    - xcrun altool --validate-app -f output/*.ipa --type ios --apiKey $(cat ~/keys/keyid) --apiIssuer $(cat ~/keys/issuerid)
+    - xcrun altool --upload-app -f output/*.ipa --type ios --apiKey $(cat ~/keys/keyid) --apiIssuer $(cat ~/keys/issuerid)
+
+# upload_to_play_appstore:
+#   stage: upload
+#   when: manual
+#   only:
+#     - tags
+#   variables:
+#     SECURE_FILES_DOWNLOAD_PATH: '.'
+#   tags:
+#     - ios-build-server
+#   dependencies:
+#     - app_appstore
+#   script:
+#     - curl --silent "https://gitlab.com/gitlab-org/incubation-engineering/mobile-devops/download-secure-files/-/raw/main/installer" | bash
+#     - cd $CI_PROJECT_DIR/android
+#     - fastlane supply init --json_key=$CI_PROJECT_DIR/pc-api-4936110844414333417-961-59cb70ba15b4.json
+#     - echo $CI_COMMIT_TAG_MESSAGE > $CI_PROJECT_DIR/android/fastlane/metadata/android/de-DE/changelogs/$CI_PIPELINE_IID.txt
+#     - fastlane supply --aab $CI_PROJECT_DIR/output/app-release.aab --release_status=draft --json_key=$CI_PROJECT_DIR/pc-api-4936110844414333417-961-59cb70ba15b4.json --skip_upload_metadata=true  --skip_upload_images=true --skip_upload_screenshots=true
