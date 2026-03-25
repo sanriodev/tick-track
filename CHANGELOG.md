@@ -1,5 +1,35 @@
 # Changelog
 
+## [3.12.0](https://github.com/sanriodev/aandm/compare/v3.11.0...v3.12.0) (2026-01-03)
+
+
+### Features
+
+* onboarding ([ebdb25c](https://github.com/sanriodev/aandm/commit/ebdb25cd8b7f1888ce2fb135edb79a3d6fdf94a8))
+* success thingy ([93a21ae](https://github.com/sanriodev/aandm/commit/93a21aeab008371a37dd2a8a827bef8a84beacf5))
+
+## [3.11.0](https://github.com/sanriodev/aandm/compare/v3.10.0...v3.11.0) (2025-12-18)
+
+
+### Features
+
+* change password ([06d8bf5](https://github.com/sanriodev/aandm/commit/06d8bf5b92ee493395a9476e202ceb21b6aaf77e))
+* correct error message when possible on login ([6980bc8](https://github.com/sanriodev/aandm/commit/6980bc8082c97a1d323e62e770e7987a014d9df0))
+* passwort ändern ([25972e9](https://github.com/sanriodev/aandm/commit/25972e994034f29cecbde94119bb4ec18d133c94))
+* settings ([65cc15c](https://github.com/sanriodev/aandm/commit/65cc15c3407db8c8e5adfaada688005e0c5e99bc))
+* use logout ([6bd51fc](https://github.com/sanriodev/aandm/commit/6bd51fcc771f067aa5b4e77c0eff92160f5793cd))
+
+## [3.10.0](https://github.com/sanriodev/aandm/compare/v3.9.1...v3.10.0) (2025-11-24)
+
+
+### Features
+
+* get task lists ([b9084a6](https://github.com/sanriodev/aandm/commit/b9084a6b85b18c3ea82e050ad2101d271bfce4f0))
+* home ([88ca34d](https://github.com/sanriodev/aandm/commit/88ca34db6b6dc256f3f2fb1cbff63e9f5d693d92))
+* more styling ([e821d51](https://github.com/sanriodev/aandm/commit/e821d51d4955b129dde59e5dc6beca36a8673176))
+* styling ([36647fe](https://github.com/sanriodev/aandm/commit/36647fe15afabbfc8787b8e384f91dcff3005b4c))
+* wip app bar changes ([ca573af](https://github.com/sanriodev/aandm/commit/ca573afef8ff1d523a5b78c867a8faa75adc115e))
+
 ## [3.9.1](https://github.com/sanriodev/aandm/compare/v3.9.0...v3.9.1) (2025-11-17)
 
 
