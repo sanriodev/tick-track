@@ -55,7 +55,7 @@ class _MainAppScreenState extends State<MainAppScreen> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-        title: 'Alina\'s App',
+        title: 'TickTrack',
         themeMode: currentTheme,
         theme: appThemeLight,
         darkTheme: appThemeDark,

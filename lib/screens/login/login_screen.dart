@@ -114,7 +114,7 @@ class _LoginScreenState extends State<LoginScreen> {
       key: _scaffoldKey,
       appBar: AppBar(
         title: Text(
-          'Alina\'s App',
+          'TickTrack',
           style: Theme.of(context).primaryTextTheme.titleMedium,
         ),
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,

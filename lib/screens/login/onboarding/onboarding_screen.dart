@@ -86,7 +86,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Alina\'s App',
+          'TickTrack',
           style: Theme.of(context).primaryTextTheme.titleMedium,
         ),
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
