@@ -36,10 +36,11 @@ class BottomMenu extends StatelessWidget {
             selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
             unselectedFontSize: 10,
             selectedItemColor: Theme.of(context).brightness == Brightness.light
-                ? Theme.of(context).primaryColor
+                ? Colors.black
                 : Theme.of(context).colorScheme.primary,
-            unselectedItemColor:
-                Theme.of(context).appBarTheme.titleTextStyle!.color,
+            unselectedItemColor: Theme.of(context).brightness == Brightness.light
+                ? Colors.grey[500]
+                : Theme.of(context).appBarTheme.titleTextStyle!.color,
             currentIndex: current,
             onTap: (int index) {
               navigateToRoute(

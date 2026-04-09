@@ -138,7 +138,7 @@ ThemeData appThemeDark = ThemeData(
     ),
     floatingActionButtonTheme: FloatingActionButtonThemeData(
       backgroundColor: Colors.grey[400],
-      foregroundColor: Colors.grey[300],
+      foregroundColor: Colors.black,
     ),
     progressIndicatorTheme: ProgressIndicatorThemeData(
       color: Colors.grey[400],
