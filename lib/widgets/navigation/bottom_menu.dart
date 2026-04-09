@@ -14,10 +14,12 @@ class BottomMenu extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         border: Border(
-          top:
-              BorderSide(color: Theme.of(context).appBarTheme.foregroundColor!),
+          top: BorderSide(
+            color: Theme.of(context).dividerColor ?? Colors.grey,
+            width: 1.0,
+          ),
         ),
-        color: Theme.of(context).appBarTheme.foregroundColor,
+        color: Theme.of(context).scaffoldBackgroundColor,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -25,7 +27,7 @@ class BottomMenu extends StatelessWidget {
           BottomNavigationBar(
             showUnselectedLabels: true,
             type: BottomNavigationBarType.fixed,
-            backgroundColor: Theme.of(context).appBarTheme.foregroundColor,
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
             enableFeedback: true,
             iconSize: 26,
             elevation: 8,

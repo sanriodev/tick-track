@@ -266,7 +266,7 @@ class _AppDrawerState extends State<AppDrawer> {
                         style: Theme.of(context).primaryTextTheme.displayLarge?.copyWith(
                           color: Theme.of(context).brightness == Brightness.light
                               ? Colors.white
-                              : Colors.grey[300],
+                              : Colors.grey[900],
                         ),
                       ),
                     ),
