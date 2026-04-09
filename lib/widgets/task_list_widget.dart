@@ -70,7 +70,7 @@ class _TaskListWidgetState extends State<TaskListWidget> {
               child: TaskListAccordion(
                 children: [
                   TaskListAccordionSection(
-                    headerBackgroundColor: Colors.purple.shade400,
+                    headerBackgroundColor: Theme.of(context).secondaryHeaderColor,
                     isOpen: false,
                     header: Padding(
                       padding: const EdgeInsets.all(12.0),
@@ -125,9 +125,9 @@ class _TaskListWidgetState extends State<TaskListWidget> {
                             padding: EdgeInsets.symmetric(vertical: 6),
                             child: Row(
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.circle,
-                                  color: Colors.purple,
+                                  color: Theme.of(context).primaryColor,
                                   size: 15,
                                 ),
                                 Text("Einträge gesamt: ${widget.totalTasks}",
@@ -194,7 +194,7 @@ class _TaskListWidgetState extends State<TaskListWidget> {
                                           widget.totalTasks),
                                   lineHeight: 20,
                                   backgroundColor: Colors.black26,
-                                  progressBarColor: Colors.purple.shade400,
+                                  progressBarColor: Theme.of(context).primaryColor,
                                   child: Text(
                                       "${(((widget.completedTasks / widget.totalTasks).isNaN ? 0 : (widget.completedTasks / widget.totalTasks)) * 100).toStringAsFixed(2)}%",
                                       style: Theme.of(context)

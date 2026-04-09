@@ -1,4 +1,4 @@
-package com.example.aandm
+package com.tick-track.app
 
 import io.flutter.embedding.android.FlutterActivity
 

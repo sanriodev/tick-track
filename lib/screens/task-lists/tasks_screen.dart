@@ -264,8 +264,8 @@ class _TasksScreenState extends State<TasksScreen> {
                                     tasks[index].isDone = value ?? false;
                                     await _updateTask(tasks[index]);
                                   },
-                                  activeColor: Colors.purple[200],
-                                  checkColor: Colors.grey[200],
+                                  activeColor: Theme.of(context).primaryColor,
+                                  checkColor: Theme.of(context).scaffoldBackgroundColor,
                                   side: const BorderSide(
                                       color: Colors.grey, width: 1.5),
                                 ),

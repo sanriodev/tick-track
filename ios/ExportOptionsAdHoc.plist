@@ -10,8 +10,8 @@
 		<string>ad-hoc</string>
 		<key>provisioningProfiles</key>
 		<dict>
-			<key>com.example.aandm</key>
-			<string>Aandm AdHoc Provisioning Profile</string>
+			<key>com.tick-track.app</key>
+			<string>TickTrack AdHoc Provisioning Profile</string>
 		</dict>
 		<key>signingCertificate</key>
 		<string>Apple Distribution</string>
