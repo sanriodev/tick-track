@@ -1,4 +1,4 @@
-import 'package:aandm/enum/privacy_mode_enum.dart';
+import 'package:ticktrack/enum/privacy_mode_enum.dart';
 
 class CreateTaskListDto {
   String name;

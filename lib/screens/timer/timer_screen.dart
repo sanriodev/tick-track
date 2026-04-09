@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:aandm/widgets/app_drawer_widget.dart';
-import 'package:aandm/widgets/navigation/bottom_menu.dart';
+import 'package:ticktrack/widgets/app_drawer_widget.dart';
+import 'package:ticktrack/widgets/navigation/bottom_menu.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 

@@ -1,14 +1,14 @@
 // ignore_for_file: use_build_context_synchronously
 
-import 'package:aandm/backend/service/backend_service.dart';
-import 'package:aandm/models/activity/activity_model.dart';
-import 'package:aandm/util/helpers.dart';
-import 'package:aandm/widgets/activity/activity_graph_widget.dart';
-import 'package:aandm/widgets/activity/activity_history_widget.dart';
-import 'package:aandm/widgets/app_drawer_widget.dart';
-import 'package:aandm/widgets/navigation/bottom_menu.dart';
-import 'package:aandm/widgets/option_button.dart';
-import 'package:aandm/widgets/skeleton/skeleton_card.dart';
+import 'package:ticktrack/backend/service/backend_service.dart';
+import 'package:ticktrack/models/activity/activity_model.dart';
+import 'package:ticktrack/util/helpers.dart';
+import 'package:ticktrack/widgets/activity/activity_graph_widget.dart';
+import 'package:ticktrack/widgets/activity/activity_history_widget.dart';
+import 'package:ticktrack/widgets/app_drawer_widget.dart';
+import 'package:ticktrack/widgets/navigation/bottom_menu.dart';
+import 'package:ticktrack/widgets/option_button.dart';
+import 'package:ticktrack/widgets/skeleton/skeleton_card.dart';
 import 'package:blvckleg_dart_core/exception/session_expired.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:flutter/material.dart';

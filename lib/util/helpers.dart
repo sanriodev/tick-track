@@ -1,4 +1,4 @@
-import 'package:aandm/enum/privacy_mode_enum.dart';
+import 'package:ticktrack/enum/privacy_mode_enum.dart';
 import 'package:blvckleg_dart_core/models/auth/login_response_model.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:flutter/material.dart';

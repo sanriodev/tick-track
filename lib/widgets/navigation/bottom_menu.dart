@@ -1,5 +1,5 @@
-import 'package:aandm/util/helpers.dart';
-import 'package:aandm/widgets/navigation/bottom_menu_navigation_item.dart';
+import 'package:ticktrack/util/helpers.dart';
+import 'package:ticktrack/widgets/navigation/bottom_menu_navigation_item.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 

@@ -1,4 +1,4 @@
-import 'package:aandm/models/activity/activity_model.dart';
+import 'package:ticktrack/models/activity/activity_model.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 

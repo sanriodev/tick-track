@@ -1,6 +1,6 @@
-import 'package:aandm/backend/service/cat_backend_service.dart';
-import 'package:aandm/routes/routes.dart';
-import 'package:aandm/ui/theme.dart';
+import 'package:ticktrack/backend/service/cat_backend_service.dart';
+import 'package:ticktrack/routes/routes.dart';
+import 'package:ticktrack/ui/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
