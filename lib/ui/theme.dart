@@ -118,30 +118,30 @@ ThemeData appThemeDark = ThemeData(
       seedColor: Colors.grey,
       brightness: Brightness.dark,
     ),
-    primaryColor: Colors.grey[900],
+    primaryColor: Colors.grey[400],
     canvasColor: Colors.grey[800],
-    secondaryHeaderColor: Colors.grey[900],
+    secondaryHeaderColor: Colors.grey[400],
     scaffoldBackgroundColor: const Color(0xFF303030),
     extensions: <ThemeExtension<dynamic>>[
       ActivityHeatmapColors.dark(),
     ],
     appBarTheme: AppBarTheme(
-      foregroundColor: Colors.grey[900],
+      foregroundColor: Colors.grey[400],
       backgroundColor: const Color(0xFF303030),
       titleTextStyle: TextStyle(color: Colors.grey[300]),
       elevation: 0,
       surfaceTintColor: Colors.transparent,
     ),
     buttonTheme: ButtonThemeData(
-      buttonColor: Colors.grey[900],
+      buttonColor: Colors.grey[400],
       textTheme: ButtonTextTheme.primary,
     ),
     floatingActionButtonTheme: FloatingActionButtonThemeData(
-      backgroundColor: Colors.grey[900],
+      backgroundColor: Colors.grey[400],
       foregroundColor: Colors.grey[300],
     ),
     progressIndicatorTheme: ProgressIndicatorThemeData(
-      color: Colors.grey[900],
+      color: Colors.grey[400],
     ),
     iconTheme: IconThemeData(
       color: Colors.grey[400],
@@ -149,7 +149,7 @@ ThemeData appThemeDark = ThemeData(
     primaryIconTheme: IconThemeData(color: Colors.grey[400]),
     elevatedButtonTheme: ElevatedButtonThemeData(
         style: ButtonStyle(
-      backgroundColor: WidgetStatePropertyAll(Colors.grey[900]),
+      backgroundColor: WidgetStatePropertyAll(Colors.grey[400]),
       foregroundColor: WidgetStatePropertyAll(Colors.grey[300]),
       textStyle: WidgetStatePropertyAll(TextStyle(fontSize: 16, color: Colors.grey[300])),
     )),

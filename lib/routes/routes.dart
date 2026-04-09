@@ -5,7 +5,6 @@ import 'package:ticktrack/screens/login/onboarding/onboarding_screen.dart';
 import 'package:ticktrack/screens/notes/notes_edit_screen.dart';
 import 'package:ticktrack/screens/notes/notes_screen.dart';
 import 'package:ticktrack/screens/splash/splash_screen.dart';
-import 'package:ticktrack/screens/timer/timer_screen.dart';
 import 'package:ticktrack/screens/task-lists/task_list_screen.dart';
 import 'package:ticktrack/screens/task-lists/tasks_screen.dart';
 import 'package:flutter/material.dart';
@@ -33,22 +32,6 @@ GoRouter createRouter() {
           key: state.pageKey,
           name: 'home',
           child: HomeScreen(),
-          transitionDuration: const Duration(milliseconds: transitionDuration),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(
-              opacity: CurveTween(curve: Curves.easeIn).animate(animation),
-              child: child,
-            );
-          },
-        ),
-      ),
-      GoRoute(
-        name: 'timer',
-        path: '/timer',
-        pageBuilder: (context, state) => CustomTransitionPage(
-          key: state.pageKey,
-          name: 'timer',
-          child: TimerScreen(),
           transitionDuration: const Duration(milliseconds: transitionDuration),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(

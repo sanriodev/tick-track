@@ -263,7 +263,11 @@ class _AppDrawerState extends State<AppDrawer> {
                       left: 15,
                       child: Text(
                         'Alina\'s App\nI love Alina',
-                        style: Theme.of(context).primaryTextTheme.displayLarge,
+                        style: Theme.of(context).primaryTextTheme.displayLarge?.copyWith(
+                          color: Theme.of(context).brightness == Brightness.light
+                              ? Colors.white
+                              : Colors.grey[300],
+                        ),
                       ),
                     ),
                   ],
