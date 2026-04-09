@@ -47,33 +47,33 @@ ThemeData appThemeLight = ThemeData(
     seedColor: Colors.grey,
     brightness: Brightness.light,
   ),
-  primaryColor: Colors.black,
+  primaryColor: Colors.grey[700],
   canvasColor: Colors.grey[300],
-  secondaryHeaderColor: Colors.black,
-  scaffoldBackgroundColor: Colors.white,
+  secondaryHeaderColor: Colors.grey[700],
+  scaffoldBackgroundColor: Colors.grey[200],
   extensions: <ThemeExtension<dynamic>>[
     ActivityHeatmapColors.light(),
   ],
   appBarTheme: AppBarThemeData(
-    foregroundColor: Colors.black,
-    backgroundColor: Colors.white,
-    titleTextStyle: const TextStyle(color: Colors.black),
+    foregroundColor: Colors.grey[700],
+    backgroundColor: Colors.grey[200],
+    titleTextStyle: TextStyle(color: Colors.grey[800]),
     elevation: 0,
     surfaceTintColor: Colors.transparent,
   ),
   primaryTextTheme: textThemeLight(),
   textTheme: textThemeLight(),
   buttonTheme: ButtonThemeData(
-    buttonColor: Colors.black,
+    buttonColor: Colors.grey[700],
     textTheme: ButtonTextTheme.primary,
   ),
   floatingActionButtonTheme: FloatingActionButtonThemeData(
-    backgroundColor: Colors.black,
+    backgroundColor: Colors.grey[700],
     foregroundColor: Colors.white,
   ),
   elevatedButtonTheme: ElevatedButtonThemeData(
       style: ButtonStyle(
-    backgroundColor: const WidgetStatePropertyAll(Colors.black),
+    backgroundColor: WidgetStatePropertyAll(Colors.grey[700]),
     foregroundColor: const WidgetStatePropertyAll(Colors.white),
     textStyle: const WidgetStatePropertyAll(
       TextStyle(fontSize: 16, color: Colors.white),
@@ -81,8 +81,8 @@ ThemeData appThemeLight = ThemeData(
   )),
   iconButtonTheme: IconButtonThemeData(
     style: ButtonStyle(
-      foregroundColor: const WidgetStatePropertyAll(Colors.white),
-      backgroundColor: const WidgetStatePropertyAll(Colors.black),
+      foregroundColor: WidgetStatePropertyAll(Colors.grey[700]),
+      backgroundColor: const WidgetStatePropertyAll(Colors.transparent),
     ),
   ),
   cardColor: Colors.grey[100],
@@ -91,26 +91,26 @@ ThemeData appThemeLight = ThemeData(
     surfaceTintColor: Colors.transparent,
   ),
   progressIndicatorTheme: ProgressIndicatorThemeData(
-    color: Colors.black,
+    color: Colors.grey[700],
   ),
-  iconTheme: IconThemeData(color: Colors.black),
-  primaryIconTheme: IconThemeData(color: Colors.black),
+  iconTheme: IconThemeData(color: Colors.grey[700]),
+  primaryIconTheme: IconThemeData(color: Colors.grey[700]),
   inputDecorationTheme: InputDecorationTheme(
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(10),
-      borderSide: const BorderSide(color: Colors.black26, width: 1.5),
+      borderSide: BorderSide(color: Colors.grey[400]!, width: 1.5),
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(10),
-      borderSide: const BorderSide(color: Colors.black, width: 1.5),
+      borderSide: BorderSide(color: Colors.grey[700]!, width: 1.5),
     ),
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(10),
-      borderSide: const BorderSide(color: Colors.black26, width: 1.5),
+      borderSide: BorderSide(color: Colors.grey[400]!, width: 1.5),
     ),
   ),
-  dialogTheme: DialogThemeData(backgroundColor: Colors.white),
-  dividerColor: Colors.grey[300],
+  dialogTheme: DialogThemeData(backgroundColor: Colors.grey[100]),
+  dividerColor: Colors.grey[400],
 );
 
 ThemeData appThemeDark = ThemeData(
@@ -118,181 +118,180 @@ ThemeData appThemeDark = ThemeData(
       seedColor: Colors.grey,
       brightness: Brightness.dark,
     ),
-    primaryColor: Colors.white,
-    canvasColor: Colors.grey[850],
-    secondaryHeaderColor: Colors.white,
-    scaffoldBackgroundColor: const Color(0xFF121212),
+    primaryColor: Colors.grey[900],
+    canvasColor: Colors.grey[800],
+    secondaryHeaderColor: Colors.grey[900],
+    scaffoldBackgroundColor: const Color(0xFF303030),
     extensions: <ThemeExtension<dynamic>>[
       ActivityHeatmapColors.dark(),
     ],
     appBarTheme: AppBarTheme(
-      foregroundColor: Colors.white,
-      backgroundColor: const Color(0xFF121212),
-      titleTextStyle: const TextStyle(color: Colors.white),
+      foregroundColor: Colors.grey[900],
+      backgroundColor: const Color(0xFF303030),
+      titleTextStyle: TextStyle(color: Colors.grey[300]),
       elevation: 0,
       surfaceTintColor: Colors.transparent,
     ),
     buttonTheme: ButtonThemeData(
-      buttonColor: Colors.white,
+      buttonColor: Colors.grey[900],
       textTheme: ButtonTextTheme.primary,
     ),
     floatingActionButtonTheme: FloatingActionButtonThemeData(
-      backgroundColor: Colors.white,
-      foregroundColor: Colors.black,
+      backgroundColor: Colors.grey[900],
+      foregroundColor: Colors.grey[300],
     ),
     progressIndicatorTheme: ProgressIndicatorThemeData(
-      color: Colors.white,
+      color: Colors.grey[900],
     ),
     iconTheme: IconThemeData(
-      color: Colors.white,
+      color: Colors.grey[400],
     ),
-    primaryIconTheme: IconThemeData(color: Colors.white),
+    primaryIconTheme: IconThemeData(color: Colors.grey[400]),
     elevatedButtonTheme: ElevatedButtonThemeData(
         style: ButtonStyle(
-      backgroundColor: const WidgetStatePropertyAll(Colors.white),
-      foregroundColor: const WidgetStatePropertyAll(Colors.black),
-      textStyle: const WidgetStatePropertyAll(
-          TextStyle(fontSize: 16, color: Colors.black)),
+      backgroundColor: WidgetStatePropertyAll(Colors.grey[900]),
+      foregroundColor: WidgetStatePropertyAll(Colors.grey[300]),
+      textStyle: WidgetStatePropertyAll(TextStyle(fontSize: 16, color: Colors.grey[300])),
     )),
     iconButtonTheme: IconButtonThemeData(
       style: ButtonStyle(
-        foregroundColor: const WidgetStatePropertyAll(Colors.black),
-        backgroundColor: const WidgetStatePropertyAll(Colors.white),
+        foregroundColor: WidgetStatePropertyAll(Colors.grey[400]),
+        backgroundColor: const WidgetStatePropertyAll(Colors.transparent),
       ),
     ),
     cardTheme: CardThemeData(
-      color: Colors.grey[900],
+      color: Colors.grey[850],
       surfaceTintColor: Colors.transparent,
     ),
-    cardColor: Colors.grey[900],
+    cardColor: Colors.grey[850],
     inputDecorationTheme: InputDecorationTheme(
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: Colors.white24, width: 1.5),
+        borderSide: BorderSide(color: Colors.grey[700]!, width: 1.5),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: Colors.white, width: 1.5),
+        borderSide: BorderSide(color: Colors.grey[500]!, width: 1.5),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
-        borderSide: const BorderSide(color: Colors.white24, width: 1.5),
+        borderSide: BorderSide(color: Colors.grey[700]!, width: 1.5),
       ),
-      labelStyle: TextStyle(color: Colors.white),
+      labelStyle: TextStyle(color: Colors.grey[400]),
     ),
     primaryTextTheme: textThemeDark(),
     textTheme: textThemeDark(),
     dividerColor: Colors.grey[700],
-    dialogTheme: DialogThemeData(backgroundColor: Colors.grey[900]));
+    dialogTheme: DialogThemeData(backgroundColor: Colors.grey[850]));
 
 TextTheme textThemeLight() {
   return TextTheme(
     titleLarge: TextStyle(
-      color: Colors.black,
+      color: Colors.grey[800],
       fontSize: 23,
       height: 1.2,
       fontWeight: FontWeight.bold,
     ),
     titleMedium: TextStyle(
-      color: Colors.black,
+      color: Colors.grey[800],
       fontSize: 20,
       height: 1.1,
       fontWeight: FontWeight.bold,
     ),
     titleSmall: TextStyle(
-      color: Colors.black,
+      color: Colors.grey[800],
       fontSize: 14,
     ),
     displayLarge: TextStyle(
-      color: Colors.black,
+      color: Colors.grey[800],
       fontSize: 18,
       fontWeight: FontWeight.bold,
     ),
     displayMedium: TextStyle(
-      color: Colors.black,
+      color: Colors.grey[800],
       fontSize: 12,
     ),
     displaySmall: TextStyle(
-      color: Colors.black,
+      color: Colors.grey[800],
       fontSize: 15,
       fontWeight: FontWeight.w500,
     ),
     bodyLarge: TextStyle(
-      color: Colors.black,
+      color: Colors.grey[800],
       fontSize: 30,
       fontWeight: FontWeight.bold,
     ),
     bodySmall: TextStyle(
-      color: Colors.black,
+      color: Colors.grey[800],
       fontSize: 14,
       fontWeight: FontWeight.w500,
     ),
     labelLarge: TextStyle(
-      color: Colors.black,
+      color: Colors.grey[800],
       fontSize: 16,
       fontWeight: FontWeight.w500,
     ),
     labelMedium: TextStyle(
-      color: Colors.black,
+      color: Colors.grey[800],
       fontSize: 16,
       fontWeight: FontWeight.normal,
     ),
-    labelSmall: TextStyle(color: Colors.black, fontSize: 12),
+    labelSmall: TextStyle(color: Colors.grey[800], fontSize: 12),
   );
 }
 
 TextTheme textThemeDark() {
   return TextTheme(
     titleLarge: TextStyle(
-      color: Colors.white,
+      color: Colors.grey[300],
       fontSize: 23,
       height: 1.2,
       fontWeight: FontWeight.bold,
     ),
     titleMedium: TextStyle(
-      color: Colors.white,
+      color: Colors.grey[300],
       fontSize: 20,
       height: 1.1,
       fontWeight: FontWeight.bold,
     ),
     titleSmall: TextStyle(
-      color: Colors.white,
+      color: Colors.grey[300],
       fontSize: 14,
     ),
     displayLarge: TextStyle(
-      color: Colors.white,
+      color: Colors.grey[300],
       fontSize: 18,
       fontWeight: FontWeight.bold,
     ),
     displayMedium: TextStyle(
-      color: Colors.white,
+      color: Colors.grey[300],
       fontSize: 12,
     ),
     displaySmall: TextStyle(
-      color: Colors.white,
+      color: Colors.grey[300],
       fontSize: 15,
       fontWeight: FontWeight.w500,
     ),
     bodyLarge: TextStyle(
-      color: Colors.white,
+      color: Colors.grey[300],
       fontSize: 30,
       fontWeight: FontWeight.bold,
     ),
     bodySmall: TextStyle(
-      color: Colors.white,
+      color: Colors.grey[300],
       fontSize: 14,
       fontWeight: FontWeight.w500,
     ),
     labelLarge: TextStyle(
-      color: Colors.white,
+      color: Colors.grey[300],
       fontSize: 16,
       fontWeight: FontWeight.w500,
     ),
     labelMedium: TextStyle(
-      color: Colors.white,
+      color: Colors.grey[300],
       fontSize: 16,
       fontWeight: FontWeight.normal,
     ),
-    labelSmall: TextStyle(color: Colors.white, fontSize: 12),
+    labelSmall: TextStyle(color: Colors.grey[300], fontSize: 12),
   );
 }
