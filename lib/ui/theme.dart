@@ -45,6 +45,7 @@ class ActivityHeatmapColors extends ThemeExtension<ActivityHeatmapColors> {
 ThemeData appThemeLight = ThemeData(
   colorScheme: ColorScheme.fromSeed(
     seedColor: Colors.grey,
+    brightness: Brightness.light,
   ),
   primaryColor: Colors.grey[700],
   canvasColor: Colors.grey[300],
