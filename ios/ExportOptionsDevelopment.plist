@@ -10,8 +10,8 @@
 		<string>development</string>
 		<key>provisioningProfiles</key>
 		<dict>
-			<key>app.tick-track.tick-track</key>
-			<string>TickTrack Development Provisioning Profile</string>
+			<key>com.example.aandm</key>
+			<string>Aandm Development Provisioning Profile</string>
 		</dict>
 		<key>signingCertificate</key>
 		<string>Apple Development</string>
