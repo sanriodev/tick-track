@@ -77,7 +77,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/
-    - assets/icons/logo.png
+    - assets/icons/logo.svg
     - assets/icons/top_figure.svg
     - assets/icons/bottom_figure.svg
     - assets/icons/top_figure_dark.svg
