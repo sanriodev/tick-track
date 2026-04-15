@@ -10,8 +10,8 @@
 		<string>app-store</string>
 		<key>provisioningProfiles</key>
 		<dict>
-			<key>com.example.aandm</key>
-			<string>Aandm AppStore Provisioning Profile</string>
+			<key>app.tick-track.tick-track</key>
+			<string>TickTrack AppStore Provisioning Profile</string>
 		</dict>
 		<key>signingCertificate</key>
 		<string>Apple Distribution</string>
