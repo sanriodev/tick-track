@@ -87,7 +87,7 @@ class _SplashScreenState extends State<SplashScreen>
           Container(
             width: double.infinity,
             height: double.infinity,
-            color: Theme.of(context).colorScheme.background,
+            color: Theme.of(context).colorScheme.surface,
           ),
           Positioned(
             top: 0,

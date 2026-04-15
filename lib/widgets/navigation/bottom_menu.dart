@@ -15,8 +15,7 @@ class BottomMenu extends StatelessWidget {
       decoration: BoxDecoration(
         border: Border(
           top: BorderSide(
-            color: Theme.of(context).dividerColor ?? Colors.grey,
-            width: 1.0,
+            color: Theme.of(context).dividerColor,
           ),
         ),
         color: Theme.of(context).scaffoldBackgroundColor,
@@ -38,9 +37,10 @@ class BottomMenu extends StatelessWidget {
             selectedItemColor: Theme.of(context).brightness == Brightness.light
                 ? Colors.black
                 : Theme.of(context).colorScheme.primary,
-            unselectedItemColor: Theme.of(context).brightness == Brightness.light
-                ? Colors.grey[500]
-                : Theme.of(context).appBarTheme.titleTextStyle!.color,
+            unselectedItemColor:
+                Theme.of(context).brightness == Brightness.light
+                    ? Colors.grey[500]
+                    : Theme.of(context).appBarTheme.titleTextStyle!.color,
             currentIndex: current,
             onTap: (int index) {
               navigateToRoute(
