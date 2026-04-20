@@ -265,7 +265,8 @@ class _TasksScreenState extends State<TasksScreen> {
                                     await _updateTask(tasks[index]);
                                   },
                                   activeColor: Theme.of(context).primaryColor,
-                                  checkColor: Theme.of(context).scaffoldBackgroundColor,
+                                  checkColor:
+                                      Theme.of(context).scaffoldBackgroundColor,
                                   side: const BorderSide(
                                       color: Colors.grey, width: 1.5),
                                 ),
@@ -379,8 +380,18 @@ class _TasksScreenState extends State<TasksScreen> {
                         }
                       },
                       style: Theme.of(context).elevatedButtonTheme.style,
-                      child: Text('Erstellen',
-                          style: Theme.of(context).primaryTextTheme.titleSmall),
+                      child: Text(
+                        'Erstellen',
+                        style: Theme.of(context)
+                            .primaryTextTheme
+                            .titleSmall
+                            ?.copyWith(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.light
+                                  ? Colors.white
+                                  : Colors.grey[900],
+                            ),
+                      ),
                     ),
                   ],
                 );

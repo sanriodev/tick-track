@@ -16,7 +16,6 @@ class BottomMenu extends StatelessWidget {
         border: Border(
           top: BorderSide(
             color: Theme.of(context).dividerColor ?? Colors.grey,
-            width: 1.0,
           ),
         ),
         color: Theme.of(context).scaffoldBackgroundColor,

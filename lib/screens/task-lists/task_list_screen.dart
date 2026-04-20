@@ -260,8 +260,18 @@ class _TaskListScreenState extends State<TaskListScreen> {
                         Navigator.of(dialogContext).pop();
                       }
                     },
-                    child: Text('Erstellen',
-                        style: Theme.of(context).primaryTextTheme.titleSmall),
+                    child: Text(
+                      'Erstellen',
+                      style: Theme.of(context)
+                          .primaryTextTheme
+                          .titleSmall
+                          ?.copyWith(
+                            color:
+                                Theme.of(context).brightness == Brightness.light
+                                    ? Colors.white
+                                    : Colors.grey[900],
+                          ),
+                    ),
                   ),
                 ],
               );

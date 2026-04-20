@@ -70,7 +70,8 @@ class _TaskListWidgetState extends State<TaskListWidget> {
               child: TaskListAccordion(
                 children: [
                   TaskListAccordionSection(
-                    headerBackgroundColor: Theme.of(context).secondaryHeaderColor,
+                    headerBackgroundColor:
+                        Theme.of(context).secondaryHeaderColor,
                     isOpen: false,
                     header: Padding(
                       padding: const EdgeInsets.all(12.0),
@@ -104,14 +105,30 @@ class _TaskListWidgetState extends State<TaskListWidget> {
                               ],
                               child: Icon(
                                 privacyIconFor(widget.taskList.privacyMode),
-                                color: Theme.of(context).primaryIconTheme.color,
+                                color: Theme.of(context)
+                                    .primaryIconTheme
+                                    ?.copyWith(
+                                      color: Theme.of(context).brightness ==
+                                              Brightness.light
+                                          ? Colors.white
+                                          : Colors.grey[900],
+                                    )
+                                    .color,
                               ),
                             ),
                           ),
-                          Text(widget.taskList.name,
-                              style: Theme.of(context)
-                                  .primaryTextTheme
-                                  .titleMedium),
+                          Text(
+                            widget.taskList.name,
+                            style: Theme.of(context)
+                                .primaryTextTheme
+                                .titleMedium
+                                ?.copyWith(
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.light
+                                      ? Colors.white
+                                      : Colors.grey[900],
+                                ),
+                          ),
                         ],
                       ),
                     ),
@@ -133,7 +150,13 @@ class _TaskListWidgetState extends State<TaskListWidget> {
                                 Text("Einträge gesamt: ${widget.totalTasks}",
                                     style: Theme.of(context)
                                         .primaryTextTheme
-                                        .bodyMedium),
+                                        .bodyMedium
+                                        ?.copyWith(
+                                            color:
+                                                Theme.of(context).brightness ==
+                                                        Brightness.light
+                                                    ? Colors.grey[900]
+                                                    : Colors.white)),
                               ],
                             ),
                           ),
@@ -147,10 +170,17 @@ class _TaskListWidgetState extends State<TaskListWidget> {
                                   size: 15,
                                 ),
                                 Text(
-                                    "Einträge abgeschlossen: ${widget.completedTasks}",
-                                    style: Theme.of(context)
-                                        .primaryTextTheme
-                                        .bodyMedium),
+                                  "Einträge abgeschlossen: ${widget.completedTasks}",
+                                  style: Theme.of(context)
+                                      .primaryTextTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                        color: Theme.of(context).brightness ==
+                                                Brightness.light
+                                            ? Colors.grey[900]
+                                            : Colors.white,
+                                      ),
+                                ),
                               ],
                             ),
                           ),
@@ -163,10 +193,17 @@ class _TaskListWidgetState extends State<TaskListWidget> {
                                   color: Colors.red,
                                   size: 15,
                                 ),
-                                Text("Einträge offen: ${widget.openTasks}",
-                                    style: Theme.of(context)
-                                        .primaryTextTheme
-                                        .bodyMedium),
+                                Text(
+                                  "Einträge offen: ${widget.openTasks}",
+                                  style: Theme.of(context)
+                                      .primaryTextTheme
+                                      .bodyMedium
+                                      ?.copyWith(
+                                          color: Theme.of(context).brightness ==
+                                                  Brightness.light
+                                              ? Colors.grey[900]
+                                              : Colors.white),
+                                ),
                               ],
                             ),
                           ),
@@ -182,7 +219,13 @@ class _TaskListWidgetState extends State<TaskListWidget> {
                                     "Aktueller Fortschritt",
                                     style: Theme.of(context)
                                         .primaryTextTheme
-                                        .bodyMedium,
+                                        .bodyMedium
+                                        ?.copyWith(
+                                            color:
+                                                Theme.of(context).brightness ==
+                                                        Brightness.light
+                                                    ? Colors.grey[900]
+                                                    : Colors.white),
                                   ),
                                 ),
                                 GFProgressBar(
@@ -194,12 +237,15 @@ class _TaskListWidgetState extends State<TaskListWidget> {
                                           widget.totalTasks),
                                   lineHeight: 20,
                                   backgroundColor: Colors.black26,
-                                  progressBarColor: Theme.of(context).primaryColor,
+                                  progressBarColor:
+                                      Theme.of(context).primaryColor,
                                   child: Text(
-                                      "${(((widget.completedTasks / widget.totalTasks).isNaN ? 0 : (widget.completedTasks / widget.totalTasks)) * 100).toStringAsFixed(2)}%",
-                                      style: Theme.of(context)
-                                          .primaryTextTheme
-                                          .bodyMedium),
+                                    "${(((widget.completedTasks / widget.totalTasks).isNaN ? 0 : (widget.completedTasks / widget.totalTasks)) * 100).toStringAsFixed(2)}%",
+                                    style: Theme.of(context)
+                                        .primaryTextTheme
+                                        .bodyMedium
+                                        ?.copyWith(color: Colors.white),
+                                  ),
                                 ),
                               ],
                             ),

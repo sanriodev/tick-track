@@ -260,27 +260,36 @@ class _NotesScreenState extends State<NotesScreen> {
                         style: Theme.of(context).primaryTextTheme.titleSmall),
                   ),
                   ElevatedButton(
-                    onPressed: () async {
-                      final name = nameController.text.trim();
-                      if (name.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Bitte einen Namen eingeben.'),
-                          ),
-                        );
-                        return;
-                      }
-                      await createNewItem(CreateNoteDto(
-                        title: name,
-                        content: '',
-                      ));
-                      if (mounted) {
-                        Navigator.of(dialogContext).pop();
-                      }
-                    },
-                    child: Text('Erstellen',
-                        style: Theme.of(context).primaryTextTheme.titleSmall),
-                  ),
+                      onPressed: () async {
+                        final name = nameController.text.trim();
+                        if (name.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Bitte einen Namen eingeben.'),
+                            ),
+                          );
+                          return;
+                        }
+                        await createNewItem(CreateNoteDto(
+                          title: name,
+                          content: '',
+                        ));
+                        if (mounted) {
+                          Navigator.of(dialogContext).pop();
+                        }
+                      },
+                      child: Text(
+                        'Erstellen',
+                        style: Theme.of(context)
+                            .primaryTextTheme
+                            .titleSmall
+                            ?.copyWith(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.light
+                                  ? Colors.white
+                                  : Colors.grey[900],
+                            ),
+                      )),
                 ],
               );
             },

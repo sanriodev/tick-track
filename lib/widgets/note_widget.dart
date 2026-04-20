@@ -87,7 +87,13 @@ class _NoteWidgetState extends State<NoteWidget> {
                                       widget.note.title,
                                       style: Theme.of(context)
                                           .primaryTextTheme
-                                          .bodyMedium,
+                                          .bodyMedium
+                                          ?.copyWith(
+                                              color: Theme.of(context)
+                                                          .brightness ==
+                                                      Brightness.light
+                                                  ? Colors.grey[900]
+                                                  : Colors.white),
                                     ),
                                   ),
                                   if (widget.note.content != null &&
@@ -109,9 +115,14 @@ class _NoteWidgetState extends State<NoteWidget> {
                                         "${widget.note.content!.length > 40 ? widget.note.content!.substring(0, 40) : widget.note.content}...",
                                         style: Theme.of(context)
                                             .primaryTextTheme
-                                            .bodyMedium!
-                                          ..copyWith(
-                                              overflow: TextOverflow.ellipsis),
+                                            .bodyMedium
+                                            ?.copyWith(
+                                                overflow: TextOverflow.ellipsis,
+                                                color: Theme.of(context)
+                                                            .brightness ==
+                                                        Brightness.light
+                                                    ? Colors.grey[900]
+                                                    : Colors.white),
                                       ),
                                     ),
                                 ],
