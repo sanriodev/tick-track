@@ -1,4 +1,4 @@
-import 'package:aandm/models/activity/activity_model.dart';
+import 'package:ticktrack/models/activity/activity_model.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
@@ -82,20 +82,18 @@ class _ActivityPreviewWidgetState extends State<ActivityPreviewWidget> {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: Theme.of(context)
-                            .colorScheme
-                            .primary
+                            .primaryColor
                             .withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
                           color: Theme.of(context)
-                              .colorScheme
-                              .primary
+                              .primaryColor
                               .withValues(alpha: 0.3),
                         ),
                       ),
                       child: PhosphorIcon(
                         PhosphorIconsRegular.pulse,
-                        color: Theme.of(context).colorScheme.primary,
+                        color: Theme.of(context).primaryColor,
                         size: 20,
                       ),
                     ),
@@ -200,7 +198,7 @@ class _ActivityPreviewWidgetState extends State<ActivityPreviewWidget> {
                 child: Text(
                   'Mehr anzeigen',
                   style: TextStyle(
-                    color: Theme.of(context).colorScheme.primary,
+                    color: Theme.of(context).primaryColor,
                     fontWeight: FontWeight.w600,
                   ),
                 ),

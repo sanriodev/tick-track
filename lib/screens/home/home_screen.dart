@@ -1,26 +1,20 @@
 // ignore_for_file: use_build_context_synchronously
 
-import 'package:aandm/backend/service/backend_service.dart';
-import 'package:aandm/backend/service/cat_backend_service.dart';
-import 'package:aandm/models/activity/activity_model.dart';
-import 'package:aandm/models/cat/cat_facts_api_model.dart';
-import 'package:aandm/models/cat/cat_picture_api_model.dart';
-import 'package:aandm/models/note/note_api_model.dart';
-import 'package:aandm/models/tasklist/task_list_api_model.dart';
-import 'package:aandm/screens/home/main_app_screen.dart';
-import 'package:aandm/util/helpers.dart';
-import 'package:aandm/widgets/activity_preview_widget.dart';
-import 'package:aandm/widgets/app_drawer_widget.dart';
-import 'package:aandm/widgets/cat_facts_widget.dart';
-import 'package:aandm/widgets/navigation/bottom_menu.dart';
-import 'package:aandm/widgets/notes_preview_widget.dart';
-import 'package:aandm/widgets/option_button.dart';
-import 'package:aandm/widgets/timer_preview_widget.dart';
-import 'package:aandm/widgets/to_do_list_widget.dart';
+import 'package:ticktrack/backend/service/backend_service.dart';
+import 'package:ticktrack/models/activity/activity_model.dart';
+import 'package:ticktrack/models/note/note_api_model.dart';
+import 'package:ticktrack/models/tasklist/task_list_api_model.dart';
+import 'package:ticktrack/screens/home/main_app_screen.dart';
+import 'package:ticktrack/util/helpers.dart';
+import 'package:ticktrack/widgets/activity_preview_widget.dart';
+import 'package:ticktrack/widgets/app_drawer_widget.dart';
+import 'package:ticktrack/widgets/navigation/bottom_menu.dart';
+import 'package:ticktrack/widgets/notes_preview_widget.dart';
+import 'package:ticktrack/widgets/option_button.dart';
+import 'package:ticktrack/widgets/to_do_list_widget.dart';
 import 'package:blvckleg_dart_core/exception/session_expired.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -32,8 +26,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  List<CatFactsApiModel> catFacts = [];
-  List<CatPictureApiModel> catPictures = [];
   List<TaskList> _taskLists = [];
   List<Note> _notes = [];
   List<EventlogMessage<dynamic>> _activities = [];
@@ -45,26 +37,6 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     _loadData();
     super.initState();
-  }
-
-  Future<void> _getCatData() async {
-    final backend = Provider.of<CatBackend>(context, listen: false);
-    try {
-      final pictures = await backend.getCatPictures();
-      setState(() {
-        catPictures = pictures;
-      });
-    } catch (e) {
-      rethrow;
-    }
-    try {
-      final facts = await backend.getCatFacts();
-      setState(() {
-        catFacts = facts;
-      });
-    } catch (e) {
-      rethrow;
-    }
   }
 
   Future<void> _getTaskLists() async {
@@ -115,7 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
         isLoading = true;
       });
       await Future.wait(
-          [_getTaskLists(), _getNotes(), _getCatData(), _getActivities()]);
+          [_getTaskLists(), _getNotes(), _getActivities()]);
 
       setState(() {
         isLoading = false;
@@ -176,13 +148,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           : "Willkommen zurück!",
                       style: Theme.of(context).primaryTextTheme.displayLarge),
                   const SizedBox(height: 24),
-                  TimerPreviewWidget(
-                    themeMode: MainAppScreen.of(context)!.currentTheme!,
-                    onPressed: () {
-                      navigateToRoute(context, 'timer');
-                    },
-                  ),
-                  const SizedBox(height: 16),
                   TodoPreviewWidget(
                     themeMode: MainAppScreen.of(context)!.currentTheme!,
                     onPressed: () {
@@ -207,9 +172,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     isLoading: isLoading,
                     activities: _activities,
                   ),
-                  const SizedBox(height: 16),
-                  CatPreviewWidget(
-                      catFacts: catFacts, catPictures: catPictures),
                   const SizedBox(height: 24),
                 ],
               ),

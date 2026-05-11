@@ -1,5 +1,5 @@
 {
-  "url": "https://mc-server.blvckleg.dev/api/",
-  "registrationEnabled": false,
+  "url": "https://api.tick-track.app/api/",
+  "registrationEnabled": true,
   "supportEmail": "services@blvckleg.dev"
 }

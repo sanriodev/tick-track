@@ -2,8 +2,8 @@
 
 import 'dart:convert';
 
-import 'package:aandm/backend/service/backend_service.dart';
-import 'package:aandm/util/helpers.dart';
+import 'package:ticktrack/backend/service/backend_service.dart';
+import 'package:ticktrack/util/helpers.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
@@ -86,7 +86,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Alina\'s App',
+          'TickTrack',
           style: Theme.of(context).primaryTextTheme.titleMedium,
         ),
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -149,7 +149,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ),
                   label: Text(
                     'Zurück zum Login',
-                    style: Theme.of(context).primaryTextTheme.displayLarge,
+                    style: Theme.of(context)
+                        .primaryTextTheme
+                        .displayLarge
+                        ?.copyWith(
+                          color:
+                              Theme.of(context).brightness == Brightness.light
+                                  ? Colors.white
+                                  : Colors.grey[900],
+                        ),
                   ),
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size.fromHeight(48),
@@ -302,7 +310,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           ),
                     label: Text(
                       'Account anfordern',
-                      style: Theme.of(context).primaryTextTheme.displayLarge,
+                      style: Theme.of(context)
+                          .primaryTextTheme
+                          .displayLarge
+                          ?.copyWith(
+                            color:
+                                Theme.of(context).brightness == Brightness.light
+                                    ? Colors.white
+                                    : Colors.grey[900],
+                          ),
                     ),
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size.fromHeight(48),

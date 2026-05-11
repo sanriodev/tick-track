@@ -10,7 +10,7 @@ class TaskListAccordion extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Accordion(
-      headerBorderColor: Colors.blueGrey,
+      headerBorderColor: Colors.grey,
       headerBorderColorOpened: Colors.transparent,
       headerPadding: EdgeInsets.zero,
       contentBackgroundColor: Theme.of(context).canvasColor,

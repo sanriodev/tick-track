@@ -1,4 +1,4 @@
-import 'package:aandm/util/helpers.dart';
+import 'package:ticktrack/util/helpers.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -87,7 +87,7 @@ class _SplashScreenState extends State<SplashScreen>
           Container(
             width: double.infinity,
             height: double.infinity,
-            color: Theme.of(context).primaryColor,
+            color: Theme.of(context).colorScheme.surface,
           ),
           Positioned(
             top: 0,
@@ -164,9 +164,24 @@ class _SplashScreenState extends State<SplashScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  SvgPicture.asset(
-                    'assets/icons/logo.svg',
+                  Container(
+                    width: 200,
                     height: 200,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.transparent, // Transparent border
+                        width: 8,
+                      ),
+                    ),
+                    child: ClipOval(
+                      child: SvgPicture.asset(
+                        'assets/icons/logo.svg',
+                        width: 200,
+                        height: 200,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
                   ),
                 ],
               ),

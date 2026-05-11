@@ -1,6 +1,6 @@
-import 'package:aandm/enum/privacy_mode_enum.dart';
-import 'package:aandm/models/note/note_api_model.dart';
-import 'package:aandm/util/helpers.dart';
+import 'package:ticktrack/enum/privacy_mode_enum.dart';
+import 'package:ticktrack/models/note/note_api_model.dart';
+import 'package:ticktrack/util/helpers.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -87,7 +87,13 @@ class _NoteWidgetState extends State<NoteWidget> {
                                       widget.note.title,
                                       style: Theme.of(context)
                                           .primaryTextTheme
-                                          .bodyMedium,
+                                          .bodyMedium
+                                          ?.copyWith(
+                                              color: Theme.of(context)
+                                                          .brightness ==
+                                                      Brightness.light
+                                                  ? Colors.grey[900]
+                                                  : Colors.white),
                                     ),
                                   ),
                                   if (widget.note.content != null &&
@@ -109,9 +115,14 @@ class _NoteWidgetState extends State<NoteWidget> {
                                         "${widget.note.content!.length > 40 ? widget.note.content!.substring(0, 40) : widget.note.content}...",
                                         style: Theme.of(context)
                                             .primaryTextTheme
-                                            .bodyMedium!
-                                          ..copyWith(
-                                              overflow: TextOverflow.ellipsis),
+                                            .bodyMedium
+                                            ?.copyWith(
+                                                overflow: TextOverflow.ellipsis,
+                                                color: Theme.of(context)
+                                                            .brightness ==
+                                                        Brightness.light
+                                                    ? Colors.grey[900]
+                                                    : Colors.white),
                                       ),
                                     ),
                                 ],

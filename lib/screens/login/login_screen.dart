@@ -2,7 +2,7 @@
 
 import 'dart:async';
 import 'dart:convert';
-import 'package:aandm/util/helpers.dart';
+import 'package:ticktrack/util/helpers.dart';
 import 'package:blvckleg_dart_core/models/settings/settings_model.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:blvckleg_dart_core/settings/settings.dart';
@@ -114,7 +114,7 @@ class _LoginScreenState extends State<LoginScreen> {
       key: _scaffoldKey,
       appBar: AppBar(
         title: Text(
-          'Alina\'s App',
+          'TickTrack',
           style: Theme.of(context).primaryTextTheme.titleMedium,
         ),
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -274,10 +274,18 @@ class _LoginScreenState extends State<LoginScreen> {
                                   color:
                                       Theme.of(context).primaryIconTheme.color,
                                 ),
-                          label: Text('Sign in',
-                              style: Theme.of(context)
-                                  .primaryTextTheme
-                                  .displayLarge),
+                          label: Text(
+                            'Sign in',
+                            style: Theme.of(context)
+                                .primaryTextTheme
+                                .displayLarge
+                                ?.copyWith(
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.light
+                                      ? Colors.white
+                                      : Colors.grey[900],
+                                ),
+                          ),
                           style: ElevatedButton.styleFrom(
                             minimumSize: const Size.fromHeight(48),
                           ),

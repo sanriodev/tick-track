@@ -1,14 +1,14 @@
 // ignore_for_file: use_build_context_synchronously
 
-import 'package:aandm/backend/service/backend_service.dart';
-import 'package:aandm/enum/privacy_mode_enum.dart';
-import 'package:aandm/models/task/dto/create_task_dto.dart';
-import 'package:aandm/models/task/task_api_model.dart';
-import 'package:aandm/models/tasklist/task_list_api_model.dart';
-import 'package:aandm/util/helpers.dart';
-import 'package:aandm/widgets/app_drawer_widget.dart';
-import 'package:aandm/widgets/option_button.dart';
-import 'package:aandm/widgets/skeleton/skeleton_card.dart';
+import 'package:ticktrack/backend/service/backend_service.dart';
+import 'package:ticktrack/enum/privacy_mode_enum.dart';
+import 'package:ticktrack/models/task/dto/create_task_dto.dart';
+import 'package:ticktrack/models/task/task_api_model.dart';
+import 'package:ticktrack/models/tasklist/task_list_api_model.dart';
+import 'package:ticktrack/util/helpers.dart';
+import 'package:ticktrack/widgets/app_drawer_widget.dart';
+import 'package:ticktrack/widgets/option_button.dart';
+import 'package:ticktrack/widgets/skeleton/skeleton_card.dart';
 import 'package:blvckleg_dart_core/exception/session_expired.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:flutter/material.dart';
@@ -214,14 +214,20 @@ class _TasksScreenState extends State<TasksScreen> {
                                   child: Text("Titel",
                                       style: Theme.of(context)
                                           .primaryTextTheme
-                                          .titleSmall),
+                                          .bodyMedium
+                                          ?.copyWith(
+                                              color: Theme.of(context)
+                                                          .brightness ==
+                                                      Brightness.light
+                                                  ? Colors.grey[900]
+                                                  : Colors.white)),
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.all(4),
                                   child: Text(tasks[index].title,
                                       style: Theme.of(context)
                                           .primaryTextTheme
-                                          .bodyMedium),
+                                          .titleSmall),
                                 ),
                                 if (tasks[index].content != null &&
                                     tasks[index].content!.isNotEmpty)
@@ -230,7 +236,13 @@ class _TasksScreenState extends State<TasksScreen> {
                                     child: Text("Inhalt",
                                         style: Theme.of(context)
                                             .primaryTextTheme
-                                            .titleSmall),
+                                            .bodyMedium
+                                            ?.copyWith(
+                                                color: Theme.of(context)
+                                                            .brightness ==
+                                                        Brightness.light
+                                                    ? Colors.grey[900]
+                                                    : Colors.white)),
                                   ),
                                 if (tasks[index].content != null &&
                                     tasks[index].content!.isNotEmpty)
@@ -239,7 +251,7 @@ class _TasksScreenState extends State<TasksScreen> {
                                     child: Text(tasks[index].content!,
                                         style: Theme.of(context)
                                             .primaryTextTheme
-                                            .bodyMedium),
+                                            .titleSmall),
                                   ),
                               ],
                             ),
@@ -264,8 +276,9 @@ class _TasksScreenState extends State<TasksScreen> {
                                     tasks[index].isDone = value ?? false;
                                     await _updateTask(tasks[index]);
                                   },
-                                  activeColor: Colors.purple[200],
-                                  checkColor: Colors.grey[200],
+                                  activeColor: Theme.of(context).primaryColor,
+                                  checkColor:
+                                      Theme.of(context).scaffoldBackgroundColor,
                                   side: const BorderSide(
                                       color: Colors.grey, width: 1.5),
                                 ),
@@ -379,8 +392,18 @@ class _TasksScreenState extends State<TasksScreen> {
                         }
                       },
                       style: Theme.of(context).elevatedButtonTheme.style,
-                      child: Text('Erstellen',
-                          style: Theme.of(context).primaryTextTheme.titleSmall),
+                      child: Text(
+                        'Erstellen',
+                        style: Theme.of(context)
+                            .primaryTextTheme
+                            .titleSmall
+                            ?.copyWith(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.light
+                                  ? Colors.white
+                                  : Colors.grey[900],
+                            ),
+                      ),
                     ),
                   ],
                 );

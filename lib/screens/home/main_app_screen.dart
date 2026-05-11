@@ -1,10 +1,8 @@
-import 'package:aandm/backend/service/cat_backend_service.dart';
-import 'package:aandm/routes/routes.dart';
-import 'package:aandm/ui/theme.dart';
+import 'package:ticktrack/routes/routes.dart';
+import 'package:ticktrack/ui/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
-import 'package:provider/provider.dart';
 
 class MainAppScreen extends StatefulWidget {
   const MainAppScreen({super.key});
@@ -56,15 +54,12 @@ class _MainAppScreenState extends State<MainAppScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [Provider(create: (context) => CatBackend())],
-      child: MaterialApp.router(
-        title: 'Alina\'s App',
+    return MaterialApp.router(
+        title: 'TickTrack',
         themeMode: currentTheme,
         theme: appThemeLight,
         darkTheme: appThemeDark,
         routerConfig: _router,
-      ),
     );
   }
 }

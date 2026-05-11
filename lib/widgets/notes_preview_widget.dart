@@ -1,4 +1,4 @@
-import 'package:aandm/models/note/note_api_model.dart';
+import 'package:ticktrack/models/note/note_api_model.dart';
 import 'package:flutter/material.dart';
 
 class NotesPreviewWidget extends StatefulWidget {

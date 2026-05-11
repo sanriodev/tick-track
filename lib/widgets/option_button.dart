@@ -11,11 +11,11 @@ class OptionButton extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(right: 8),
       decoration: BoxDecoration(
-        color: Theme.of(context).secondaryHeaderColor,
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(8),
       ),
       child: IconButton(
-        color: Theme.of(context).primaryIconTheme.color,
+        color: Theme.of(context).iconTheme.color,
         icon: const PhosphorIcon(
           PhosphorIconsRegular.gear,
           semanticLabel: 'Einstellungen',

@@ -1,5 +1,5 @@
-import 'package:aandm/util/helpers.dart';
-import 'package:aandm/widgets/navigation/bottom_menu_navigation_item.dart';
+import 'package:ticktrack/util/helpers.dart';
+import 'package:ticktrack/widgets/navigation/bottom_menu_navigation_item.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
@@ -14,10 +14,11 @@ class BottomMenu extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         border: Border(
-          top:
-              BorderSide(color: Theme.of(context).appBarTheme.foregroundColor!),
+          top: BorderSide(
+            color: Theme.of(context).dividerColor ?? Colors.grey,
+          ),
         ),
-        color: Theme.of(context).appBarTheme.foregroundColor,
+        color: Theme.of(context).scaffoldBackgroundColor,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -25,7 +26,7 @@ class BottomMenu extends StatelessWidget {
           BottomNavigationBar(
             showUnselectedLabels: true,
             type: BottomNavigationBarType.fixed,
-            backgroundColor: Theme.of(context).appBarTheme.foregroundColor,
+            backgroundColor: Theme.of(context).scaffoldBackgroundColor,
             enableFeedback: true,
             iconSize: 26,
             elevation: 8,
@@ -34,10 +35,11 @@ class BottomMenu extends StatelessWidget {
             selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold),
             unselectedFontSize: 10,
             selectedItemColor: Theme.of(context).brightness == Brightness.light
-                ? Theme.of(context).primaryColor
+                ? Colors.black
                 : Theme.of(context).colorScheme.primary,
-            unselectedItemColor:
-                Theme.of(context).appBarTheme.titleTextStyle!.color,
+            unselectedItemColor: Theme.of(context).brightness == Brightness.light
+                ? Colors.grey[500]
+                : Theme.of(context).appBarTheme.titleTextStyle!.color,
             currentIndex: current,
             onTap: (int index) {
               navigateToRoute(

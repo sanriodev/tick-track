@@ -1,16 +1,16 @@
 // ignore_for_file: use_build_context_synchronously
 
-import 'package:aandm/backend/service/backend_service.dart';
-import 'package:aandm/enum/privacy_mode_enum.dart';
-import 'package:aandm/models/note/dto/update_note_dto.dart';
-import 'package:aandm/models/note/note_api_model.dart';
-import 'package:aandm/models/note/dto/create_note_dto.dart';
-import 'package:aandm/util/helpers.dart';
-import 'package:aandm/widgets/app_drawer_widget.dart';
-import 'package:aandm/widgets/navigation/bottom_menu.dart';
-import 'package:aandm/widgets/note_widget.dart';
-import 'package:aandm/widgets/option_button.dart';
-import 'package:aandm/widgets/skeleton/skeleton_card.dart';
+import 'package:ticktrack/backend/service/backend_service.dart';
+import 'package:ticktrack/enum/privacy_mode_enum.dart';
+import 'package:ticktrack/models/note/dto/update_note_dto.dart';
+import 'package:ticktrack/models/note/note_api_model.dart';
+import 'package:ticktrack/models/note/dto/create_note_dto.dart';
+import 'package:ticktrack/util/helpers.dart';
+import 'package:ticktrack/widgets/app_drawer_widget.dart';
+import 'package:ticktrack/widgets/navigation/bottom_menu.dart';
+import 'package:ticktrack/widgets/note_widget.dart';
+import 'package:ticktrack/widgets/option_button.dart';
+import 'package:ticktrack/widgets/skeleton/skeleton_card.dart';
 import 'package:blvckleg_dart_core/exception/session_expired.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:flutter/material.dart';
@@ -260,27 +260,36 @@ class _NotesScreenState extends State<NotesScreen> {
                         style: Theme.of(context).primaryTextTheme.titleSmall),
                   ),
                   ElevatedButton(
-                    onPressed: () async {
-                      final name = nameController.text.trim();
-                      if (name.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Bitte einen Namen eingeben.'),
-                          ),
-                        );
-                        return;
-                      }
-                      await createNewItem(CreateNoteDto(
-                        title: name,
-                        content: '',
-                      ));
-                      if (mounted) {
-                        Navigator.of(dialogContext).pop();
-                      }
-                    },
-                    child: Text('Erstellen',
-                        style: Theme.of(context).primaryTextTheme.titleSmall),
-                  ),
+                      onPressed: () async {
+                        final name = nameController.text.trim();
+                        if (name.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Bitte einen Namen eingeben.'),
+                            ),
+                          );
+                          return;
+                        }
+                        await createNewItem(CreateNoteDto(
+                          title: name,
+                          content: '',
+                        ));
+                        if (mounted) {
+                          Navigator.of(dialogContext).pop();
+                        }
+                      },
+                      child: Text(
+                        'Erstellen',
+                        style: Theme.of(context)
+                            .primaryTextTheme
+                            .titleSmall
+                            ?.copyWith(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.light
+                                  ? Colors.white
+                                  : Colors.grey[900],
+                            ),
+                      )),
                 ],
               );
             },

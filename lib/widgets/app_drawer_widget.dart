@@ -1,8 +1,8 @@
 // ignore_for_file: use_build_context_synchronously
 
-import 'package:aandm/backend/service/backend_service.dart';
-import 'package:aandm/screens/home/main_app_screen.dart';
-import 'package:aandm/util/helpers.dart';
+import 'package:ticktrack/backend/service/backend_service.dart';
+import 'package:ticktrack/screens/home/main_app_screen.dart';
+import 'package:ticktrack/util/helpers.dart';
 import 'package:blvckleg_dart_core/exception/session_expired.dart';
 import 'package:blvckleg_dart_core/models/user/user_model.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
@@ -262,8 +262,12 @@ class _AppDrawerState extends State<AppDrawer> {
                       bottom: 20,
                       left: 15,
                       child: Text(
-                        'Alina\'s App\nI love Alina',
-                        style: Theme.of(context).primaryTextTheme.displayLarge,
+                        'TickTrack\nmanage tasks, take notes!',
+                        style: Theme.of(context).primaryTextTheme.displayLarge?.copyWith(
+                          color: Theme.of(context).brightness == Brightness.light
+                              ? Colors.white
+                              : Colors.grey[900],
+                        ),
                       ),
                     ),
                   ],
@@ -384,7 +388,7 @@ class _AppDrawerState extends State<AppDrawer> {
                     onPressed: () => showAboutDialog(
                       context: context,
                       applicationVersion: 'Version: ${_packageInfo.version}',
-                      applicationName: 'Alina\'s App',
+                      applicationName: 'TickTrack',
                       children: [
                         Text(
                           'Copyright: MATTEO JUEN',
