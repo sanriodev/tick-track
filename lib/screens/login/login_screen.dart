@@ -274,10 +274,18 @@ class _LoginScreenState extends State<LoginScreen> {
                                   color:
                                       Theme.of(context).primaryIconTheme.color,
                                 ),
-                          label: Text('Sign in',
-                              style: Theme.of(context)
-                                  .primaryTextTheme
-                                  .displayLarge),
+                          label: Text(
+                            'Sign in',
+                            style: Theme.of(context)
+                                .primaryTextTheme
+                                .displayLarge
+                                ?.copyWith(
+                                  color: Theme.of(context).brightness ==
+                                          Brightness.light
+                                      ? Colors.white
+                                      : Colors.grey[900],
+                                ),
+                          ),
                           style: ElevatedButton.styleFrom(
                             minimumSize: const Size.fromHeight(48),
                           ),

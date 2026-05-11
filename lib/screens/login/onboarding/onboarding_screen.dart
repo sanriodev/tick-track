@@ -149,7 +149,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ),
                   label: Text(
                     'Zurück zum Login',
-                    style: Theme.of(context).primaryTextTheme.displayLarge,
+                    style: Theme.of(context)
+                        .primaryTextTheme
+                        .displayLarge
+                        ?.copyWith(
+                          color:
+                              Theme.of(context).brightness == Brightness.light
+                                  ? Colors.white
+                                  : Colors.grey[900],
+                        ),
                   ),
                   style: ElevatedButton.styleFrom(
                     minimumSize: const Size.fromHeight(48),
@@ -302,7 +310,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           ),
                     label: Text(
                       'Account anfordern',
-                      style: Theme.of(context).primaryTextTheme.displayLarge,
+                      style: Theme.of(context)
+                          .primaryTextTheme
+                          .displayLarge
+                          ?.copyWith(
+                            color:
+                                Theme.of(context).brightness == Brightness.light
+                                    ? Colors.white
+                                    : Colors.grey[900],
+                          ),
                     ),
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size.fromHeight(48),

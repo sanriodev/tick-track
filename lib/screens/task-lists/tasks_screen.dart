@@ -214,14 +214,20 @@ class _TasksScreenState extends State<TasksScreen> {
                                   child: Text("Titel",
                                       style: Theme.of(context)
                                           .primaryTextTheme
-                                          .titleSmall),
+                                          .bodyMedium
+                                          ?.copyWith(
+                                              color: Theme.of(context)
+                                                          .brightness ==
+                                                      Brightness.light
+                                                  ? Colors.grey[900]
+                                                  : Colors.white)),
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.all(4),
                                   child: Text(tasks[index].title,
                                       style: Theme.of(context)
                                           .primaryTextTheme
-                                          .bodyMedium),
+                                          .titleSmall),
                                 ),
                                 if (tasks[index].content != null &&
                                     tasks[index].content!.isNotEmpty)
@@ -230,7 +236,13 @@ class _TasksScreenState extends State<TasksScreen> {
                                     child: Text("Inhalt",
                                         style: Theme.of(context)
                                             .primaryTextTheme
-                                            .titleSmall),
+                                            .bodyMedium
+                                            ?.copyWith(
+                                                color: Theme.of(context)
+                                                            .brightness ==
+                                                        Brightness.light
+                                                    ? Colors.grey[900]
+                                                    : Colors.white)),
                                   ),
                                 if (tasks[index].content != null &&
                                     tasks[index].content!.isNotEmpty)
@@ -239,7 +251,7 @@ class _TasksScreenState extends State<TasksScreen> {
                                     child: Text(tasks[index].content!,
                                         style: Theme.of(context)
                                             .primaryTextTheme
-                                            .bodyMedium),
+                                            .titleSmall),
                                   ),
                               ],
                             ),
