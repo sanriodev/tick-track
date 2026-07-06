@@ -1,4 +1,5 @@
 import 'package:ticktrack/enum/privacy_mode_enum.dart';
+import 'package:ticktrack/state/group_context.dart';
 import 'package:blvckleg_dart_core/models/auth/login_response_model.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:flutter/material.dart';
@@ -35,12 +36,31 @@ Future<void> deleteBoxAndNavigateToLogin(BuildContext context) async {
 
   final AuthBackend authBackend = AuthBackend();
   authBackend.loggedInUser = null;
+  GroupContext().clear();
 
   if (context.mounted) {
     navigateToRoute(
       context,
       'login',
     );
+  }
+}
+
+/// Loads the group context after a successful login and decides where to
+/// go: users without any group are forced into the group onboarding,
+/// everyone else lands on the home screen.
+Future<void> navigateAfterAuth(BuildContext context) async {
+  String target = 'home';
+  try {
+    await GroupContext().refresh();
+    if (!GroupContext().hasGroups) {
+      target = 'group-onboarding';
+    }
+  } catch (_) {
+    // session problems are handled by the home screen itself
+  }
+  if (context.mounted) {
+    navigateToRoute(context, target);
   }
 }
 

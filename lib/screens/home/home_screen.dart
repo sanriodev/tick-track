@@ -5,9 +5,11 @@ import 'package:ticktrack/models/activity/activity_model.dart';
 import 'package:ticktrack/models/note/note_api_model.dart';
 import 'package:ticktrack/models/tasklist/task_list_api_model.dart';
 import 'package:ticktrack/screens/home/main_app_screen.dart';
+import 'package:ticktrack/state/group_context.dart';
 import 'package:ticktrack/util/helpers.dart';
 import 'package:ticktrack/widgets/activity_preview_widget.dart';
 import 'package:ticktrack/widgets/app_drawer_widget.dart';
+import 'package:ticktrack/widgets/group/group_context_switcher.dart';
 import 'package:ticktrack/widgets/navigation/bottom_menu.dart';
 import 'package:ticktrack/widgets/notes_preview_widget.dart';
 import 'package:ticktrack/widgets/option_button.dart';
@@ -35,14 +37,29 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void initState() {
+    GroupContext().addListener(_onGroupContextChanged);
     _loadData();
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    GroupContext().removeListener(_onGroupContextChanged);
+    super.dispose();
+  }
+
+  void _onGroupContextChanged() {
+    if (mounted) {
+      _loadData();
+    }
   }
 
   Future<void> _getTaskLists() async {
     try {
       final backend = Backend();
-      final res = await backend.getAllTaskLists();
+      final res = await backend.getAllTaskLists(
+        groupId: GroupContext().activeGroup?.id,
+      );
       final own = res
           .where((element) =>
               element.user!.username ==
@@ -57,7 +74,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _getNotes() async {
     try {
       final backend = Backend();
-      final res = await backend.getAllNotes();
+      final res = await backend.getAllNotes(
+        groupId: GroupContext().activeGroup?.id,
+      );
       final own = res
           .where((element) =>
               element.user!.username ==
@@ -72,7 +91,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _getActivities() async {
     try {
       final backend = Backend();
-      final res = await backend.getActivity('own');
+      final res = await backend.getActivity(
+        'own',
+        groupId: GroupContext().activeGroup?.id,
+      );
       setState(() {
         _activities = res;
       });
@@ -122,6 +144,7 @@ class _HomeScreenState extends State<HomeScreen> {
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           centerTitle: false,
           actions: [
+            const GroupContextSwitcher(),
             OptionButton(
               onPressed: () {
                 _scaffoldKey.currentState?.openEndDrawer();

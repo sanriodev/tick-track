@@ -5,8 +5,10 @@ import 'package:ticktrack/enum/privacy_mode_enum.dart';
 import 'package:ticktrack/models/tasklist/dto/update_task_list_dto.dart';
 import 'package:ticktrack/models/tasklist/task_list_api_model.dart';
 import 'package:ticktrack/models/tasklist/dto/create_task_list_dto.dart';
+import 'package:ticktrack/state/group_context.dart';
 import 'package:ticktrack/util/helpers.dart';
 import 'package:ticktrack/widgets/app_drawer_widget.dart';
+import 'package:ticktrack/widgets/group/group_context_switcher.dart';
 import 'package:ticktrack/widgets/navigation/bottom_menu.dart';
 import 'package:ticktrack/widgets/option_button.dart';
 import 'package:ticktrack/widgets/skeleton/skeleton_card.dart';
@@ -33,7 +35,20 @@ class _TaskListScreenState extends State<TaskListScreen> {
   @override
   void initState() {
     super.initState();
+    GroupContext().addListener(_onGroupContextChanged);
     getTaskLists();
+  }
+
+  @override
+  void dispose() {
+    GroupContext().removeListener(_onGroupContextChanged);
+    super.dispose();
+  }
+
+  void _onGroupContextChanged() {
+    if (mounted) {
+      getTaskLists();
+    }
   }
 
   Future<void> getTaskLists() async {
@@ -42,7 +57,9 @@ class _TaskListScreenState extends State<TaskListScreen> {
         isLoading = true;
       });
       final backend = Backend();
-      final res = await backend.getAllTaskLists();
+      final res = await backend.getAllTaskLists(
+        groupId: GroupContext().activeGroup?.id,
+      );
       final own = res
           .where((element) =>
               element.user!.username ==
@@ -201,6 +218,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         centerTitle: false,
         actions: [
+          const GroupContextSwitcher(),
           OptionButton(
             onPressed: () {
               _scaffoldKey.currentState?.openEndDrawer();
@@ -255,7 +273,10 @@ class _TaskListScreenState extends State<TaskListScreen> {
                         );
                         return;
                       }
-                      await createNewItem(CreateTaskListDto(name: name));
+                      await createNewItem(CreateTaskListDto(
+                        name: name,
+                        groupId: GroupContext().activeGroup?.id,
+                      ));
                       if (mounted) {
                         Navigator.of(dialogContext).pop();
                       }

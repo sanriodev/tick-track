@@ -4,8 +4,10 @@ import 'package:ticktrack/backend/service/backend_service.dart';
 import 'package:ticktrack/enum/privacy_mode_enum.dart';
 import 'package:ticktrack/models/note/note_api_model.dart';
 import 'package:ticktrack/models/note/dto/update_note_dto.dart';
+import 'package:ticktrack/state/group_context.dart';
 import 'package:ticktrack/util/helpers.dart';
 import 'package:ticktrack/widgets/app_drawer_widget.dart';
+import 'package:ticktrack/widgets/group/group_context_switcher.dart';
 import 'package:blvckleg_dart_core/exception/session_expired.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:flutter/material.dart';
@@ -29,6 +31,22 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
   @override
   void initState() {
     super.initState();
+    GroupContext().addListener(_onGroupContextChanged);
+  }
+
+  @override
+  void dispose() {
+    GroupContext().removeListener(_onGroupContextChanged);
+    _commentController.dispose();
+    super.dispose();
+  }
+
+  void _onGroupContextChanged() {
+    // the shown note belongs to the previous group context, go back to the
+    // notes overview of the new context
+    if (mounted) {
+      navigateToRoute(context, 'notes');
+    }
   }
 
   @override
@@ -122,6 +140,7 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
           ),
         ),
         actions: [
+          const GroupContextSwitcher(),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: IconButton(
