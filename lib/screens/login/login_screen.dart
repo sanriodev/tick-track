@@ -62,10 +62,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final authBackend = AuthBackend();
     try {
       await authBackend.postLogin(username, password);
-      navigateToRoute(
-        context,
-        'home',
-      );
+      await navigateAfterAuth(context);
     } catch (e) {
       if (e is Response) {
         final jsonData = await json.decode(utf8.decode(e.bodyBytes));

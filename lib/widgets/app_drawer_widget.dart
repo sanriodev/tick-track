@@ -1,12 +1,18 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: use_build_context_synchronously, avoid_dynamic_calls
+
+import 'dart:convert';
 
 import 'package:ticktrack/backend/service/backend_service.dart';
+import 'package:ticktrack/models/group/group_api_model.dart';
 import 'package:ticktrack/screens/home/main_app_screen.dart';
+import 'package:ticktrack/state/group_context.dart';
 import 'package:ticktrack/util/helpers.dart';
 import 'package:blvckleg_dart_core/exception/session_expired.dart';
 import 'package:blvckleg_dart_core/models/user/user_model.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:http/http.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
@@ -197,6 +203,335 @@ class _AppDrawerState extends State<AppDrawer> {
     }
   }
 
+  Future<void> _handleGroupError(Object e, String fallbackMessage) async {
+    if (e is SessionExpiredException) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Bitte melde dich erneut an.')),
+      );
+      try {
+        await AuthBackend().postLogout();
+        await deleteBoxAndNavigateToLogin(context);
+      } catch (e) {
+        await deleteBoxAndNavigateToLogin(context);
+      }
+    } else if (e is Response) {
+      final jsonData = await json.decode(utf8.decode(e.bodyBytes));
+      final String? message = jsonData['message'] as String?;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$fallbackMessage: $message')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$fallbackMessage: $e')),
+      );
+    }
+  }
+
+  Future<void> _joinGroup(String joinCode) async {
+    try {
+      final group = await Backend().joinGroup(joinCode);
+      await GroupContext().refresh();
+      await GroupContext().setActiveGroup(group);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gruppe "${group.name}" beigetreten.')),
+      );
+    } catch (e) {
+      await _handleGroupError(e, 'Beitritt fehlgeschlagen');
+    }
+  }
+
+  Future<void> _showAddGroupDialogue() async {
+    String joinCode = '';
+    final theme = Theme.of(context);
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: Text(
+            'Gruppe hinzufügen',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          content: StatefulBuilder(
+            builder: (context, setDialogState) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Tritt mit einem Einladungscode einer Gruppe bei:',
+                    style: theme.primaryTextTheme.bodySmall,
+                  ),
+                  SizedBox(height: 16),
+                  TextFormField(
+                    textCapitalization: TextCapitalization.characters,
+                    style: theme.primaryTextTheme.bodySmall?.copyWith(
+                      letterSpacing: 2,
+                    ),
+                    decoration: InputDecoration(
+                      labelText: 'Einladungscode',
+                      labelStyle: theme.primaryTextTheme.bodySmall,
+                      hintStyle: theme.primaryTextTheme.bodySmall,
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged: (value) {
+                      setDialogState(() {
+                        joinCode = value;
+                      });
+                    },
+                  ),
+                  SizedBox(height: 20),
+                  Row(
+                    children: [
+                      const Expanded(child: Divider()),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Text(
+                          'oder',
+                          style: theme.primaryTextTheme.bodySmall,
+                        ),
+                      ),
+                      const Expanded(child: Divider()),
+                    ],
+                  ),
+                  SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.of(dialogContext).pop();
+                      navigateToRoute(context, 'group-create',
+                          backEnabled: true);
+                    },
+                    icon: Icon(
+                      Icons.add,
+                      color: theme.colorScheme.primary,
+                    ),
+                    label: Text(
+                      'Neue Gruppe erstellen',
+                      style: theme.primaryTextTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+              },
+              child: Text('Abbrechen'),
+            ),
+            TextButton(
+              onPressed: () async {
+                final code = joinCode.trim().toUpperCase();
+                if (code.isEmpty) {
+                  return;
+                }
+                await _joinGroup(code);
+                if (dialogContext.mounted) {
+                  Navigator.of(dialogContext).pop();
+                }
+              },
+              child: Text('Beitreten'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<Group?> _selectGroupToLeave(List<Group> groups) async {
+    return await showDialog<Group>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: Text(
+            'Welche Gruppe verlassen?',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: groups.length,
+              itemBuilder: (BuildContext listContext, int index) {
+                final group = groups[index];
+                return ListTile(
+                  leading: PhosphorIcon(
+                    PhosphorIconsRegular.usersThree,
+                    color: Theme.of(context).primaryIconTheme.color,
+                  ),
+                  title: Text(
+                    group.name,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  onTap: () {
+                    Navigator.of(dialogContext).pop(group);
+                  },
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+              },
+              child: Text('Abbrechen'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<bool> _confirmLeaveGroup(Group group) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: Text(
+            'Gruppe verlassen?',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          content: Text(
+            'Möchtest du die Gruppe "${group.name}" wirklich verlassen? '
+            'Du verlierst den Zugriff auf alle Einträge dieser Gruppe. '
+            'Verlässt das letzte Mitglied die Gruppe, wird sie gelöscht.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop(false);
+              },
+              child: Text('Abbrechen'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop(true);
+              },
+              child: Text('Bestätigen'),
+            ),
+          ],
+        );
+      },
+    );
+    return confirmed ?? false;
+  }
+
+  Future<void> _leaveGroupFlow() async {
+    final groups = GroupContext().groups;
+    if (groups.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Du bist in keiner Gruppe.')),
+      );
+      return;
+    }
+
+    Group? group;
+    if (groups.length == 1) {
+      group = groups.first;
+    } else {
+      group = await _selectGroupToLeave(groups);
+    }
+    if (group == null) {
+      return;
+    }
+
+    if (!await _confirmLeaveGroup(group)) {
+      return;
+    }
+
+    try {
+      await Backend().leaveGroup(group.id);
+      await GroupContext().refresh();
+      if (!GroupContext().hasGroups) {
+        navigateToRoute(context, 'group-onboarding');
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gruppe "${group.name}" verlassen.')),
+      );
+    } catch (e) {
+      await _handleGroupError(e, 'Gruppe konnte nicht verlassen werden');
+    }
+  }
+
+  Future<void> _showInviteCodeDialogue() async {
+    final group = GroupContext().activeGroup;
+    if (group == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Du bist in keiner Gruppe.')),
+      );
+      return;
+    }
+    final theme = Theme.of(context);
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: Text(
+            'Einladungscode',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Mit diesem Code können andere der Gruppe "${group.name}" beitreten:',
+                style: theme.primaryTextTheme.bodySmall,
+              ),
+              SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SelectableText(
+                    group.joinCode,
+                    style: theme.primaryTextTheme.titleMedium?.copyWith(
+                      letterSpacing: 4,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Code kopieren',
+                    icon: PhosphorIcon(
+                      PhosphorIconsRegular.copy,
+                      color: theme.primaryIconTheme.color,
+                    ),
+                    onPressed: () async {
+                      await Clipboard.setData(
+                        ClipboardData(text: group.joinCode),
+                      );
+                      if (dialogContext.mounted) {
+                        Navigator.of(dialogContext).pop();
+                      }
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Einladungscode kopiert.'),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+              },
+              child: Text('Schließen'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _showActivityDialogue() {
     final isCurrentlyPublic = _ownUser != null &&
         _ownUser!.publicActivity != null &&
@@ -310,6 +645,46 @@ class _AppDrawerState extends State<AppDrawer> {
               ),
               title: Text(
                 'Aktivität - ${_ownUser != null && _ownUser!.publicActivity != null && _ownUser!.publicActivity! ? 'Öffentlich' : 'Privat'}',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
+            const Divider(),
+            ListTile(
+              onTap: () {
+                _showAddGroupDialogue();
+              },
+              leading: PhosphorIcon(
+                PhosphorIconsRegular.userPlus,
+                color: Theme.of(context).primaryIconTheme.color,
+              ),
+              title: Text(
+                'Gruppe hinzufügen',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
+            ListTile(
+              onTap: () {
+                _leaveGroupFlow();
+              },
+              leading: PhosphorIcon(
+                PhosphorIconsRegular.userMinus,
+                color: Theme.of(context).primaryIconTheme.color,
+              ),
+              title: Text(
+                'Gruppe verlassen',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
+            ListTile(
+              onTap: () {
+                _showInviteCodeDialogue();
+              },
+              leading: PhosphorIcon(
+                PhosphorIconsRegular.key,
+                color: Theme.of(context).primaryIconTheme.color,
+              ),
+              title: Text(
+                'Einladungscode',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ),

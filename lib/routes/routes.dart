@@ -1,4 +1,6 @@
 import 'package:ticktrack/screens/activity/activity_screen.dart';
+import 'package:ticktrack/screens/groups/group_create_screen.dart';
+import 'package:ticktrack/screens/groups/group_onboarding_screen.dart';
 import 'package:ticktrack/screens/home/home_screen.dart';
 import 'package:ticktrack/screens/login/login_screen.dart';
 import 'package:ticktrack/screens/login/onboarding/onboarding_screen.dart';
@@ -80,6 +82,38 @@ GoRouter createRouter() {
           key: state.pageKey,
           name: 'onboarding',
           child: const OnboardingScreen(),
+          transitionDuration: const Duration(milliseconds: transitionDuration),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: CurveTween(curve: Curves.easeIn).animate(animation),
+              child: child,
+            );
+          },
+        ),
+      ),
+      GoRoute(
+        name: 'group-onboarding',
+        path: '/group-onboarding',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          name: 'group-onboarding',
+          child: const GroupOnboardingScreen(),
+          transitionDuration: const Duration(milliseconds: transitionDuration),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: CurveTween(curve: Curves.easeIn).animate(animation),
+              child: child,
+            );
+          },
+        ),
+      ),
+      GoRoute(
+        name: 'group-create',
+        path: '/group-create',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          name: 'group-create',
+          child: const GroupCreateScreen(),
           transitionDuration: const Duration(milliseconds: transitionDuration),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(

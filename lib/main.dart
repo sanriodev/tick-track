@@ -8,6 +8,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await registerDartCore();
   await Hive.openBox('theme');
+  await Hive.openBox('groupContext');
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
   runApp(const MainAppScreen());
