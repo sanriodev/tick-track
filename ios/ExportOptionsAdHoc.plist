@@ -10,7 +10,7 @@
 		<string>ad-hoc</string>
 		<key>provisioningProfiles</key>
 		<dict>
-			<key>app.ticktrack.ticktrack</key>
+			<key>app.ticktrack.todonotes</key>
 			<string>TickTrack AdHoc Provisioning Profile</string>
 		</dict>
 		<key>signingCertificate</key>

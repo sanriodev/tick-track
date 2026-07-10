@@ -10,7 +10,7 @@
 		<string>development</string>
 		<key>provisioningProfiles</key>
 		<dict>
-			<key>app.tick-track.tick-track</key>
+			<key>app.ticktrack.todonotes</key>
 			<string>ticktrack Development Provisioning Profile</string>
 		</dict>
 		<key>signingCertificate</key>

@@ -10,7 +10,7 @@
 		<string>app-store</string>
 		<key>provisioningProfiles</key>
 		<dict>
-			<key>app.tick-track.tick-track</key>
+			<key>app.ticktrack.todonotes</key>
 			<string>ticktrack AppStore Provisioning Profile</string>
 		</dict>
 		<key>signingCertificate</key>
