@@ -166,7 +166,7 @@ class _ActivityPreviewWidgetState extends State<ActivityPreviewWidget> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '${activity.user.username} hat $entityName ${_getActionText(activity.actionType)}',
+                              '${activity.user.username} hat $entityName ${_getActionText(activity.actionType)}${activity.group != null ? ' in "${activity.group!.name}"' : ''}',
                               style: Theme.of(context).textTheme.bodyMedium,
                               overflow: TextOverflow.ellipsis,
                             ),

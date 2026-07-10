@@ -209,7 +209,10 @@ class _ActivityItem extends StatelessWidget {
       _ => activity.actionType,
     };
 
-    return '${activity.user.username} hat $entityName $actionVerb';
+    final group = activity.group;
+    final groupSuffix = group != null ? ' in "${group.name}"' : '';
+
+    return '${activity.user.username} hat $entityName $actionVerb$groupSuffix';
   }
 
   String _formatTimeAgo(DateTime date) {

@@ -6,6 +6,7 @@ class EventlogMessage<T> {
   final String actionStatus;
   final DateTime date;
   final AcitvityUser user;
+  final ActivityGroup? group;
   // final User? auth;
 
   EventlogMessage({
@@ -16,6 +17,7 @@ class EventlogMessage<T> {
     required this.actionStatus,
     required this.date,
     required this.user,
+    this.group,
     // this.auth,
   });
 
@@ -27,10 +29,29 @@ class EventlogMessage<T> {
       actionStatus: json['actionStatus'] as String,
       user: AcitvityUser.fromJson(json['user'] as Map<String, dynamic>),
       date: DateTime.parse(json['date'] as String),
+      group: json['group'] != null
+          ? ActivityGroup.fromJson(json['group'] as Map<String, dynamic>)
+          : null,
 
       // auth: json['auth'] != null
       //     ? User.fromJson(json['auth'] as Map<String, dynamic>)
       //     : null,
+    );
+  }
+}
+
+/// The group an activity happened in. Null on the message when the backend
+/// could not resolve it (e.g. deletions or activity from before groups).
+class ActivityGroup {
+  final int id;
+  final String name;
+
+  ActivityGroup({required this.id, required this.name});
+
+  factory ActivityGroup.fromJson(Map<String, dynamic> json) {
+    return ActivityGroup(
+      id: json['id'] as int,
+      name: json['name'] as String,
     );
   }
 }
