@@ -8,6 +8,5 @@ command:
     # Restrict `melos version` to the trunk branch.
     branch: main
     workspaceChangelog: false
-    includeCommitId: true
     changelogFormat:
       includeDate: true
