@@ -5,8 +5,10 @@ import 'package:ticktrack/enum/privacy_mode_enum.dart';
 import 'package:ticktrack/models/task/dto/create_task_dto.dart';
 import 'package:ticktrack/models/task/task_api_model.dart';
 import 'package:ticktrack/models/tasklist/task_list_api_model.dart';
+import 'package:ticktrack/state/group_context.dart';
 import 'package:ticktrack/util/helpers.dart';
 import 'package:ticktrack/widgets/app_drawer_widget.dart';
+import 'package:ticktrack/widgets/group/group_context_switcher.dart';
 import 'package:ticktrack/widgets/option_button.dart';
 import 'package:ticktrack/widgets/skeleton/skeleton_card.dart';
 import 'package:blvckleg_dart_core/exception/session_expired.dart';
@@ -33,6 +35,21 @@ class _TasksScreenState extends State<TasksScreen> {
   @override
   void initState() {
     super.initState();
+    GroupContext().addListener(_onGroupContextChanged);
+  }
+
+  @override
+  void dispose() {
+    GroupContext().removeListener(_onGroupContextChanged);
+    super.dispose();
+  }
+
+  void _onGroupContextChanged() {
+    // the shown list belongs to the previous group context, go back to the
+    // task list overview of the new context
+    if (mounted) {
+      navigateToRoute(context, 'task-lists');
+    }
   }
 
   @override
@@ -316,6 +333,7 @@ class _TasksScreenState extends State<TasksScreen> {
           ),
           //backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           actions: [
+            const GroupContextSwitcher(),
             OptionButton(
               onPressed: () {
                 _scaffoldKey.currentState?.openEndDrawer();

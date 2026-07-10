@@ -7,12 +7,14 @@ class Note extends BaseUserRelation {
   String title;
   String? content;
   PrivacyMode privacyMode;
+  int? groupId;
 
   Note({
     required this.id,
     required this.title,
     required this.privacyMode,
     this.content,
+    this.groupId,
     super.user,
     super.lastModifiedUser,
   });
@@ -23,6 +25,7 @@ class Note extends BaseUserRelation {
       title: json['title'] as String,
       content: json['content'] as String?,
       privacyMode: PrivacyMode.fromJson(json['privacyMode']),
+      groupId: json['groupId'] as int?,
       user: (json['user'] != null
           ? User.fromJson(json['user'] as Map<String, dynamic>)
           : null),
@@ -38,6 +41,7 @@ class Note extends BaseUserRelation {
       'title': title,
       'content': content,
       'privacyMode': privacyMode,
+      'groupId': groupId,
       'user': user?.toJson(),
       'lastModifiedUser': lastModifiedUser?.toJson(),
     };

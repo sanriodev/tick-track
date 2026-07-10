@@ -2,10 +2,12 @@
 
 import 'package:ticktrack/backend/service/backend_service.dart';
 import 'package:ticktrack/models/activity/activity_model.dart';
+import 'package:ticktrack/state/group_context.dart';
 import 'package:ticktrack/util/helpers.dart';
 import 'package:ticktrack/widgets/activity/activity_graph_widget.dart';
 import 'package:ticktrack/widgets/activity/activity_history_widget.dart';
 import 'package:ticktrack/widgets/app_drawer_widget.dart';
+import 'package:ticktrack/widgets/group/group_context_switcher.dart';
 import 'package:ticktrack/widgets/navigation/bottom_menu.dart';
 import 'package:ticktrack/widgets/option_button.dart';
 import 'package:ticktrack/widgets/skeleton/skeleton_card.dart';
@@ -31,7 +33,20 @@ class _ActivityScreenState extends State<ActivityScreen> {
   @override
   void initState() {
     super.initState();
+    GroupContext().addListener(_onGroupContextChanged);
     getActivity();
+  }
+
+  @override
+  void dispose() {
+    GroupContext().removeListener(_onGroupContextChanged);
+    super.dispose();
+  }
+
+  void _onGroupContextChanged() {
+    if (mounted) {
+      getActivity();
+    }
   }
 
   Future<void> getActivity() async {
@@ -40,16 +55,19 @@ class _ActivityScreenState extends State<ActivityScreen> {
     });
     try {
       final backend = Backend();
+      final groupId = GroupContext().activeGroup?.id;
       if (selectedFilterMode == 'any') {
-        final resAll = await backend.getActivity(selectedFilterMode);
-        final res = await backend.getActivity('own');
+        final resAll =
+            await backend.getActivity(selectedFilterMode, groupId: groupId);
+        final res = await backend.getActivity('own', groupId: groupId);
         setState(() {
           ownActivites = res;
           allActivites = resAll;
           isLoading = false;
         });
       } else {
-        final res = await backend.getActivity(selectedFilterMode);
+        final res =
+            await backend.getActivity(selectedFilterMode, groupId: groupId);
         setState(() {
           ownActivites = res;
           allActivites = res;
@@ -86,6 +104,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
         centerTitle: false,
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         actions: [
+          const GroupContextSwitcher(),
           OptionButton(
             onPressed: () {
               _scaffoldKey.currentState?.openEndDrawer();

@@ -8,12 +8,14 @@ class TaskList extends BaseUserRelation {
   String name;
   PrivacyMode privacyMode;
   List<Task> tasks;
+  int? groupId;
 
   TaskList({
     required this.id,
     required this.name,
     required this.privacyMode,
     required this.tasks,
+    this.groupId,
     super.user,
     super.lastModifiedUser,
   });
@@ -23,6 +25,7 @@ class TaskList extends BaseUserRelation {
       id: json['id'] as int,
       name: json['name'] as String,
       privacyMode: PrivacyMode.fromJson(json['privacyMode']),
+      groupId: json['groupId'] as int?,
       tasks: json['tasks'] != null
           ? (json['tasks'] as List<dynamic>)
               .map((e) => Task.fromJson(e as Map<String, dynamic>))
@@ -42,6 +45,7 @@ class TaskList extends BaseUserRelation {
       'id': id,
       'name': name,
       'privacyMode': privacyMode,
+      'groupId': groupId,
       'tasks': tasks.map((e) => e.toJson()).toList(),
       'user': user?.toJson(),
       'lastModifiedUser': lastModifiedUser?.toJson(),

@@ -59,9 +59,9 @@ class _SplashScreenState extends State<SplashScreen>
     _controller.forward();
 
     if (authBackend.loggedInUser != null) {
-      Future.delayed(const Duration(seconds: 2), () {
+      Future.delayed(const Duration(seconds: 2), () async {
         if (mounted) {
-          navigateToRoute(context, 'home');
+          await navigateAfterAuth(context);
         }
       });
     } else {

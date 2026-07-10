@@ -1,4 +1,4 @@
-package com.tick-track.app
+package app.ticktrack.todonotes
 
 import io.flutter.embedding.android.FlutterActivity
 

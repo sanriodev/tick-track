@@ -3,6 +3,7 @@
 import 'dart:convert';
 
 import 'package:ticktrack/models/activity/activity_model.dart';
+import 'package:ticktrack/models/group/group_api_model.dart';
 import 'package:ticktrack/models/note/note_api_model.dart';
 import 'package:ticktrack/models/task/dto/create_task_dto.dart';
 import 'package:ticktrack/models/task/task_api_model.dart';
@@ -36,8 +37,9 @@ class Backend extends ABackend {
     }
   }
 
-  Future<List<TaskList>> getAllTaskLists() async {
-    final res = await get('v1/task-list/');
+  Future<List<TaskList>> getAllTaskLists({int? groupId}) async {
+    final res =
+        await get('v1/task-list/${groupId != null ? '?groupId=$groupId' : ''}');
 
     if (res.statusCode == 200 || res.statusCode == 201) {
       final jsonData = await json.decode(utf8.decode(res.bodyBytes))['data']
@@ -100,8 +102,9 @@ class Backend extends ABackend {
     }
   }
 
-  Future<List<Note>> getAllNotes() async {
-    final res = await get('v1/note/');
+  Future<List<Note>> getAllNotes({int? groupId}) async {
+    final res =
+        await get('v1/note/${groupId != null ? '?groupId=$groupId' : ''}');
 
     if (res.statusCode == 200 || res.statusCode == 201) {
       final jsonData = await json.decode(utf8.decode(res.bodyBytes))['data']
@@ -179,8 +182,9 @@ class Backend extends ABackend {
     }
   }
 
-  Future<List<Task>> getAllTasks() async {
-    final res = await get('v1/task/');
+  Future<List<Task>> getAllTasks({int? groupId}) async {
+    final res =
+        await get('v1/task/${groupId != null ? '?groupId=$groupId' : ''}');
 
     if (res.statusCode == 200 || res.statusCode == 201) {
       final jsonData = await json.decode(utf8.decode(res.bodyBytes))['data']
@@ -244,11 +248,16 @@ class Backend extends ABackend {
     }
   }
 
-  Future<List<EventlogMessage<dynamic>>> getActivity(String filterMode) async {
+  Future<List<EventlogMessage<dynamic>>> getActivity(
+    String filterMode, {
+    int? groupId,
+  }) async {
     if (filterMode != 'own' && filterMode != 'any') {
       throw 'Invalid filter mode';
     }
-    final res = await get('v1/activity/?filterMode=$filterMode');
+    final res = await get(
+      'v1/activity/?filterMode=$filterMode${groupId != null ? '&groupId=$groupId' : ''}',
+    );
 
     if (res.statusCode == 200 || res.statusCode == 201) {
       final jsonData = await json.decode(utf8.decode(res.bodyBytes))['data'];
@@ -271,6 +280,74 @@ class Backend extends ABackend {
 
     if (res.statusCode == 200 || res.statusCode == 201) {
       return;
+    } else {
+      throw res;
+    }
+  }
+
+  Future<List<Group>> getMyGroups() async {
+    final res = await get('v1/group/');
+
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      final jsonData = await json.decode(utf8.decode(res.bodyBytes))['data']
+          as List<dynamic>;
+      return jsonData
+          .map((e) => Group.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } else {
+      throw res;
+    }
+  }
+
+  Future<Group> getGroup(int id) async {
+    final res = await get('v1/group/$id');
+
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      final jsonData = await json.decode(utf8.decode(res.bodyBytes))['data']
+          as Map<String, dynamic>;
+      return Group.fromJson(jsonData);
+    } else {
+      throw res;
+    }
+  }
+
+  Future<Group> createGroup(String name) async {
+    final body = json.encode({'name': name});
+    final res = await post(body, 'v1/group/');
+
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      final jsonData = await json.decode(utf8.decode(res.bodyBytes))['data']
+          as Map<String, dynamic>;
+      return Group.fromJson(jsonData);
+    } else {
+      throw res;
+    }
+  }
+
+  Future<Group> joinGroup(String joinCode) async {
+    final body = json.encode({'joinCode': joinCode});
+    final res = await post(body, 'v1/group/join');
+
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      final jsonData = await json.decode(utf8.decode(res.bodyBytes))['data']
+          as Map<String, dynamic>;
+      return Group.fromJson(jsonData);
+    } else {
+      throw res;
+    }
+  }
+
+  /// Leaves the group. Returns the updated group or null if the group was
+  /// deleted because the last member left.
+  Future<Group?> leaveGroup(int id) async {
+    final res = await post('', 'v1/group/$id/leave');
+
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      final jsonData = await json.decode(utf8.decode(res.bodyBytes))['data'];
+      if (jsonData == null) {
+        return null;
+      }
+      return Group.fromJson(jsonData as Map<String, dynamic>);
     } else {
       throw res;
     }

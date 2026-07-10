@@ -5,8 +5,10 @@ import 'package:ticktrack/enum/privacy_mode_enum.dart';
 import 'package:ticktrack/models/note/dto/update_note_dto.dart';
 import 'package:ticktrack/models/note/note_api_model.dart';
 import 'package:ticktrack/models/note/dto/create_note_dto.dart';
+import 'package:ticktrack/state/group_context.dart';
 import 'package:ticktrack/util/helpers.dart';
 import 'package:ticktrack/widgets/app_drawer_widget.dart';
+import 'package:ticktrack/widgets/group/group_context_switcher.dart';
 import 'package:ticktrack/widgets/navigation/bottom_menu.dart';
 import 'package:ticktrack/widgets/note_widget.dart';
 import 'package:ticktrack/widgets/option_button.dart';
@@ -32,7 +34,20 @@ class _NotesScreenState extends State<NotesScreen> {
   @override
   void initState() {
     super.initState();
+    GroupContext().addListener(_onGroupContextChanged);
     getNotes();
+  }
+
+  @override
+  void dispose() {
+    GroupContext().removeListener(_onGroupContextChanged);
+    super.dispose();
+  }
+
+  void _onGroupContextChanged() {
+    if (mounted) {
+      getNotes();
+    }
   }
 
   Future<void> getNotes() async {
@@ -41,7 +56,9 @@ class _NotesScreenState extends State<NotesScreen> {
         isLoading = true;
       });
       final backend = Backend();
-      final res = await backend.getAllNotes();
+      final res = await backend.getAllNotes(
+        groupId: GroupContext().activeGroup?.id,
+      );
       final own = res
           .where((element) =>
               element.user!.username ==
@@ -216,6 +233,7 @@ class _NotesScreenState extends State<NotesScreen> {
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
 
         actions: [
+          const GroupContextSwitcher(),
           OptionButton(
             onPressed: () {
               _scaffoldKey.currentState?.openEndDrawer();
@@ -273,6 +291,7 @@ class _NotesScreenState extends State<NotesScreen> {
                         await createNewItem(CreateNoteDto(
                           title: name,
                           content: '',
+                          groupId: GroupContext().activeGroup?.id,
                         ));
                         if (mounted) {
                           Navigator.of(dialogContext).pop();
