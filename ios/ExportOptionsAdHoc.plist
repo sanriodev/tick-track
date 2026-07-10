@@ -10,7 +10,7 @@
 		<string>ad-hoc</string>
 		<key>provisioningProfiles</key>
 		<dict>
-			<key>com.tick-track.app</key>
+			<key>app.ticktrack.ticktrack</key>
 			<string>TickTrack AdHoc Provisioning Profile</string>
 		</dict>
 		<key>signingCertificate</key>

@@ -1,4 +1,4 @@
-package com.tick-track.app
+package app.ticktrack.ticktrack
 
 import io.flutter.embedding.android.FlutterActivity
 
