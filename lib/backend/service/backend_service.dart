@@ -353,15 +353,44 @@ class Backend extends ABackend {
     }
   }
 
-  Future<void> requestAccess(String username, String email) async {
+  Future<void> register(String username, String email, String password) async {
     final body = json.encode({
       'username': username,
       'email': email,
+      'password': password,
     });
-    final res = await post(body, 'v1/application/request-access');
+    final res = await post(body, 'v1/application/register');
 
     if (res.statusCode == 200 || res.statusCode == 201) {
       return;
+    } else {
+      throw res;
+    }
+  }
+
+  Future<void> confirmRegistration(String email, String code) async {
+    final body = json.encode({
+      'email': email,
+      'code': code,
+    });
+    final res = await post(body, 'v1/application/confirm');
+
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      return;
+    } else {
+      throw res;
+    }
+  }
+
+  Future<bool> checkUsernameAvailable(String username) async {
+    final res = await get(
+      'v1/application/check-username?username=${Uri.encodeQueryComponent(username)}',
+    );
+
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      final jsonData = await json.decode(utf8.decode(res.bodyBytes))['data']
+          as Map<String, dynamic>;
+      return jsonData['available'] as bool;
     } else {
       throw res;
     }
