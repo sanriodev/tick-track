@@ -382,6 +382,19 @@ class Backend extends ABackend {
     }
   }
 
+  /// Changes the password of the logged in user. Uses the backend's own
+  /// change-password endpoint (the user id is taken from the bearer token).
+  Future<void> changeOwnPassword(String password) async {
+    final body = json.encode({'password': password});
+    final res = await post(body, 'v1/auth/change-password');
+
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      return;
+    } else {
+      throw res;
+    }
+  }
+
   Future<bool> checkUsernameAvailable(String username) async {
     final res = await get(
       'v1/application/check-username?username=${Uri.encodeQueryComponent(username)}',

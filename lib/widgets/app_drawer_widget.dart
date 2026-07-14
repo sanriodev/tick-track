@@ -54,15 +54,12 @@ class _AppDrawerState extends State<AppDrawer> {
     });
   }
 
-  Future<void> _changePassword(String userId, String newPassword) async {
+  Future<void> _changePassword(String newPassword) async {
     try {
-      final backend = AuthBackend();
-      if (_ownUser != null && _ownUser!.publicActivity != null) {
-        await backend.patchChangePassword(userId, newPassword);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Passwort erfolgreich geändert.')),
-        );
-      }
+      await Backend().changeOwnPassword(newPassword);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Passwort erfolgreich geändert.')),
+      );
     } catch (e) {
       if (e is SessionExpiredException) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -75,6 +72,10 @@ class _AppDrawerState extends State<AppDrawer> {
         } catch (e) {
           await deleteBoxAndNavigateToLogin(context);
         }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Passwort ändern fehlgeschlagen.')),
+        );
       }
     }
   }
@@ -168,7 +169,7 @@ class _AppDrawerState extends State<AppDrawer> {
                     _ownUser == null) {
                   return;
                 }
-                await _changePassword(_ownUser!.id.toString(), newPassword);
+                await _changePassword(newPassword);
                 if (context.mounted) {
                   Navigator.of(context).pop();
                 }
