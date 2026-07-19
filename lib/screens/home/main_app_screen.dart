@@ -56,6 +56,7 @@ class _MainAppScreenState extends State<MainAppScreen> {
   Widget build(BuildContext context) {
     return MaterialApp.router(
         title: 'TickTrack',
+        debugShowCheckedModeBanner: false,
         themeMode: currentTheme,
         theme: appThemeLight,
         darkTheme: appThemeDark,
