@@ -2,13 +2,10 @@
 
 ## Supported Versions
 
-
 | Version | Supported          |
 | ------- | ------------------ |
-| latest   | :white_check_mark: |
-
-since 2.0 Account is needed
+| latest  | :white_check_mark: |
 
 ## Reporting a Vulnerability
 
-If you find any vulnerabilities please inform me discretely on [twitter](https://x.com/blvckleg)
+If you find any vulnerabilities please inform me discretely on [the support email](mailto:services@blvckleg.dev?subject=security)

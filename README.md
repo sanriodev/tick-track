@@ -1,6 +1,3 @@
-release
+Tick-Track - die WG App
 
-```
-dart run melos version --all --yes
-git push --follow-tags origin main
-```
+For more information visit our [Website](https://tick-track.app)
