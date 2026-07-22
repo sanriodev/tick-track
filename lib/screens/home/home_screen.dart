@@ -91,8 +91,9 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _getActivities() async {
     try {
       final backend = Backend();
+      // show the whole feed in the preview, same default as the activity screen
       final res = await backend.getActivity(
-        'own',
+        'any',
         groupId: GroupContext().activeGroup?.id,
       );
       setState(() {
