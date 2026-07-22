@@ -2,6 +2,8 @@
 
 import 'dart:async';
 import 'dart:convert';
+import 'package:ticktrack/backend/service/backend_service.dart';
+import 'package:ticktrack/screens/login/onboarding/onboarding_screen.dart';
 import 'package:ticktrack/util/helpers.dart';
 import 'package:blvckleg_dart_core/models/settings/settings_model.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
@@ -81,6 +83,55 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  /// A registration that was never confirmed has no roles yet, so logging in
+  /// would just fail with a permission error. Check up front and send those
+  /// users back into the confirmation with a fresh code instead.
+  Future<bool> _handleUnconfirmedAccount(
+    String loginName,
+    String password,
+  ) async {
+    // the field accepts both, the backend has to be told which one it got
+    final email = loginName.contains('@') ? loginName : null;
+    final username = email == null ? loginName : null;
+
+    try {
+      final availability = await Backend().checkAvailability(
+        username: loginName,
+        email: email,
+      );
+      if (availability.available || availability.confirmed) return false;
+
+      final maskedEmail = await Backend().resendConfirmationCode(
+        email: email,
+        username: username,
+      );
+      if (!mounted) return true;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Dein Account wurde noch nicht bestätigt - wir haben dir einen '
+            'neuen Code geschickt.',
+          ),
+        ),
+      );
+      navigateToRoute(
+        context,
+        'onboarding',
+        backEnabled: true,
+        extra: PendingConfirmation(
+          loginName: loginName,
+          email: email,
+          password: password,
+          maskedEmail: maskedEmail,
+        ),
+      );
+      return true;
+    } catch (_) {
+      // the check is only a shortcut, let the login itself report problems
+      return false;
+    }
+  }
+
   Future<void> _submit() async {
     final form = _formKey.currentState;
     if (form == null || !form.validate()) return;
@@ -88,11 +139,13 @@ class _LoginScreenState extends State<LoginScreen> {
     FocusScope.of(context).unfocus();
     setState(() => _submitting = true);
 
+    final loginName = _usernameCtrl.text.trim();
+
     try {
-      login(
-        _usernameCtrl.text.trim(),
-        _passwordCtrl.text,
-      );
+      if (await _handleUnconfirmedAccount(loginName, _passwordCtrl.text)) {
+        return;
+      }
+      await login(loginName, _passwordCtrl.text);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

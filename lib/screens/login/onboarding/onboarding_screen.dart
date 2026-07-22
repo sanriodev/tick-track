@@ -4,19 +4,48 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:ticktrack/backend/service/backend_service.dart';
+import 'package:ticktrack/models/application/availability_model.dart';
 import 'package:ticktrack/util/helpers.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:http/http.dart';
+import 'package:pinput/pinput.dart';
 
 enum _OnboardingStep { form, code, success }
 
+const int _codeLength = 5;
+
+/// Handed to the screen when the login found a registered but never confirmed
+/// account: the confirmation mask opens right away and the credentials are
+/// kept so the user is logged in as soon as the code is accepted.
+class PendingConfirmation {
+  /// what was typed on the login screen - the account is signed in with it
+  /// once the confirmation went through
+  final String loginName;
+
+  /// set when the user identified themselves by email instead of username
+  final String? email;
+
+  final String password;
+
+  /// masked address the code went to, e.g. a***e@example.com
+  final String maskedEmail;
+
+  const PendingConfirmation({
+    required this.loginName,
+    required this.password,
+    required this.maskedEmail,
+    this.email,
+  });
+}
+
 class OnboardingScreen extends StatefulWidget {
-  const OnboardingScreen({super.key});
+  const OnboardingScreen({super.key, this.pending});
 
   static const routeName = '/onboarding';
+
+  final PendingConfirmation? pending;
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -41,14 +70,38 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   bool _obscure = true;
   _OnboardingStep _step = _OnboardingStep.form;
 
+  /// address shown on the confirmation mask - the entered one when the user
+  /// registers here, the masked one when the login sent us here
+  String _codeTarget = '';
+
   // null = unknown (empty input or check failed/pending)
   bool? _usernameAvailable;
   bool _checkingUsername = false;
   Timer? _usernameDebounce;
 
+  bool? _emailAvailable;
+  bool _checkingEmail = false;
+  Timer? _emailDebounce;
+
+  @override
+  void initState() {
+    super.initState();
+    final pending = widget.pending;
+    if (pending != null) {
+      // resuming an unconfirmed registration: the code is already on its way
+      _usernameCtrl.text = pending.loginName;
+      if (pending.email != null) _emailCtrl.text = pending.email!;
+      _passwordCtrl.text = pending.password;
+      // the real address when we know it, the masked one otherwise
+      _codeTarget = pending.email ?? pending.maskedEmail;
+      _step = _OnboardingStep.code;
+    }
+  }
+
   @override
   void dispose() {
     _usernameDebounce?.cancel();
+    _emailDebounce?.cancel();
     _usernameCtrl.dispose();
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
@@ -74,10 +127,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       if (!mounted) return;
       setState(() => _checkingUsername = true);
       try {
-        final available = await Backend().checkUsernameAvailable(username);
+        final availability = await Backend().checkAvailability(
+          username: username,
+        );
         if (!mounted || _usernameCtrl.text.trim() != username) return;
         setState(() {
-          _usernameAvailable = available;
+          _usernameAvailable = availability.usernameAvailable;
           _checkingUsername = false;
         });
       } catch (_) {
@@ -88,18 +143,63 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     });
   }
 
+  void _onEmailChanged(String value) {
+    _emailDebounce?.cancel();
+    setState(() {
+      _emailAvailable = null;
+      _checkingEmail = false;
+    });
+
+    final email = value.trim();
+    // the backend only accepts syntactically valid addresses
+    if (!email.contains('@')) return;
+
+    _emailDebounce = Timer(const Duration(milliseconds: 500), () async {
+      if (!mounted) return;
+      setState(() => _checkingEmail = true);
+      try {
+        final availability = await Backend().checkAvailability(email: email);
+        if (!mounted || _emailCtrl.text.trim() != email) return;
+        setState(() {
+          _emailAvailable = availability.emailAvailable;
+          _checkingEmail = false;
+        });
+      } catch (_) {
+        if (!mounted) return;
+        setState(() => _checkingEmail = false);
+      }
+    });
+  }
+
   Future<void> _showResponseError(Object e, String prefix) async {
     if (e is Response) {
       final jsonData = await json.decode(utf8.decode(e.bodyBytes));
-      final String? message = jsonData['message'] as String?;
+      final dynamic raw = jsonData['message'];
+      final String message =
+          raw is List ? raw.join(', ') : (raw as String? ?? '$e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$prefix: ${message}')),
+        SnackBar(content: Text('$prefix: $message')),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('$prefix: ${e}')),
       );
     }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
+  /// Switches to the confirmation mask for [email] with an empty code field.
+  void _goToCodeStep(String email) {
+    _codeCtrl.clear();
+    setState(() {
+      _codeTarget = email;
+      _step = _OnboardingStep.code;
+    });
   }
 
   Future<void> _submit() async {
@@ -118,20 +218,68 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     FocusScope.of(context).unfocus();
     setState(() => _submitting = true);
 
+    final username = _usernameCtrl.text.trim();
+    final email = _emailCtrl.text.trim();
+
     if (!mounted) return;
     try {
-      await Backend().register(
-        _usernameCtrl.text.trim(),
-        _emailCtrl.text.trim(),
-        _passwordCtrl.text,
+      final availability = await Backend().checkAvailability(
+        username: username,
+        email: email,
       );
-      _codeCtrl.clear();
-      setState(() => _step = _OnboardingStep.code);
+
+      if (!availability.available) {
+        if (await _resumeExistingAccount(availability, username, email)) {
+          return;
+        }
+        setState(() {
+          _usernameAvailable = availability.usernameAvailable;
+          _emailAvailable = availability.emailAvailable;
+        });
+        _showMessage(
+          !availability.usernameAvailable && !availability.emailAvailable
+              ? 'Benutzername und E-Mail-Adresse sind bereits vergeben'
+              : !availability.usernameAvailable
+                  ? 'Dieser Benutzername ist bereits vergeben'
+                  : 'Diese E-Mail-Adresse ist bereits registriert',
+        );
+        return;
+      }
+
+      await Backend().register(username, email, _passwordCtrl.text);
+      _goToCodeStep(email);
     } catch (e) {
       await _showResponseError(e, 'Registrierung fehlgeschlagen');
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
+  }
+
+  /// Username and email already belong to one and the same account: either it
+  /// is confirmed and the user simply has to log in, or the confirmation was
+  /// never finished and we hand out a fresh code. Returns whether the
+  /// registration was handled here.
+  Future<bool> _resumeExistingAccount(
+    Availability availability,
+    String username,
+    String email,
+  ) async {
+    if (!availability.sameUser) return false;
+
+    if (availability.confirmed) {
+      _showMessage('Dieser Account existiert bereits, bitte melde dich an.');
+      navigateToRoute(context, 'login');
+      return true;
+    }
+
+    // registering again reissues the code and takes over the new password
+    await Backend().register(username, email, _passwordCtrl.text);
+    _goToCodeStep(email);
+    _showMessage(
+      'Diese Registrierung wurde nie bestätigt - wir haben dir einen neuen '
+      'Code geschickt.',
+    );
+    return true;
   }
 
   Future<void> _confirm() async {
@@ -143,9 +291,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
     if (!mounted) return;
     try {
+      final email = _emailCtrl.text.trim();
       await Backend().confirmRegistration(
-        _emailCtrl.text.trim(),
         _codeCtrl.text.trim(),
+        email: email.isEmpty ? null : email,
+        username: _usernameCtrl.text.trim(),
       );
       setState(() => _step = _OnboardingStep.success);
     } catch (e) {
@@ -158,14 +308,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Future<void> _resendCode() async {
     setState(() => _submitting = true);
     try {
-      await Backend().register(
-        _usernameCtrl.text.trim(),
-        _emailCtrl.text.trim(),
-        _passwordCtrl.text,
+      final email = _emailCtrl.text.trim();
+      final target = await Backend().resendConfirmationCode(
+        email: email.isEmpty ? null : email,
+        username: _usernameCtrl.text.trim(),
       );
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Code wurde erneut gesendet')),
-      );
+      // keep the address the user typed, fall back to the masked one
+      if (email.isEmpty) setState(() => _codeTarget = target);
+      _showMessage('Code wurde erneut gesendet');
     } catch (e) {
       await _showResponseError(e, 'Senden fehlgeschlagen');
     } finally {
@@ -210,7 +360,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 child: IconButton(
                   icon: const Icon(Icons.arrow_back_rounded),
                   onPressed: () {
-                    if (_step == _OnboardingStep.code) {
+                    // there is no form to go back to when the login sent us
+                    // straight into the confirmation
+                    if (_step == _OnboardingStep.code &&
+                        widget.pending == null) {
                       setState(() => _step = _OnboardingStep.form);
                     } else {
                       Navigator.of(context).pop();
@@ -296,6 +449,20 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Widget _buildCodeForm(ThemeData theme) {
+    final defaultPinTheme = PinTheme(
+      width: 56,
+      height: 60,
+      textStyle: theme.primaryTextTheme.displayLarge?.copyWith(
+            fontWeight: FontWeight.w700,
+          ) ??
+          theme.textTheme.headlineSmall,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.dividerColor),
+      ),
+    );
+
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 480),
@@ -303,7 +470,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           padding: const EdgeInsets.all(16),
           child: Form(
             key: _codeFormKey,
-            autovalidateMode: AutovalidateMode.onUserInteraction,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -319,41 +485,41 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Wir haben dir einen 5-stelligen Code an '
-                  '${_emailCtrl.text.trim()} geschickt.',
+                  'Wir haben dir einen $_codeLength-stelligen Code an '
+                  '$_codeTarget geschickt.',
                   style: theme.primaryTextTheme.bodySmall,
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 20),
-                TextFormField(
+                const SizedBox(height: 24),
+                Pinput(
+                  length: _codeLength,
                   controller: _codeCtrl,
                   focusNode: _codeFocus,
-                  textInputAction: TextInputAction.done,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(5),
-                  ],
-                  textAlign: TextAlign.center,
-                  style: theme.primaryTextTheme.bodyLarge?.copyWith(
-                    letterSpacing: 12,
-                    fontWeight: FontWeight.w700,
-                  ),
-                  decoration: InputDecoration(
-                    labelText: 'Bestätigungscode',
-                    hintText: '·····',
-                    labelStyle: theme.primaryTextTheme.bodySmall,
-                    hintStyle: theme.primaryTextTheme.bodySmall,
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 12,
+                  autofocus: true,
+                  defaultPinTheme: defaultPinTheme,
+                  focusedPinTheme: defaultPinTheme.copyDecorationWith(
+                    border: Border.all(
+                      color: theme.colorScheme.primary,
+                      width: 2,
                     ),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  validator: (v) => (v == null || v.trim().length != 5)
-                      ? 'Bitte geben Sie den 5-stelligen Code ein'
+                  submittedPinTheme: defaultPinTheme.copyDecorationWith(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                    border: Border.all(color: theme.colorScheme.primary),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  errorPinTheme: defaultPinTheme.copyDecorationWith(
+                    border: Border.all(color: theme.colorScheme.error),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  errorTextStyle: theme.primaryTextTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.error,
+                  ),
+                  validator: (v) => (v == null || v.trim().length != _codeLength)
+                      ? 'Bitte geben Sie den $_codeLength-stelligen Code ein'
                       : null,
-                  onFieldSubmitted: (_) => _confirm(),
+                  onCompleted: (_) => _confirm(),
                 ),
                 const SizedBox(height: 24),
                 SizedBox(
@@ -406,8 +572,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  Widget? _usernameSuffixIcon(ThemeData theme) {
-    if (_checkingUsername) {
+  Widget? _availabilitySuffixIcon(
+    ThemeData theme, {
+    required bool checking,
+    required bool? available,
+  }) {
+    if (checking) {
       return const Padding(
         padding: EdgeInsets.all(12),
         child: SizedBox(
@@ -417,11 +587,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         ),
       );
     }
-    if (_usernameAvailable == true) {
+    if (available == true) {
       return const Icon(Icons.check_circle_outline,
           size: 20, color: Colors.green);
     }
-    if (_usernameAvailable == false) {
+    if (available == false) {
       return Icon(Icons.cancel_outlined,
           size: 20, color: theme.colorScheme.error);
     }
@@ -464,7 +634,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     labelStyle: theme.primaryTextTheme.bodySmall,
                     hintStyle: theme.primaryTextTheme.bodySmall,
                     prefixIcon: const Icon(Icons.person_outline, size: 20),
-                    suffixIcon: _usernameSuffixIcon(theme),
+                    suffixIcon: _availabilitySuffixIcon(
+                      theme,
+                      checking: _checkingUsername,
+                      available: _usernameAvailable,
+                    ),
                     helperText: _usernameAvailable == null
                         ? null
                         : _usernameAvailable!
@@ -493,12 +667,28 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   textInputAction: TextInputAction.next,
                   keyboardType: TextInputType.emailAddress,
                   style: theme.primaryTextTheme.bodySmall,
+                  onChanged: _onEmailChanged,
                   decoration: InputDecoration(
                     labelText: 'E-Mail-Adresse',
                     hintText: 'ihre.email@beispiel.de',
                     labelStyle: theme.primaryTextTheme.bodySmall,
                     hintStyle: theme.primaryTextTheme.bodySmall,
                     prefixIcon: const Icon(Icons.email_outlined, size: 20),
+                    suffixIcon: _availabilitySuffixIcon(
+                      theme,
+                      checking: _checkingEmail,
+                      available: _emailAvailable,
+                    ),
+                    helperText: _emailAvailable == null
+                        ? null
+                        : _emailAvailable!
+                            ? 'E-Mail-Adresse ist frei'
+                            : 'E-Mail-Adresse ist bereits registriert',
+                    helperStyle: theme.primaryTextTheme.bodySmall?.copyWith(
+                      color: _emailAvailable == true
+                          ? Colors.green
+                          : theme.colorScheme.error,
+                    ),
                     isDense: true,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 12,

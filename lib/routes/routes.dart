@@ -81,7 +81,10 @@ GoRouter createRouter() {
         pageBuilder: (context, state) => CustomTransitionPage(
           key: state.pageKey,
           name: 'onboarding',
-          child: const OnboardingScreen(),
+          // set when the login found an account that was never confirmed
+          child: OnboardingScreen(
+            pending: state.extra as PendingConfirmation?,
+          ),
           transitionDuration: const Duration(milliseconds: transitionDuration),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(

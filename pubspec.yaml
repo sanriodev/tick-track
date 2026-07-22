@@ -54,6 +54,7 @@ dependencies:
   flutter_svg: ^2.2.1
   intl: ^0.20.2
   blvckleg_dart_core: ^0.0.4
+  pinput: ^6.0.2
 
 dev_dependencies:
   flutter_test:
