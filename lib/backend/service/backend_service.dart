@@ -3,6 +3,7 @@
 import 'dart:convert';
 
 import 'package:ticktrack/models/activity/activity_model.dart';
+import 'package:ticktrack/models/application/availability_model.dart';
 import 'package:ticktrack/models/group/group_api_model.dart';
 import 'package:ticktrack/models/note/note_api_model.dart';
 import 'package:ticktrack/models/task/dto/create_task_dto.dart';
@@ -368,15 +369,41 @@ class Backend extends ABackend {
     }
   }
 
-  Future<void> confirmRegistration(String email, String code) async {
+  /// Confirms the registration with the emailed code. The account is
+  /// addressed by email when it is known and by username otherwise (coming
+  /// from the login screen).
+  Future<void> confirmRegistration(String code,
+      {String? email, String? username}) async {
     final body = json.encode({
-      'email': email,
+      if (email != null) 'email': email,
+      if (username != null) 'username': username,
       'code': code,
     });
     final res = await post(body, 'v1/application/confirm');
 
     if (res.statusCode == 200 || res.statusCode == 201) {
       return;
+    } else {
+      throw res;
+    }
+  }
+
+  /// Issues a fresh confirmation code for a registered but never confirmed
+  /// account. Returns the masked email the code was sent to.
+  Future<String> resendConfirmationCode({
+    String? email,
+    String? username,
+  }) async {
+    final body = json.encode({
+      if (email != null) 'email': email,
+      if (username != null) 'username': username,
+    });
+    final res = await post(body, 'v1/application/resend-code');
+
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      final jsonData = await json.decode(utf8.decode(res.bodyBytes))['data']
+          as Map<String, dynamic>;
+      return jsonData['email'] as String;
     } else {
       throw res;
     }
@@ -395,15 +422,23 @@ class Backend extends ABackend {
     }
   }
 
-  Future<bool> checkUsernameAvailable(String username) async {
-    final res = await get(
-      'v1/application/check-username?username=${Uri.encodeQueryComponent(username)}',
-    );
+  /// Registration dry run. At least one of [username] / [email] has to be
+  /// given, both together also report whether they belong to the same account.
+  Future<Availability> checkAvailability({
+    String? username,
+    String? email,
+  }) async {
+    final query = <String>[
+      if (username != null)
+        'username=${Uri.encodeQueryComponent(username)}',
+      if (email != null) 'email=${Uri.encodeQueryComponent(email)}',
+    ].join('&');
+    final res = await get('v1/application/check-username?$query');
 
     if (res.statusCode == 200 || res.statusCode == 201) {
       final jsonData = await json.decode(utf8.decode(res.bodyBytes))['data']
           as Map<String, dynamic>;
-      return jsonData['available'] as bool;
+      return Availability.fromJson(jsonData);
     } else {
       throw res;
     }

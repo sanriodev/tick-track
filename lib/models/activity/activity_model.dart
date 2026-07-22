@@ -1,3 +1,9 @@
+/// Entity type the backend logs a group creation under.
+const String groupEntityType = 'group';
+
+/// Entity type the backend logs joining/leaving a group under.
+const String groupMembershipEntityType = 'group_membership';
+
 class EventlogMessage<T> {
   final String actionType;
   final String entityType;
@@ -20,6 +26,28 @@ class EventlogMessage<T> {
     this.group,
     // this.auth,
   });
+
+  /// Someone left a group - the only membership event that is not a join.
+  bool get isGroupLeave =>
+      entityType == groupMembershipEntityType && actionType == '4';
+
+  /// Ready made sentence for the group lifecycle events (created / joined /
+  /// left), null for everything else. The group name is left out when the
+  /// backend could not resolve it.
+  String? get groupActivityText {
+    final name = group?.name;
+    final named = name != null ? '"$name" ' : '';
+
+    if (entityType == groupEntityType && actionType == '1') {
+      return '${user.username} hat die Gruppe ${named}erstellt';
+    }
+    if (entityType == groupMembershipEntityType) {
+      return isGroupLeave
+          ? '${user.username} hat die Gruppe ${named}verlassen'
+          : '${user.username} ist der Gruppe ${named}beigetreten';
+    }
+    return null;
+  }
 
   factory EventlogMessage.fromJson(Map<String, dynamic> json) {
     return EventlogMessage(

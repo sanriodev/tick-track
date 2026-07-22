@@ -188,11 +188,18 @@ class _ActivityItem extends StatelessWidget {
       'note' => PhosphorIconsRegular.note,
       'task' => PhosphorIconsRegular.checkSquare,
       'task_list' || 'tasklist' => PhosphorIconsRegular.listChecks,
+      'group' => PhosphorIconsRegular.usersThree,
+      'group_membership' => activity.isGroupLeave
+          ? PhosphorIconsRegular.signOut
+          : PhosphorIconsRegular.userPlus,
       _ => PhosphorIconsRegular.pulse,
     };
   }
 
   String _descriptionForActivity(EventlogMessage<dynamic> activity) {
+    final groupSentence = activity.groupActivityText;
+    if (groupSentence != null) return groupSentence;
+
     // Map entity types to German nouns
     final entityName = switch (activity.entityType.toLowerCase()) {
       'note' => 'Notiz',

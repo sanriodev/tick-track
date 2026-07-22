@@ -136,6 +136,14 @@ class _ActivityPreviewWidgetState extends State<ActivityPreviewWidget> {
                   case 'task_list':
                     icon = Icons.checklist;
                     entityName = 'Aufgabenliste';
+                  case groupEntityType:
+                    icon = Icons.groups;
+                    entityName = 'Gruppe';
+                  case groupMembershipEntityType:
+                    icon = activity.isGroupLeave
+                        ? Icons.logout
+                        : Icons.person_add_alt;
+                    entityName = 'Gruppe';
                   default:
                     icon = Icons.circle;
                     entityName = 'Element';
@@ -166,7 +174,8 @@ class _ActivityPreviewWidgetState extends State<ActivityPreviewWidget> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '${activity.user.username} hat $entityName ${_getActionText(activity.actionType)}${activity.group != null ? ' in "${activity.group!.name}"' : ''}',
+                              activity.groupActivityText ??
+                                  '${activity.user.username} hat $entityName ${_getActionText(activity.actionType)}${activity.group != null ? ' in "${activity.group!.name}"' : ''}',
                               style: Theme.of(context).textTheme.bodyMedium,
                               overflow: TextOverflow.ellipsis,
                             ),
