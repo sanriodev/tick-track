@@ -91,6 +91,9 @@ ThemeData appThemeLight = ThemeData(
   ),
   progressIndicatorTheme: ProgressIndicatorThemeData(
     color: Colors.grey[700],
+    // disc behind the pull-to-refresh arrow. The arrow itself is drawn in
+    // colorScheme.primary, so this has to be a light surface for it to show
+    refreshBackgroundColor: Colors.grey[100],
   ),
   iconTheme: IconThemeData(color: Colors.grey[700]),
   primaryIconTheme: IconThemeData(color: Colors.grey[700]),
@@ -141,6 +144,8 @@ ThemeData appThemeDark = ThemeData(
     ),
     progressIndicatorTheme: ProgressIndicatorThemeData(
       color: Colors.grey[400],
+      // see the light theme - dark surface, the arrow is a light grey here
+      refreshBackgroundColor: Colors.grey[850],
     ),
     iconTheme: IconThemeData(
       color: Colors.grey[400],

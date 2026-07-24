@@ -341,11 +341,15 @@ class _AppDrawerState extends State<AppDrawer> {
                       left: 15,
                       child: Text(
                         'TickTrack\nmanage tasks, take notes!',
-                        style: Theme.of(context).primaryTextTheme.displayLarge?.copyWith(
-                          color: Theme.of(context).brightness == Brightness.light
-                              ? Colors.white
-                              : Colors.grey[900],
-                        ),
+                        style: Theme.of(context)
+                            .primaryTextTheme
+                            .displayLarge
+                            ?.copyWith(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.light
+                                  ? Colors.white
+                                  : Colors.grey[900],
+                            ),
                       ),
                     ),
                   ],
@@ -402,7 +406,7 @@ class _AppDrawerState extends State<AppDrawer> {
                 color: Theme.of(context).primaryIconTheme.color,
               ),
               title: Text(
-                'Gruppendetails',
+                'Gruppenübersicht',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ),

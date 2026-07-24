@@ -318,8 +318,6 @@ class _NotesScreenState extends State<NotesScreen> {
         child: const Icon(Icons.add),
       ),
       body: RefreshIndicator(
-        color: Theme.of(context).primaryColor,
-        backgroundColor: Theme.of(context).secondaryHeaderColor,
         onRefresh: () async {
           setState(() {
             isLoading = true;

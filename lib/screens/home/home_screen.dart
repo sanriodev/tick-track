@@ -155,8 +155,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         endDrawer: AppDrawer(),
         body: RefreshIndicator(
-            color: Theme.of(context).primaryColor,
-            backgroundColor: Theme.of(context).secondaryHeaderColor,
             onRefresh: () {
               return _loadData();
             },

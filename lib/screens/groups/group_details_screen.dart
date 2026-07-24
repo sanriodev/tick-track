@@ -4,7 +4,9 @@ import 'package:ticktrack/backend/service/backend_service.dart';
 import 'package:ticktrack/models/group/group_api_model.dart';
 import 'package:ticktrack/state/group_context.dart';
 import 'package:ticktrack/util/helpers.dart';
+import 'package:ticktrack/widgets/app_drawer_widget.dart';
 import 'package:ticktrack/widgets/group/group_context_switcher.dart';
+import 'package:ticktrack/widgets/option_button.dart';
 import 'package:ticktrack/widgets/skeleton/skeleton_card.dart';
 import 'package:blvckleg_dart_core/models/user/user_model.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
@@ -26,6 +28,8 @@ class GroupDetailsScreen extends StatefulWidget {
 }
 
 class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+
   bool _isLoading = true;
   bool _busy = false;
   Group? _group;
@@ -371,6 +375,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         title: Text('Gruppendetails', style: theme.primaryTextTheme.titleMedium),
         backgroundColor: theme.scaffoldBackgroundColor,
@@ -383,12 +388,18 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
             color: theme.primaryIconTheme.color,
           ),
         ),
-        actions: const [GroupContextSwitcher()],
+        actions: [
+          const GroupContextSwitcher(),
+          OptionButton(
+            onPressed: () {
+              _scaffoldKey.currentState?.openEndDrawer();
+            },
+          ),
+        ],
       ),
+      endDrawer: const AppDrawer(),
       body: SafeArea(
         child: RefreshIndicator(
-          color: theme.primaryColor,
-          backgroundColor: theme.secondaryHeaderColor,
           onRefresh: _load,
           child: _isLoading
               ? Skeletonizer(
