@@ -338,6 +338,35 @@ class Backend extends ABackend {
     }
   }
 
+  /// Hands the group over to another member. Owner only, the new owner has
+  /// to be a member already.
+  Future<Group> transferGroupOwnership(int groupId, int newOwnerId) async {
+    final body = json.encode({'userId': newOwnerId.toString()});
+    final res = await patch(body, 'v1/group/$groupId/owner');
+
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      final jsonData = await json.decode(utf8.decode(res.bodyBytes))['data']
+          as Map<String, dynamic>;
+      return Group.fromJson(jsonData);
+    } else {
+      throw res;
+    }
+  }
+
+  /// Removes a member from the group. Owner only. Everything that member
+  /// authored inside this group is deleted with them.
+  Future<Group> removeGroupMember(int groupId, int userId) async {
+    final res = await delete('v1/group/$groupId/members/$userId');
+
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      final jsonData = await json.decode(utf8.decode(res.bodyBytes))['data']
+          as Map<String, dynamic>;
+      return Group.fromJson(jsonData);
+    } else {
+      throw res;
+    }
+  }
+
   /// Leaves the group. Returns the updated group or null if the group was
   /// deleted because the last member left.
   Future<Group?> leaveGroup(int id) async {
@@ -404,6 +433,19 @@ class Backend extends ABackend {
       final jsonData = await json.decode(utf8.decode(res.bodyBytes))['data']
           as Map<String, dynamic>;
       return jsonData['email'] as String;
+    } else {
+      throw res;
+    }
+  }
+
+  /// Irreversibly deletes the logged in account with everything attached to
+  /// it. Takes no arguments on purpose - the backend always deletes the
+  /// account from the bearer token.
+  Future<void> deleteOwnAccount() async {
+    final res = await delete('v1/account/');
+
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      return;
     } else {
       throw res;
     }
