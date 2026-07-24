@@ -1,0 +1,12 @@
+name: ticktrack
+
+packages:
+  - .
+
+command:
+  version:
+    # Restrict `melos version` to the trunk branch.
+    branch: main
+    workspaceChangelog: false
+    changelogFormat:
+      includeDate: true

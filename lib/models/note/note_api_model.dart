@@ -1,0 +1,49 @@
+import 'package:ticktrack/models/base/base_user_relation.dart';
+import 'package:ticktrack/enum/privacy_mode_enum.dart';
+import 'package:blvckleg_dart_core/models/user/user_model.dart';
+
+class Note extends BaseUserRelation {
+  int id;
+  String title;
+  String? content;
+  PrivacyMode privacyMode;
+  int? groupId;
+
+  Note({
+    required this.id,
+    required this.title,
+    required this.privacyMode,
+    this.content,
+    this.groupId,
+    super.user,
+    super.lastModifiedUser,
+  });
+
+  factory Note.fromJson(Map<String, dynamic> json) {
+    return Note(
+      id: json['id'] as int,
+      title: json['title'] as String,
+      content: json['content'] as String?,
+      privacyMode: PrivacyMode.fromJson(json['privacyMode']),
+      groupId: json['groupId'] as int?,
+      user: (json['user'] != null
+          ? User.fromJson(json['user'] as Map<String, dynamic>)
+          : null),
+      lastModifiedUser: (json['lastModifiedUser'] != null
+          ? User.fromJson(json['lastModifiedUser'] as Map<String, dynamic>)
+          : null),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'content': content,
+      'privacyMode': privacyMode,
+      'groupId': groupId,
+      'user': user?.toJson(),
+      'lastModifiedUser': lastModifiedUser?.toJson(),
+    };
+  }
+}
