@@ -136,7 +136,6 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
               Navigator.of(context).pop();
             },
             color: Theme.of(context).primaryIconTheme.color,
-            tooltip: "I love my gf",
           ),
         ),
         actions: [
