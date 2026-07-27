@@ -219,19 +219,7 @@ class _NotesScreenState extends State<NotesScreen> {
         title: Text("Notizen",
             style: Theme.of(context).primaryTextTheme.titleMedium),
         centerTitle: false,
-        // leading: Padding(
-        //   padding: const EdgeInsets.all(8.0),
-        //   child: IconButton(
-        //     icon: const Icon(Icons.arrow_back_rounded),
-        //     onPressed: () {
-        //       Navigator.of(context).pop();
-        //     },
-        //     color: Theme.of(context).primaryIconTheme.color,
-        //     tooltip: "I love my gf",
-        //   ),
-        // ),
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-
         actions: [
           const GroupContextSwitcher(),
           OptionButton(

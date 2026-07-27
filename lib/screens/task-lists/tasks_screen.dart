@@ -328,7 +328,6 @@ class _TasksScreenState extends State<TasksScreen> {
                 Navigator.of(context).pop();
               },
               color: Theme.of(context).primaryIconTheme.color,
-              tooltip: "I love my gf",
             ),
           ),
           //backgroundColor: Theme.of(context).scaffoldBackgroundColor,
