@@ -202,6 +202,7 @@ class _NotesScreenState extends State<NotesScreen> {
                 notes[index].id,
               );
             },
+            onBlocked: () => getNotes(),
             onChangePrivacy: (PrivacyMode mode) {
               updatePrivacy(notes[index], mode);
             },

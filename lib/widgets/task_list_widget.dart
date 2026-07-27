@@ -1,6 +1,7 @@
 import 'package:ticktrack/enum/privacy_mode_enum.dart';
 import 'package:ticktrack/models/tasklist/task_list_api_model.dart';
 import 'package:ticktrack/util/helpers.dart';
+import 'package:ticktrack/util/report_helper.dart';
 import 'package:ticktrack/widgets/accordion/accordion_section.dart';
 import 'package:ticktrack/widgets/accordion/task_list_accordion.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
@@ -18,6 +19,10 @@ class TaskListWidget extends StatefulWidget {
   final void Function()? onDeletePress;
   final void Function(PrivacyMode mode)? onChangePrivacy;
 
+  /// Called after the list's author was blocked from the report dialog, so
+  /// the screen can reload and drop the now hidden content.
+  final void Function()? onBlocked;
+
   const TaskListWidget({
     super.key,
     required this.taskList,
@@ -27,6 +32,7 @@ class TaskListWidget extends StatefulWidget {
     this.onDeletePress,
     this.onTap,
     this.onChangePrivacy,
+    this.onBlocked,
   });
 
   @override
@@ -34,6 +40,10 @@ class TaskListWidget extends StatefulWidget {
 }
 
 class _TaskListWidgetState extends State<TaskListWidget> {
+  bool get _isOwnList =>
+      widget.taskList.user?.username ==
+      AuthBackend().loggedInUser?.user?.username;
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -51,20 +61,36 @@ class _TaskListWidgetState extends State<TaskListWidget> {
                     )),
           ),
           Slidable(
-              enabled: widget.taskList.user?.username ==
-                  AuthBackend().loggedInUser?.user?.username,
               key: UniqueKey(),
               endActionPane: ActionPane(
                 motion: BehindMotion(),
                 extentRatio: 0.3,
                 children: [
-                  SlidableAction(
-                    borderRadius: BorderRadius.circular(12),
-                    onPressed: (_) => widget.onDeletePress?.call(),
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
-                    icon: Icons.delete,
-                  ),
+                  if (_isOwnList)
+                    SlidableAction(
+                      borderRadius: BorderRadius.circular(12),
+                      onPressed: (_) => widget.onDeletePress?.call(),
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                      icon: Icons.delete,
+                    )
+                  else
+                    SlidableAction(
+                      borderRadius: BorderRadius.circular(12),
+                      onPressed: (_) => showReportContentDialog(
+                        context,
+                        entityType: 'task_list',
+                        entityId: widget.taskList.id,
+                        entityLabel: 'Aufgabenliste',
+                        authorId: widget.taskList.user?.id,
+                        authorName: widget.taskList.user?.username,
+                        onBlocked: widget.onBlocked,
+                      ),
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                      icon: Icons.flag,
+                      label: 'Melden',
+                    ),
                 ],
               ),
               child: TaskListAccordion(

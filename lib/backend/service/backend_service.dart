@@ -368,6 +368,28 @@ class Backend extends ABackend {
     }
   }
 
+  /// Reports a piece of content (note, task or task list) as objectionable.
+  /// The backend stores a snapshot and notifies the developer.
+  /// [entityType] is one of 'note', 'task', 'task_list'.
+  Future<void> reportContent(
+    String entityType,
+    int entityId, {
+    String? reason,
+  }) async {
+    final body = json.encode({
+      'entityType': entityType,
+      'entityId': entityId,
+      if (reason != null && reason.trim().isNotEmpty) 'reason': reason.trim(),
+    });
+    final res = await post(body, 'v1/report/');
+
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      return;
+    } else {
+      throw res;
+    }
+  }
+
   /// Blocks a user. Their content and activity disappear from the own feed
   /// instantly and the developer is notified. Optional [reason] is forwarded
   /// to the developer.

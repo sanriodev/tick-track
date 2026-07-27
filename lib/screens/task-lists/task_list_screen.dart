@@ -198,6 +198,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
               onChangePrivacy: (PrivacyMode mode) {
                 updatePrivacy(taskLists[index], mode);
               },
+              onBlocked: () => getTaskLists(),
               totalTasks: taskLists[index].tasks.length,
               completedTasks:
                   taskLists[index].tasks.where((test) => test.isDone).length,
