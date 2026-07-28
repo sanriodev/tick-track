@@ -267,51 +267,21 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
     }
   }
 
-  /// Blocks a member. Available to every member for any other member. Asks
-  /// for an optional reason that is forwarded to the developer.
+  /// Blocks a member. Available to every member for any other member.
+  /// Blocking is a private setting - no reason, no notification.
   Future<void> _blockMember(User member) async {
     final theme = Theme.of(context);
-    String reason = '';
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
           title: Text('Nutzer blockieren?', style: theme.textTheme.titleMedium),
-          content: StatefulBuilder(
-            builder: (context, setDialogState) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Inhalte und Aktivitäten von "${member.username}" '
-                    'verschwinden sofort aus deiner Ansicht. Der Entwickler '
-                    'wird über die Blockierung informiert.',
-                    style: theme.textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    maxLength: 500,
-                    minLines: 1,
-                    maxLines: 3,
-                    style: theme.primaryTextTheme.bodySmall,
-                    decoration: InputDecoration(
-                      labelText: 'Grund (optional)',
-                      labelStyle: theme.primaryTextTheme.bodySmall,
-                      hintText: 'z.B. anstößige Inhalte',
-                      hintStyle: theme.primaryTextTheme.bodySmall,
-                      border: const OutlineInputBorder(),
-                    ),
-                    onChanged: (value) {
-                      setDialogState(() {
-                        reason = value;
-                      });
-                    },
-                  ),
-                ],
-              );
-            },
+          content: Text(
+            'Inhalte und Aktivitäten von "${member.username}" verschwinden '
+            'sofort aus deiner Ansicht. Du kannst die Blockierung jederzeit '
+            'wieder aufheben.',
+            style: theme.textTheme.bodyMedium,
           ),
           actions: [
             TextButton(
@@ -332,7 +302,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
     if (confirmed != true) return;
 
     await _run(
-      () => Backend().blockUser(member.id, reason: reason),
+      () => Backend().blockUser(member.id),
       'Nutzer konnte nicht blockiert werden',
     );
     if (mounted) {
@@ -351,6 +321,22 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('"${blocked.username}" ist nicht mehr blockiert.'),
+        ),
+      );
+    }
+  }
+
+  /// Unblocks a member from the member list (where we hold a User, not a
+  /// BlockedUser).
+  Future<void> _unblockMember(User member) async {
+    await _run(
+      () => Backend().unblockUser(member.id),
+      'Blockierung konnte nicht aufgehoben werden',
+    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('"${member.username}" ist nicht mehr blockiert.'),
         ),
       );
     }
@@ -692,6 +678,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
   Widget _buildMemberTile(ThemeData theme, Group group, User member) {
     final isSelf = member.id == _ownUser?.id;
     final isGroupOwner = member.id == group.ownerId;
+    final isBlocked = _blocked.any((b) => b.id == member.id);
     // the owner manages everyone but themselves; blocking is open to every
     // member for any other member
     final canManage = _isOwner && !isSelf;
@@ -754,6 +741,8 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                   _removeMember(member);
                 } else if (value == 'block') {
                   _blockMember(member);
+                } else if (value == 'unblock') {
+                  _unblockMember(member);
                 }
               },
               itemBuilder: (BuildContext menuContext) => [
@@ -775,24 +764,43 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                       ],
                     ),
                   ),
-                PopupMenuItem(
-                  value: 'block',
-                  child: Row(
-                    children: [
-                      PhosphorIcon(
-                        PhosphorIconsRegular.prohibit,
-                        size: 18,
-                        color: theme.colorScheme.error,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Nutzer blockieren',
-                        style: theme.textTheme.bodySmall
-                            ?.copyWith(color: theme.colorScheme.error),
-                      ),
-                    ],
+                if (isBlocked)
+                  PopupMenuItem(
+                    value: 'unblock',
+                    child: Row(
+                      children: [
+                        PhosphorIcon(
+                          PhosphorIconsRegular.check,
+                          size: 18,
+                          color: theme.primaryIconTheme.color,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Blockierung aufheben',
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  PopupMenuItem(
+                    value: 'block',
+                    child: Row(
+                      children: [
+                        PhosphorIcon(
+                          PhosphorIconsRegular.prohibit,
+                          size: 18,
+                          color: theme.colorScheme.error,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Nutzer blockieren',
+                          style: theme.textTheme.bodySmall
+                              ?.copyWith(color: theme.colorScheme.error),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
                 if (canManage)
                   PopupMenuItem(
                     value: 'remove',

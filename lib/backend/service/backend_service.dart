@@ -391,13 +391,9 @@ class Backend extends ABackend {
   }
 
   /// Blocks a user. Their content and activity disappear from the own feed
-  /// instantly and the developer is notified. Optional [reason] is forwarded
-  /// to the developer.
-  Future<void> blockUser(int userId, {String? reason}) async {
-    final body = json.encode({
-      'userId': userId.toString(),
-      if (reason != null && reason.trim().isNotEmpty) 'reason': reason.trim(),
-    });
+  /// instantly. Purely a personal setting - no reason, no notification.
+  Future<void> blockUser(int userId) async {
+    final body = json.encode({'userId': userId.toString()});
     final res = await post(body, 'v1/block/');
 
     if (res.statusCode == 200 || res.statusCode == 201) {

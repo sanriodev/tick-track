@@ -113,7 +113,7 @@ Future<void> showReportContentDialog(
   try {
     await Backend().reportContent(entityType, entityId, reason: reason);
     if (canBlock && alsoBlock) {
-      await Backend().blockUser(authorId, reason: reason);
+      await Backend().blockUser(authorId);
     }
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
