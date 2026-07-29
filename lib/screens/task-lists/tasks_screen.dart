@@ -7,6 +7,7 @@ import 'package:ticktrack/models/task/task_api_model.dart';
 import 'package:ticktrack/models/tasklist/task_list_api_model.dart';
 import 'package:ticktrack/state/group_context.dart';
 import 'package:ticktrack/util/helpers.dart';
+import 'package:ticktrack/util/report_helper.dart';
 import 'package:ticktrack/widgets/app_drawer_widget.dart';
 import 'package:ticktrack/widgets/group/group_context_switcher.dart';
 import 'package:ticktrack/widgets/option_button.dart';
@@ -92,16 +93,9 @@ class _TasksScreenState extends State<TasksScreen> {
         isLoading = false;
       });
       if (e is SessionExpiredException) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Bitte melde dich erneut an.')),
-        );
-
-        try {
-          await AuthBackend().postLogout();
-          await deleteBoxAndNavigateToLogin(context);
-        } catch (e) {
-          await deleteBoxAndNavigateToLogin(context);
-        }
+        await showBackendError(context, e, 'Bitte melde dich erneut an.');
+      } else if (mounted) {
+        await showBackendError(context, e, 'Aktion fehlgeschlagen');
       }
     }
   }
@@ -116,16 +110,9 @@ class _TasksScreenState extends State<TasksScreen> {
         isLoading = false;
       });
       if (e is SessionExpiredException) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Bitte melde dich erneut an.')),
-        );
-
-        try {
-          await AuthBackend().postLogout();
-          await deleteBoxAndNavigateToLogin(context);
-        } catch (e) {
-          await deleteBoxAndNavigateToLogin(context);
-        }
+        await showBackendError(context, e, 'Bitte melde dich erneut an.');
+      } else if (mounted) {
+        await showBackendError(context, e, 'Aktion fehlgeschlagen');
       }
     }
   }
@@ -140,16 +127,9 @@ class _TasksScreenState extends State<TasksScreen> {
         isLoading = false;
       });
       if (e is SessionExpiredException) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Bitte melde dich erneut an.')),
-        );
-
-        try {
-          await AuthBackend().postLogout();
-          await deleteBoxAndNavigateToLogin(context);
-        } catch (e) {
-          await deleteBoxAndNavigateToLogin(context);
-        }
+        await showBackendError(context, e, 'Bitte melde dich erneut an.');
+      } else if (mounted) {
+        await showBackendError(context, e, 'Aktion fehlgeschlagen');
       }
     }
   }
@@ -164,16 +144,9 @@ class _TasksScreenState extends State<TasksScreen> {
         isLoading = false;
       });
       if (e is SessionExpiredException) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Bitte melde dich erneut an.')),
-        );
-
-        try {
-          await AuthBackend().postLogout();
-          await deleteBoxAndNavigateToLogin(context);
-        } catch (e) {
-          await deleteBoxAndNavigateToLogin(context);
-        }
+        await showBackendError(context, e, 'Bitte melde dich erneut an.');
+      } else if (mounted) {
+        await showBackendError(context, e, 'Aktion fehlgeschlagen');
       }
     }
   }
@@ -200,20 +173,37 @@ class _TasksScreenState extends State<TasksScreen> {
                           )),
                 ),
                 Slidable(
-                    enabled: tasks[index].taskList?.user?.username ==
-                        AuthBackend().loggedInUser?.user?.username,
                     key: UniqueKey(),
                     endActionPane: ActionPane(
                       motion: BehindMotion(),
                       extentRatio: 0.3,
                       children: [
-                        SlidableAction(
-                          borderRadius: BorderRadius.circular(12),
-                          onPressed: (_) => {_deleteTask(tasks[index].id)},
-                          backgroundColor: Colors.red,
-                          foregroundColor: Colors.white,
-                          icon: Icons.delete,
-                        ),
+                        if (tasks[index].taskList?.user?.username ==
+                            AuthBackend().loggedInUser?.user?.username)
+                          SlidableAction(
+                            borderRadius: BorderRadius.circular(12),
+                            onPressed: (_) => {_deleteTask(tasks[index].id)},
+                            backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
+                            icon: Icons.delete,
+                          )
+                        else
+                          SlidableAction(
+                            borderRadius: BorderRadius.circular(12),
+                            onPressed: (_) => showReportContentDialog(
+                              context,
+                              entityType: 'task',
+                              entityId: tasks[index].id,
+                              entityLabel: 'Aufgabe',
+                              authorId: tasks[index].taskList?.user?.id,
+                              authorName: tasks[index].taskList?.user?.username,
+                              onBlocked: () => _getTasksForList(),
+                            ),
+                            backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
+                            icon: Icons.flag,
+                            label: 'Melden',
+                          ),
                       ],
                     ),
                     child: Card(
@@ -328,7 +318,6 @@ class _TasksScreenState extends State<TasksScreen> {
                 Navigator.of(context).pop();
               },
               color: Theme.of(context).primaryIconTheme.color,
-              tooltip: "I love my gf",
             ),
           ),
           //backgroundColor: Theme.of(context).scaffoldBackgroundColor,

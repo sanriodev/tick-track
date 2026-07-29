@@ -65,7 +65,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final _passwordFocus = FocusNode();
   final _codeFocus = FocusNode();
 
-  bool _acceptedPrivacy = false;
+  bool _acceptedTerms = false;
   bool _submitting = false;
   bool _obscure = true;
   _OnboardingStep _step = _OnboardingStep.form;
@@ -206,10 +206,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final form = _formKey.currentState;
     if (form == null || !form.validate()) return;
 
-    if (!_acceptedPrivacy) {
+    if (!_acceptedTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Bitte akzeptieren Sie die Datenschutzerklärung'),
+          content: Text(
+            'Bitte akzeptieren Sie die Datenschutzerklärung und die '
+            'Nutzungsbedingungen',
+          ),
         ),
       );
       return;
@@ -370,7 +373,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     }
                   },
                   color: Theme.of(context).primaryIconTheme.color,
-                  tooltip: "I love my gf",
                 ),
               ),
       ),
@@ -516,7 +518,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   errorTextStyle: theme.primaryTextTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.error,
                   ),
-                  validator: (v) => (v == null || v.trim().length != _codeLength)
+                  validator: (v) => (v == null ||
+                          v.trim().length != _codeLength)
                       ? 'Bitte geben Sie den $_codeLength-stelligen Code ein'
                       : null,
                   onCompleted: (_) => _confirm(),
@@ -542,10 +545,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           .primaryTextTheme
                           .displayLarge
                           ?.copyWith(
-                            color: Theme.of(context).brightness ==
-                                    Brightness.light
-                                ? Colors.white
-                                : Colors.grey[900],
+                            color:
+                                Theme.of(context).brightness == Brightness.light
+                                    ? Colors.white
+                                    : Colors.grey[900],
                           ),
                     ),
                     style: ElevatedButton.styleFrom(
@@ -747,9 +750,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 WidgetStateProperty.all(Colors.transparent)),
                         tooltip: _obscure ? 'Show password' : 'Hide password',
                         iconSize: 20,
-                        icon: Icon(_obscure
-                            ? Icons.visibility
-                            : Icons.visibility_off),
+                        icon: Icon(
+                            _obscure ? Icons.visibility : Icons.visibility_off),
                         onPressed: () => setState(() => _obscure = !_obscure),
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         visualDensity: VisualDensity.compact,
@@ -771,9 +773,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Checkbox(
-                      value: _acceptedPrivacy,
+                      value: _acceptedTerms,
                       onChanged: (value) {
-                        setState(() => _acceptedPrivacy = value ?? false);
+                        setState(() => _acceptedTerms = value ?? false);
                       },
                       visualDensity: VisualDensity.compact,
                     ),
@@ -799,6 +801,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                     launchUrlInBrowser(
                                       Uri.parse(
                                           'https://blvckleg.dev/app-legal'),
+                                    );
+                                  },
+                              ),
+                              TextSpan(
+                                text: ' und den ',
+                              ),
+                              TextSpan(
+                                text: 'Nutzungsbedingungen',
+                                style:
+                                    theme.primaryTextTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.primary,
+                                  decoration: TextDecoration.underline,
+                                ),
+                                recognizer: TapGestureRecognizer()
+                                  ..onTap = () {
+                                    launchUrlInBrowser(
+                                      Uri.parse('https://tick-track.app/terms'),
                                     );
                                   },
                               ),

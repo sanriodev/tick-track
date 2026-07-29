@@ -79,16 +79,9 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
       });
     } catch (e) {
       if (e is SessionExpiredException) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Bitte melde dich erneut an.')),
-        );
-
-        try {
-          await AuthBackend().postLogout();
-          await deleteBoxAndNavigateToLogin(context);
-        } catch (e) {
-          await deleteBoxAndNavigateToLogin(context);
-        }
+        await showBackendError(context, e, 'Bitte melde dich erneut an.');
+      } else if (mounted) {
+        await showBackendError(context, e, 'Aktion fehlgeschlagen');
       }
     }
   }
@@ -106,16 +99,9 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
       await _loadNote();
     } catch (e) {
       if (e is SessionExpiredException) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Bitte melde dich erneut an.')),
-        );
-
-        try {
-          await AuthBackend().postLogout();
-          await deleteBoxAndNavigateToLogin(context);
-        } catch (e) {
-          await deleteBoxAndNavigateToLogin(context);
-        }
+        await showBackendError(context, e, 'Bitte melde dich erneut an.');
+      } else if (mounted) {
+        await showBackendError(context, e, 'Aktion fehlgeschlagen');
       }
     }
   }
@@ -136,7 +122,6 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
               Navigator.of(context).pop();
             },
             color: Theme.of(context).primaryIconTheme.color,
-            tooltip: "I love my gf",
           ),
         ),
         actions: [

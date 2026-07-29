@@ -79,16 +79,9 @@ class _NotesScreenState extends State<NotesScreen> {
         isLoading = false;
       });
       if (e is SessionExpiredException) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Bitte melde dich erneut an.')),
-        );
-
-        try {
-          await AuthBackend().postLogout();
-          await deleteBoxAndNavigateToLogin(context);
-        } catch (e) {
-          await deleteBoxAndNavigateToLogin(context);
-        }
+        await showBackendError(context, e, 'Bitte melde dich erneut an.');
+      } else if (mounted) {
+        await showBackendError(context, e, 'Aktion fehlgeschlagen');
       }
     }
   }
@@ -106,16 +99,9 @@ class _NotesScreenState extends State<NotesScreen> {
         isLoading = false;
       });
       if (e is SessionExpiredException) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Bitte melde dich erneut an.')),
-        );
-
-        try {
-          await AuthBackend().postLogout();
-          await deleteBoxAndNavigateToLogin(context);
-        } catch (e) {
-          await deleteBoxAndNavigateToLogin(context);
-        }
+        await showBackendError(context, e, 'Bitte melde dich erneut an.');
+      } else if (mounted) {
+        await showBackendError(context, e, 'Aktion fehlgeschlagen');
       }
     }
   }
@@ -133,16 +119,9 @@ class _NotesScreenState extends State<NotesScreen> {
         isLoading = false;
       });
       if (e is SessionExpiredException) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Bitte melde dich erneut an.')),
-        );
-
-        try {
-          await AuthBackend().postLogout();
-          await deleteBoxAndNavigateToLogin(context);
-        } catch (e) {
-          await deleteBoxAndNavigateToLogin(context);
-        }
+        await showBackendError(context, e, 'Bitte melde dich erneut an.');
+      } else if (mounted) {
+        await showBackendError(context, e, 'Aktion fehlgeschlagen');
       }
     }
   }
@@ -172,16 +151,9 @@ class _NotesScreenState extends State<NotesScreen> {
         isLoading = false;
       });
       if (e is SessionExpiredException) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Bitte melde dich erneut an.')),
-        );
-
-        try {
-          await AuthBackend().postLogout();
-          await deleteBoxAndNavigateToLogin(context);
-        } catch (e) {
-          await deleteBoxAndNavigateToLogin(context);
-        }
+        await showBackendError(context, e, 'Bitte melde dich erneut an.');
+      } else if (mounted) {
+        await showBackendError(context, e, 'Aktion fehlgeschlagen');
       }
     }
   }
@@ -202,6 +174,7 @@ class _NotesScreenState extends State<NotesScreen> {
                 notes[index].id,
               );
             },
+            onBlocked: () => getNotes(),
             onChangePrivacy: (PrivacyMode mode) {
               updatePrivacy(notes[index], mode);
             },
@@ -219,19 +192,7 @@ class _NotesScreenState extends State<NotesScreen> {
         title: Text("Notizen",
             style: Theme.of(context).primaryTextTheme.titleMedium),
         centerTitle: false,
-        // leading: Padding(
-        //   padding: const EdgeInsets.all(8.0),
-        //   child: IconButton(
-        //     icon: const Icon(Icons.arrow_back_rounded),
-        //     onPressed: () {
-        //       Navigator.of(context).pop();
-        //     },
-        //     color: Theme.of(context).primaryIconTheme.color,
-        //     tooltip: "I love my gf",
-        //   ),
-        // ),
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-
         actions: [
           const GroupContextSwitcher(),
           OptionButton(

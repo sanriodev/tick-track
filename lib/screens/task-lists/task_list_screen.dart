@@ -80,16 +80,9 @@ class _TaskListScreenState extends State<TaskListScreen> {
         isLoading = false;
       });
       if (e is SessionExpiredException) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Bitte melde dich erneut an.')),
-        );
-
-        try {
-          await AuthBackend().postLogout();
-          await deleteBoxAndNavigateToLogin(context);
-        } catch (e) {
-          await deleteBoxAndNavigateToLogin(context);
-        }
+        await showBackendError(context, e, 'Bitte melde dich erneut an.');
+      } else if (mounted) {
+        await showBackendError(context, e, 'Aktion fehlgeschlagen');
       }
     }
   }
@@ -104,16 +97,9 @@ class _TaskListScreenState extends State<TaskListScreen> {
         isLoading = false;
       });
       if (e is SessionExpiredException) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Bitte melde dich erneut an.')),
-        );
-
-        try {
-          await AuthBackend().postLogout();
-          await deleteBoxAndNavigateToLogin(context);
-        } catch (e) {
-          await deleteBoxAndNavigateToLogin(context);
-        }
+        await showBackendError(context, e, 'Bitte melde dich erneut an.');
+      } else if (mounted) {
+        await showBackendError(context, e, 'Aktion fehlgeschlagen');
       }
     }
   }
@@ -128,16 +114,9 @@ class _TaskListScreenState extends State<TaskListScreen> {
         isLoading = false;
       });
       if (e is SessionExpiredException) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Bitte melde dich erneut an.')),
-        );
-
-        try {
-          await AuthBackend().postLogout();
-          await deleteBoxAndNavigateToLogin(context);
-        } catch (e) {
-          await deleteBoxAndNavigateToLogin(context);
-        }
+        await showBackendError(context, e, 'Bitte melde dich erneut an.');
+      } else if (mounted) {
+        await showBackendError(context, e, 'Aktion fehlgeschlagen');
       }
     }
   }
@@ -167,16 +146,9 @@ class _TaskListScreenState extends State<TaskListScreen> {
         isLoading = false;
       });
       if (e is SessionExpiredException) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Bitte melde dich erneut an.')),
-        );
-
-        try {
-          await AuthBackend().postLogout();
-          await deleteBoxAndNavigateToLogin(context);
-        } catch (e) {
-          await deleteBoxAndNavigateToLogin(context);
-        }
+        await showBackendError(context, e, 'Bitte melde dich erneut an.');
+      } else if (mounted) {
+        await showBackendError(context, e, 'Aktion fehlgeschlagen');
       }
     }
   }
@@ -198,6 +170,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
               onChangePrivacy: (PrivacyMode mode) {
                 updatePrivacy(taskLists[index], mode);
               },
+              onBlocked: () => getTaskLists(),
               totalTasks: taskLists[index].tasks.length,
               completedTasks:
                   taskLists[index].tasks.where((test) => test.isDone).length,

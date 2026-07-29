@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:ticktrack/backend/service/backend_service.dart';
+import 'package:ticktrack/models/block/blocked_user_model.dart';
 import 'package:ticktrack/models/group/group_api_model.dart';
 import 'package:ticktrack/state/group_context.dart';
 import 'package:ticktrack/util/helpers.dart';
@@ -34,6 +35,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
   bool _busy = false;
   Group? _group;
   User? _ownUser;
+  List<BlockedUser> _blocked = [];
 
   bool get _isOwner =>
       _ownUser != null && _group?.ownerId != null && _group!.ownerId == _ownUser!.id;
@@ -72,10 +74,12 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
       // the group list comes without members, the detail endpoint has them
       final group = await Backend().getGroup(activeGroup.id);
       final ownUser = _ownUser ?? await AuthBackend().getOwnUser();
+      final blocked = await Backend().getBlockedUsers();
       if (!mounted) return;
       setState(() {
         _group = group;
         _ownUser = ownUser;
+        _blocked = blocked;
         _isLoading = false;
       });
     } catch (e) {
@@ -259,6 +263,81 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('"${member.username}" wurde entfernt.')),
+      );
+    }
+  }
+
+  /// Blocks a member. Available to every member for any other member.
+  /// Blocking is a private setting - no reason, no notification.
+  Future<void> _blockMember(User member) async {
+    final theme = Theme.of(context);
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: Text('Nutzer blockieren?', style: theme.textTheme.titleMedium),
+          content: Text(
+            'Inhalte und Aktivitäten von "${member.username}" verschwinden '
+            'sofort aus deiner Ansicht. Du kannst die Blockierung jederzeit '
+            'wieder aufheben.',
+            style: theme.textTheme.bodyMedium,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Abbrechen'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text(
+                'Blockieren',
+                style: TextStyle(color: theme.colorScheme.error),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirmed != true) return;
+
+    await _run(
+      () => Backend().blockUser(member.id),
+      'Nutzer konnte nicht blockiert werden',
+    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('"${member.username}" wurde blockiert.')),
+      );
+    }
+  }
+
+  Future<void> _unblockUser(BlockedUser blocked) async {
+    await _run(
+      () => Backend().unblockUser(blocked.id),
+      'Blockierung konnte nicht aufgehoben werden',
+    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('"${blocked.username}" ist nicht mehr blockiert.'),
+        ),
+      );
+    }
+  }
+
+  /// Unblocks a member from the member list (where we hold a User, not a
+  /// BlockedUser).
+  Future<void> _unblockMember(User member) async {
+    await _run(
+      () => Backend().unblockUser(member.id),
+      'Blockierung konnte nicht aufgehoben werden',
+    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('"${member.username}" ist nicht mehr blockiert.'),
+        ),
       );
     }
   }
@@ -464,6 +543,10 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
         _buildMembersCard(theme, group),
         const SizedBox(height: 16),
         _buildJoinCodeCard(theme, group),
+        if (_blocked.isNotEmpty) ...[
+          const SizedBox(height: 16),
+          _buildBlockedCard(theme),
+        ],
         const SizedBox(height: 24),
         OutlinedButton.icon(
           onPressed: _busy ? null : _showAddGroupDialogue,
@@ -595,8 +678,11 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
   Widget _buildMemberTile(ThemeData theme, Group group, User member) {
     final isSelf = member.id == _ownUser?.id;
     final isGroupOwner = member.id == group.ownerId;
-    // the owner manages everyone but themselves
+    final isBlocked = _blocked.any((b) => b.id == member.id);
+    // the owner manages everyone but themselves; blocking is open to every
+    // member for any other member
     final canManage = _isOwner && !isSelf;
+    final showMenu = !isSelf;
 
     return ListTile(
       leading: CircleAvatar(
@@ -641,7 +727,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
               ],
             )
           : null,
-      trailing: canManage
+      trailing: showMenu
           ? PopupMenuButton<String>(
               enabled: !_busy,
               icon: PhosphorIcon(
@@ -653,47 +739,142 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                   _transferOwnership(member);
                 } else if (value == 'remove') {
                   _removeMember(member);
+                } else if (value == 'block') {
+                  _blockMember(member);
+                } else if (value == 'unblock') {
+                  _unblockMember(member);
                 }
               },
               itemBuilder: (BuildContext menuContext) => [
-                PopupMenuItem(
-                  value: 'transfer',
-                  child: Row(
-                    children: [
-                      PhosphorIcon(
-                        PhosphorIconsRegular.crown,
-                        size: 18,
-                        color: theme.primaryIconTheme.color,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Zum Besitzer machen',
-                        style: theme.textTheme.bodySmall,
-                      ),
-                    ],
+                if (canManage)
+                  PopupMenuItem(
+                    value: 'transfer',
+                    child: Row(
+                      children: [
+                        PhosphorIcon(
+                          PhosphorIconsRegular.crown,
+                          size: 18,
+                          color: theme.primaryIconTheme.color,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Zum Besitzer machen',
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                PopupMenuItem(
-                  value: 'remove',
-                  child: Row(
-                    children: [
-                      PhosphorIcon(
-                        PhosphorIconsRegular.userMinus,
-                        size: 18,
-                        color: theme.colorScheme.error,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Aus Gruppe entfernen',
-                        style: theme.textTheme.bodySmall
-                            ?.copyWith(color: theme.colorScheme.error),
-                      ),
-                    ],
+                if (isBlocked)
+                  PopupMenuItem(
+                    value: 'unblock',
+                    child: Row(
+                      children: [
+                        PhosphorIcon(
+                          PhosphorIconsRegular.check,
+                          size: 18,
+                          color: theme.primaryIconTheme.color,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Blockierung aufheben',
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  PopupMenuItem(
+                    value: 'block',
+                    child: Row(
+                      children: [
+                        PhosphorIcon(
+                          PhosphorIconsRegular.prohibit,
+                          size: 18,
+                          color: theme.colorScheme.error,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Nutzer blockieren',
+                          style: theme.textTheme.bodySmall
+                              ?.copyWith(color: theme.colorScheme.error),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                if (canManage)
+                  PopupMenuItem(
+                    value: 'remove',
+                    child: Row(
+                      children: [
+                        PhosphorIcon(
+                          PhosphorIconsRegular.userMinus,
+                          size: 18,
+                          color: theme.colorScheme.error,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Aus Gruppe entfernen',
+                          style: theme.textTheme.bodySmall
+                              ?.copyWith(color: theme.colorScheme.error),
+                        ),
+                      ],
+                    ),
+                  ),
               ],
             )
           : null,
+    );
+  }
+
+  Widget _buildBlockedCard(ThemeData theme) {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+              child: Text(
+                'Blockierte Nutzer',
+                style: theme.textTheme.titleSmall
+                    ?.copyWith(fontWeight: FontWeight.bold),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Text(
+                'Inhalte und Aktivitäten dieser Nutzer sind für dich '
+                'ausgeblendet.',
+                style: theme.textTheme.bodySmall,
+              ),
+            ),
+            for (final blocked in _blocked)
+              ListTile(
+                leading: PhosphorIcon(
+                  PhosphorIconsRegular.prohibit,
+                  color: theme.colorScheme.error,
+                ),
+                title: Text(
+                  blocked.username,
+                  style: theme.textTheme.bodyMedium,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                trailing: TextButton(
+                  onPressed: _busy ? null : () => _unblockUser(blocked),
+                  child: Text(
+                    'Entblocken',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 
