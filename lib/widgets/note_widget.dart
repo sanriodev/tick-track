@@ -1,6 +1,7 @@
 import 'package:ticktrack/enum/privacy_mode_enum.dart';
 import 'package:ticktrack/models/note/note_api_model.dart';
 import 'package:ticktrack/util/helpers.dart';
+import 'package:ticktrack/util/report_helper.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -12,12 +13,17 @@ class NoteWidget extends StatefulWidget {
   final void Function()? onDeletePress;
   final void Function(PrivacyMode mode)? onChangePrivacy;
 
+  /// Called after the note's author was blocked from the report dialog, so
+  /// the list can reload and drop the now hidden content.
+  final void Function()? onBlocked;
+
   const NoteWidget({
     super.key,
     required this.note,
     this.onDeletePress,
     this.onTap,
     this.onChangePrivacy,
+    this.onBlocked,
   });
 
   @override
@@ -25,6 +31,9 @@ class NoteWidget extends StatefulWidget {
 }
 
 class _NoteWidgetState extends State<NoteWidget> {
+  bool get _isOwnNote =>
+      widget.note.user?.username == AuthBackend().loggedInUser?.user?.username;
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -42,20 +51,36 @@ class _NoteWidgetState extends State<NoteWidget> {
                     )),
           ),
           Slidable(
-              enabled: widget.note.user?.username ==
-                  AuthBackend().loggedInUser?.user?.username,
               key: UniqueKey(),
               endActionPane: ActionPane(
                 motion: BehindMotion(),
                 extentRatio: 0.3,
                 children: [
-                  SlidableAction(
-                    borderRadius: BorderRadius.circular(12),
-                    onPressed: (_) => widget.onDeletePress?.call(),
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
-                    icon: Icons.delete,
-                  ),
+                  if (_isOwnNote)
+                    SlidableAction(
+                      borderRadius: BorderRadius.circular(12),
+                      onPressed: (_) => widget.onDeletePress?.call(),
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                      icon: Icons.delete,
+                    )
+                  else
+                    SlidableAction(
+                      borderRadius: BorderRadius.circular(12),
+                      onPressed: (_) => showReportContentDialog(
+                        context,
+                        entityType: 'note',
+                        entityId: widget.note.id,
+                        entityLabel: 'Notiz',
+                        authorId: widget.note.user?.id,
+                        authorName: widget.note.user?.username,
+                        onBlocked: widget.onBlocked,
+                      ),
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                      icon: Icons.flag,
+                      label: 'Melden',
+                    ),
                 ],
               ),
               child: InkWell(

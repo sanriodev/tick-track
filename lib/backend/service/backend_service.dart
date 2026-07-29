@@ -4,6 +4,7 @@ import 'dart:convert';
 
 import 'package:ticktrack/models/activity/activity_model.dart';
 import 'package:ticktrack/models/application/availability_model.dart';
+import 'package:ticktrack/models/block/blocked_user_model.dart';
 import 'package:ticktrack/models/group/group_api_model.dart';
 import 'package:ticktrack/models/note/note_api_model.dart';
 import 'package:ticktrack/models/task/dto/create_task_dto.dart';
@@ -362,6 +363,67 @@ class Backend extends ABackend {
       final jsonData = await json.decode(utf8.decode(res.bodyBytes))['data']
           as Map<String, dynamic>;
       return Group.fromJson(jsonData);
+    } else {
+      throw res;
+    }
+  }
+
+  /// Reports a piece of content (note, task or task list) as objectionable.
+  /// The backend stores a snapshot and notifies the developer.
+  /// [entityType] is one of 'note', 'task', 'task_list'.
+  Future<void> reportContent(
+    String entityType,
+    int entityId, {
+    String? reason,
+  }) async {
+    final body = json.encode({
+      'entityType': entityType,
+      'entityId': entityId,
+      if (reason != null && reason.trim().isNotEmpty) 'reason': reason.trim(),
+    });
+    final res = await post(body, 'v1/report/');
+
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      return;
+    } else {
+      throw res;
+    }
+  }
+
+  /// Blocks a user. Their content and activity disappear from the own feed
+  /// instantly. Purely a personal setting - no reason, no notification.
+  Future<void> blockUser(int userId) async {
+    final body = json.encode({'userId': userId.toString()});
+    final res = await post(body, 'v1/block/');
+
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      return;
+    } else {
+      throw res;
+    }
+  }
+
+  /// Removes a block, the user becomes visible again.
+  Future<void> unblockUser(int userId) async {
+    final res = await delete('v1/block/$userId');
+
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      return;
+    } else {
+      throw res;
+    }
+  }
+
+  /// The users the logged in user has blocked.
+  Future<List<BlockedUser>> getBlockedUsers() async {
+    final res = await get('v1/block/');
+
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      final jsonData = await json.decode(utf8.decode(res.bodyBytes))['data']
+          as List<dynamic>;
+      return jsonData
+          .map((e) => BlockedUser.fromJson(e as Map<String, dynamic>))
+          .toList();
     } else {
       throw res;
     }
