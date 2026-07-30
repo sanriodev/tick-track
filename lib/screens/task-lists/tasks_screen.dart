@@ -155,14 +155,117 @@ class _TasksScreenState extends State<TasksScreen> {
     }
   }
 
+  /// Whether the logged in user may tick this task off: only a protected or
+  /// private list belonging to somebody else is off limits. Same rule as
+  /// before, just expressed positively.
+  bool _canToggle(Task task) {
+    final isOwnList = task.taskList?.user?.username ==
+        AuthBackend().loggedInUser?.user?.username;
+    final mode = task.taskList?.privacyMode;
+    return isOwnList ||
+        (mode != PrivacyMode.protected && mode != PrivacyMode.private);
+  }
+
+  Widget _buildTaskCard(Task task) {
+    final theme = Theme.of(context);
+    final content = task.content?.trim() ?? '';
+    final enabled = _canToggle(task);
+
+    return Card(
+      margin: EdgeInsets.zero,
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(6, 8, 14, 8),
+        child: Row(
+          children: [
+            // leading, like every other todo list - the thumb lands on it
+            // without covering the text
+            Checkbox(
+              value: task.isDone,
+              onChanged: enabled
+                  ? (bool? value) async {
+                      Haptics.tick();
+                      task.isDone = value ?? false;
+                      await _updateTask(task);
+                    }
+                  : null,
+              activeColor: theme.primaryColor,
+              checkColor: theme.scaffoldBackgroundColor,
+              side: const BorderSide(color: Colors.grey, width: 1.5),
+              materialTapTargetSize: MaterialTapTargetSize.padded,
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    task.title,
+                    style: theme.primaryTextTheme.displaySmall?.copyWith(
+                      // a finished task stays readable but visibly steps back
+                      decoration:
+                          task.isDone ? TextDecoration.lineThrough : null,
+                      color: task.isDone
+                          ? theme.primaryTextTheme.displaySmall?.color
+                              ?.withValues(alpha: 0.5)
+                          : null,
+                    ),
+                  ),
+                  if (content.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 3),
+                      child: Text(
+                        content,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.primaryTextTheme.titleSmall?.copyWith(
+                          color: theme.primaryTextTheme.titleSmall?.color
+                              ?.withValues(alpha: task.isDone ? 0.4 : 0.75),
+                          height: 1.3,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Heading plus entries, or nothing at all for an empty group.
+  ///
+  /// Rendering an empty list is not free: a vertical [ListView] without an
+  /// explicit padding adopts the vertical insets of the ambient MediaQuery, so
+  /// even with zero items it keeps a height - which pushed the heading of the
+  /// group below it down.
+  List<Widget> _section(String label, List<Task> tasks) {
+    if (tasks.isEmpty) {
+      return const [];
+    }
+    return [
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Text(
+          label,
+          style: Theme.of(context).primaryTextTheme.displayLarge,
+        ),
+      ),
+      getAllListItems(tasks),
+    ];
+  }
+
   ListView getAllListItems(List<Task> tasks) {
     return ListView.builder(
         shrinkWrap: true,
+        // see _section: without this the list inherits the MediaQuery insets
+        padding: EdgeInsets.zero,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: tasks.length,
         itemBuilder: (BuildContext context, int index) {
           return Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
             child: Stack(
               clipBehavior: Clip.antiAlias,
               children: [
@@ -205,96 +308,7 @@ class _TasksScreenState extends State<TasksScreen> {
                           ),
                       ],
                     ),
-                    child: Card(
-                      margin: EdgeInsets.zero,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Padding(
-                                  padding: EdgeInsets.all(4),
-                                  child: Text("Titel",
-                                      style: Theme.of(context)
-                                          .primaryTextTheme
-                                          .bodyMedium
-                                          ?.copyWith(
-                                              color: Theme.of(context)
-                                                          .brightness ==
-                                                      Brightness.light
-                                                  ? Colors.grey[900]
-                                                  : Colors.white)),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.all(4),
-                                  child: Text(tasks[index].title,
-                                      style: Theme.of(context)
-                                          .primaryTextTheme
-                                          .titleSmall),
-                                ),
-                                if (tasks[index].content != null &&
-                                    tasks[index].content!.isNotEmpty)
-                                  Padding(
-                                    padding: const EdgeInsets.all(4),
-                                    child: Text("Inhalt",
-                                        style: Theme.of(context)
-                                            .primaryTextTheme
-                                            .bodyMedium
-                                            ?.copyWith(
-                                                color: Theme.of(context)
-                                                            .brightness ==
-                                                        Brightness.light
-                                                    ? Colors.grey[900]
-                                                    : Colors.white)),
-                                  ),
-                                if (tasks[index].content != null &&
-                                    tasks[index].content!.isNotEmpty)
-                                  Padding(
-                                    padding: const EdgeInsets.all(4),
-                                    child: Text(tasks[index].content!,
-                                        style: Theme.of(context)
-                                            .primaryTextTheme
-                                            .titleSmall),
-                                  ),
-                              ],
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: IgnorePointer(
-                              ignoring: tasks[index].taskList?.user?.username !=
-                                      AuthBackend()
-                                          .loggedInUser
-                                          ?.user
-                                          ?.username &&
-                                  (tasks[index].taskList?.privacyMode ==
-                                          PrivacyMode.protected ||
-                                      tasks[index].taskList?.privacyMode ==
-                                          PrivacyMode.private),
-                              child: Transform.scale(
-                                scale: 1.75,
-                                child: Checkbox(
-                                  value: tasks[index].isDone,
-                                  onChanged: (bool? value) async {
-                                    Haptics.tick();
-                                    tasks[index].isDone = value ?? false;
-                                    await _updateTask(tasks[index]);
-                                  },
-                                  activeColor: Theme.of(context).primaryColor,
-                                  checkColor:
-                                      Theme.of(context).scaffoldBackgroundColor,
-                                  side: const BorderSide(
-                                      color: Colors.grey, width: 1.5),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    )),
+                    child: _buildTaskCard(tasks[index])),
               ],
             ),
           );
@@ -375,30 +389,9 @@ class _TasksScreenState extends State<TasksScreen> {
                               mainAxisSize: MainAxisSize.min,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                if (incompleteTasks.isNotEmpty)
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 16, vertical: 8),
-                                    child: Text(
-                                      "Offene Tasks",
-                                      style: Theme.of(context)
-                                          .primaryTextTheme
-                                          .displayLarge,
-                                    ),
-                                  ),
-                                getAllListItems(incompleteTasks),
-                                if (completeTasks.isNotEmpty)
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 16, vertical: 8),
-                                    child: Text(
-                                      "Abgeschlossene Tasks",
-                                      style: Theme.of(context)
-                                          .primaryTextTheme
-                                          .displayLarge,
-                                    ),
-                                  ),
-                                getAllListItems(completeTasks)
+                                ..._section("Offene Tasks", incompleteTasks),
+                                ..._section(
+                                    "Abgeschlossene Tasks", completeTasks),
                               ],
                             ),
                           ),

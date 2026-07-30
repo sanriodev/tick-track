@@ -175,27 +175,45 @@ class _NotesScreenState extends State<NotesScreen> {
     }
   }
 
-  /// Section heading above a group of notes.
-  Widget _sectionHeader(String label) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Text(
-        label,
-        style: Theme.of(context).primaryTextTheme.displayLarge,
+  /// Heading plus entries, or nothing at all for an empty group.
+  ///
+  /// Rendering an empty list is not free: a vertical [ListView] without an
+  /// explicit padding adopts the vertical insets of the ambient MediaQuery, so
+  /// even with zero items it keeps a height - which pushed the heading of the
+  /// group below it down.
+  List<Widget> _section(String label, List<Note> notes) {
+    if (notes.isEmpty) {
+      return const [];
+    }
+    return [
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Text(
+          label,
+          style: Theme.of(context).primaryTextTheme.displayLarge,
+        ),
       ),
-    );
+      getAllListItems(notes),
+    ];
   }
 
   ListView getAllListItems(List<Note> notes) {
     return ListView.builder(
         shrinkWrap: true,
+        // see _section: without this the list inherits the MediaQuery insets
+        padding: EdgeInsets.zero,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: notes.length,
         itemBuilder: (BuildContext context, int index) {
           return NoteWidget(
-            onTap: () {
-              navigateToRoute(context, 'notes-edit',
+            onTap: () async {
+              await navigateToRoute(context, 'notes-edit',
                   extra: notes[index].id, backEnabled: true);
+              // the editor saves on the way out, so title and content preview
+              // in this list are stale as soon as we are back
+              if (mounted) {
+                await getNotes();
+              }
             },
             onDeletePress: () {
               deleteItem(
@@ -359,15 +377,9 @@ class _NotesScreenState extends State<NotesScreen> {
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              if (pinned.isNotEmpty)
-                                _sectionHeader("Angepinnt"),
-                              if (pinned.isNotEmpty) getAllListItems(pinned),
-                              if (own.others.isNotEmpty)
-                                _sectionHeader("Deine Notizen"),
-                              getAllListItems(own.others),
-                              if (shared.others.isNotEmpty)
-                                _sectionHeader("Geteilte Notizen"),
-                              getAllListItems(shared.others),
+                              ..._section("Angepinnt", pinned),
+                              ..._section("Deine Notizen", own.others),
+                              ..._section("Geteilte Notizen", shared.others),
                             ],
                           ),
                         ),

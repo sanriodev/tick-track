@@ -170,27 +170,45 @@ class _TaskListScreenState extends State<TaskListScreen> {
     }
   }
 
-  /// Section heading above a group of task lists.
-  Widget _sectionHeader(String label) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Text(
-        label,
-        style: Theme.of(context).primaryTextTheme.displayLarge,
+  /// Heading plus entries, or nothing at all for an empty group.
+  ///
+  /// Rendering an empty list is not free: a vertical [ListView] without an
+  /// explicit padding adopts the vertical insets of the ambient MediaQuery, so
+  /// even with zero items it keeps a height - which pushed the heading of the
+  /// group below it down.
+  List<Widget> _section(String label, List<TaskList> taskLists) {
+    if (taskLists.isEmpty) {
+      return const [];
+    }
+    return [
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Text(
+          label,
+          style: Theme.of(context).primaryTextTheme.displayLarge,
+        ),
       ),
-    );
+      getAllListItems(taskLists),
+    ];
   }
 
   ListView getAllListItems(List<TaskList> taskLists) {
     return ListView.builder(
         shrinkWrap: true,
+        // see _section: without this the list inherits the MediaQuery insets
+        padding: EdgeInsets.zero,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: taskLists.length,
         itemBuilder: (BuildContext context, int index) {
           return TaskListWidget(
-              onTap: () {
-                navigateToRoute(context, 'tasks',
+              onTap: () async {
+                await navigateToRoute(context, 'tasks',
                     extra: taskLists[index], backEnabled: true);
+                // tasks may have been added, ticked off or deleted in there,
+                // so the counters and the progress bar are stale
+                if (mounted) {
+                  await getTaskLists();
+                }
               },
               onDeletePress: () {
                 deleteItem(taskLists[index].id);
@@ -354,15 +372,9 @@ class _TaskListScreenState extends State<TaskListScreen> {
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              if (pinned.isNotEmpty)
-                                _sectionHeader("Angepinnt"),
-                              if (pinned.isNotEmpty) getAllListItems(pinned),
-                              if (own.others.isNotEmpty)
-                                _sectionHeader("Deine Listen"),
-                              getAllListItems(own.others),
-                              if (shared.others.isNotEmpty)
-                                _sectionHeader("Geteilte Listen"),
-                              getAllListItems(shared.others),
+                              ..._section("Angepinnt", pinned),
+                              ..._section("Deine Listen", own.others),
+                              ..._section("Geteilte Listen", shared.others),
                             ],
                           ),
                         ),
