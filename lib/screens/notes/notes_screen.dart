@@ -346,14 +346,12 @@ class _NotesScreenState extends State<NotesScreen> {
               child: isLoading
                   ? Container()
                   : !hasAnyNote
-                      ? EmptyStateWidget(
+                      ? const EmptyStateWidget(
                           icon: PhosphorIconsRegular.note,
                           title: 'Noch keine Notizen',
                           message:
                               'Halte hier Gedanken, Ideen und Absprachen fest. '
                               'Wische eine Notiz nach rechts, um sie anzupinnen oder zu teilen.',
-                          actionLabel: 'Erste Notiz anlegen',
-                          onAction: _showCreateNoteDialog,
                         )
                       : SingleChildScrollView(
                           physics: const AlwaysScrollableScrollPhysics(),

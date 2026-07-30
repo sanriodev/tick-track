@@ -340,14 +340,13 @@ class _TaskListScreenState extends State<TaskListScreen> {
               child: isLoading
                   ? Container()
                   : !hasAnyList
-                      ? EmptyStateWidget(
-                          icon: PhosphorIconsRegular.checkSquare,
+                      // same icon the bottom navigation uses for this screen
+                      ? const EmptyStateWidget(
+                          icon: PhosphorIconsRegular.list,
                           title: 'Noch keine Aufgabenlisten',
                           message:
                               'Bündle Aufgaben in Listen und verfolge, was schon erledigt ist. '
                               'Wische eine Liste nach rechts, um sie anzupinnen.',
-                          actionLabel: 'Erste Liste anlegen',
-                          onAction: _showCreateTaskListDialog,
                         )
                       : SingleChildScrollView(
                           physics: const AlwaysScrollableScrollPhysics(),

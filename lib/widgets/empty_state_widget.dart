@@ -9,17 +9,11 @@ class EmptyStateWidget extends StatelessWidget {
   final String title;
   final String message;
 
-  /// Optional call to action, e.g. "Erste Notiz anlegen".
-  final String? actionLabel;
-  final void Function()? onAction;
-
   const EmptyStateWidget({
     super.key,
     required this.icon,
     required this.title,
     required this.message,
-    this.actionLabel,
-    this.onAction,
   });
 
   @override
@@ -70,21 +64,6 @@ class EmptyStateWidget extends StatelessWidget {
               textAlign: TextAlign.center,
               style: theme.primaryTextTheme.titleSmall,
             ),
-            if (actionLabel != null && onAction != null) ...[
-              const SizedBox(height: 24),
-              ElevatedButton.icon(
-                onPressed: onAction,
-                icon: const Icon(Icons.add),
-                label: Text(
-                  actionLabel!,
-                  style: theme.primaryTextTheme.titleSmall?.copyWith(
-                    color: theme.brightness == Brightness.light
-                        ? Colors.white
-                        : Colors.grey[900],
-                  ),
-                ),
-              ),
-            ],
           ],
         ),
       ),

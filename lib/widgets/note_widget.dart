@@ -5,6 +5,7 @@ import 'package:ticktrack/util/haptics.dart';
 import 'package:ticktrack/util/helpers.dart';
 import 'package:ticktrack/util/report_helper.dart';
 import 'package:ticktrack/util/share_helper.dart';
+import 'package:ticktrack/widgets/slidable_underlay.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -33,7 +34,25 @@ class NoteWidget extends StatefulWidget {
   State<NoteWidget> createState() => _NoteWidgetState();
 }
 
-class _NoteWidgetState extends State<NoteWidget> {
+class _NoteWidgetState extends State<NoteWidget>
+    with SingleTickerProviderStateMixin {
+  /// Owned here instead of by the `Slidable` so the underlay behind it can
+  /// follow which pane is open. A controller passed in from outside is not
+  /// disposed by `Slidable`, so this state has to do it.
+  late final SlidableController _slidableController;
+
+  @override
+  void initState() {
+    super.initState();
+    _slidableController = SlidableController(this);
+  }
+
+  @override
+  void dispose() {
+    _slidableController.dispose();
+    super.dispose();
+  }
+
   bool get _isOwnNote =>
       widget.note.user?.username == AuthBackend().loggedInUser?.user?.username;
 
@@ -51,22 +70,25 @@ class _NoteWidgetState extends State<NoteWidget> {
       child: Stack(
         clipBehavior: Clip.antiAlias,
         children: [
-          Positioned.fill(
-            child: Builder(
-                builder: (context) => Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                      child: Container(
-                        color: Colors.red,
-                      ),
-                    )),
+          // pin sits at the outer left, share directly next to the card
+          SlidableUnderlay(
+            controller: _slidableController,
+            startColor: Theme.of(context).canvasColor,
+            endColor: Colors.red,
           ),
           Slidable(
-              key: UniqueKey(),
+              // stable per note: a UniqueKey would rebuild the state on every
+              // build, an index based match could carry an open pane over to
+              // another note when the list changes
+              key: ValueKey(widget.note.id),
+              controller: _slidableController,
               startActionPane: ActionPane(
                 motion: BehindMotion(),
+                // two actions at the same width the end pane's single one has
+                extentRatio: 0.6,
                 children: [
                   SlidableAction(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: slidableStartOuterRadius,
                     onPressed: (_) => _togglePin(),
                     backgroundColor: Theme.of(context).secondaryHeaderColor,
                     foregroundColor:
@@ -78,8 +100,9 @@ class _NoteWidgetState extends State<NoteWidget> {
                         : PhosphorIconsRegular.pushPin,
                     label: _isPinned ? 'Loslösen' : 'Anpinnen',
                   ),
+                  // sits between the pin and the card, so square on both
+                  // sides - which is the default radius
                   SlidableAction(
-                    borderRadius: BorderRadius.circular(12),
                     onPressed: (_) => shareNote(context, widget.note),
                     backgroundColor: Theme.of(context).canvasColor,
                     foregroundColor: Theme.of(context).primaryIconTheme.color,
@@ -94,7 +117,7 @@ class _NoteWidgetState extends State<NoteWidget> {
                 children: [
                   if (_isOwnNote)
                     SlidableAction(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: slidableEndOuterRadius,
                       onPressed: (_) {
                         Haptics.warning();
                         widget.onDeletePress?.call();
@@ -105,7 +128,7 @@ class _NoteWidgetState extends State<NoteWidget> {
                     )
                   else
                     SlidableAction(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: slidableEndOuterRadius,
                       onPressed: (_) => showReportContentDialog(
                         context,
                         entityType: 'note',

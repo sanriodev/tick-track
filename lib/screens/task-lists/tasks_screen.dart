@@ -14,6 +14,7 @@ import 'package:ticktrack/widgets/empty_state_widget.dart';
 import 'package:ticktrack/widgets/group/group_context_switcher.dart';
 import 'package:ticktrack/widgets/option_button.dart';
 import 'package:ticktrack/widgets/skeleton/skeleton_card.dart';
+import 'package:ticktrack/widgets/slidable_underlay.dart';
 import 'package:blvckleg_dart_core/exception/session_expired.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:flutter/material.dart';
@@ -165,18 +166,10 @@ class _TasksScreenState extends State<TasksScreen> {
             child: Stack(
               clipBehavior: Clip.antiAlias,
               children: [
-                Positioned.fill(
-                  child: Builder(
-                      builder: (context) => Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 10.0),
-                            child: Container(
-                              color: Colors.red,
-                            ),
-                          )),
-                ),
+                // no start pane on a task, so only the right side is filled
+                const SlidableUnderlay(endColor: Colors.red),
                 Slidable(
-                    key: UniqueKey(),
+                    key: ValueKey(tasks[index].id),
                     endActionPane: ActionPane(
                       motion: BehindMotion(),
                       extentRatio: 0.3,
@@ -184,7 +177,7 @@ class _TasksScreenState extends State<TasksScreen> {
                         if (tasks[index].taskList?.user?.username ==
                             AuthBackend().loggedInUser?.user?.username)
                           SlidableAction(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: slidableEndOuterRadius,
                             onPressed: (_) {
                               Haptics.warning();
                               _deleteTask(tasks[index].id);
@@ -195,7 +188,7 @@ class _TasksScreenState extends State<TasksScreen> {
                           )
                         else
                           SlidableAction(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: slidableEndOuterRadius,
                             onPressed: (_) => showReportContentDialog(
                               context,
                               entityType: 'task',
@@ -369,14 +362,12 @@ class _TasksScreenState extends State<TasksScreen> {
                 child: isLoading
                     ? Container()
                     : completeTasks.isEmpty && incompleteTasks.isEmpty
-                        ? EmptyStateWidget(
+                        ? const EmptyStateWidget(
                             icon: PhosphorIconsRegular.listChecks,
                             title: 'Diese Liste ist leer',
                             message:
                                 'Lege den ersten Eintrag an - abgehakte Aufgaben '
                                 'rutschen automatisch nach unten.',
-                            actionLabel: 'Ersten Eintrag anlegen',
-                            onAction: _showCreateTaskDialog,
                           )
                         : SingleChildScrollView(
                             physics: const AlwaysScrollableScrollPhysics(),
