@@ -1,7 +1,10 @@
 import 'package:ticktrack/enum/privacy_mode_enum.dart';
 import 'package:ticktrack/models/note/note_api_model.dart';
+import 'package:ticktrack/state/pin_store.dart';
+import 'package:ticktrack/util/haptics.dart';
 import 'package:ticktrack/util/helpers.dart';
 import 'package:ticktrack/util/report_helper.dart';
+import 'package:ticktrack/util/share_helper.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -34,6 +37,13 @@ class _NoteWidgetState extends State<NoteWidget> {
   bool get _isOwnNote =>
       widget.note.user?.username == AuthBackend().loggedInUser?.user?.username;
 
+  bool get _isPinned => PinStore().isPinned(PinStore.noteKind, widget.note.id);
+
+  Future<void> _togglePin() async {
+    Haptics.tick();
+    await PinStore().toggle(PinStore.noteKind, widget.note.id);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -52,6 +62,32 @@ class _NoteWidgetState extends State<NoteWidget> {
           ),
           Slidable(
               key: UniqueKey(),
+              startActionPane: ActionPane(
+                motion: BehindMotion(),
+                children: [
+                  SlidableAction(
+                    borderRadius: BorderRadius.circular(12),
+                    onPressed: (_) => _togglePin(),
+                    backgroundColor: Theme.of(context).secondaryHeaderColor,
+                    foregroundColor:
+                        Theme.of(context).brightness == Brightness.light
+                            ? Colors.white
+                            : Colors.grey[900],
+                    icon: _isPinned
+                        ? PhosphorIconsFill.pushPin
+                        : PhosphorIconsRegular.pushPin,
+                    label: _isPinned ? 'Loslösen' : 'Anpinnen',
+                  ),
+                  SlidableAction(
+                    borderRadius: BorderRadius.circular(12),
+                    onPressed: (_) => shareNote(context, widget.note),
+                    backgroundColor: Theme.of(context).canvasColor,
+                    foregroundColor: Theme.of(context).primaryIconTheme.color,
+                    icon: PhosphorIconsRegular.shareNetwork,
+                    label: 'Teilen',
+                  ),
+                ],
+              ),
               endActionPane: ActionPane(
                 motion: BehindMotion(),
                 extentRatio: 0.3,
@@ -59,7 +95,10 @@ class _NoteWidgetState extends State<NoteWidget> {
                   if (_isOwnNote)
                     SlidableAction(
                       borderRadius: BorderRadius.circular(12),
-                      onPressed: (_) => widget.onDeletePress?.call(),
+                      onPressed: (_) {
+                        Haptics.warning();
+                        widget.onDeletePress?.call();
+                      },
                       backgroundColor: Colors.red,
                       foregroundColor: Colors.white,
                       icon: Icons.delete,
@@ -153,38 +192,59 @@ class _NoteWidgetState extends State<NoteWidget> {
                                 ],
                               ),
                             ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.only(left: 12, right: 12),
-                              child: PopupMenuButton<PrivacyMode>(
-                                enabled: widget.note.user?.username ==
-                                    AuthBackend().loggedInUser?.user?.username,
-                                tooltip: 'Privatsphäre',
-                                onSelected: (mode) =>
-                                    widget.onChangePrivacy?.call(mode),
-                                itemBuilder: (context) => [
-                                  const PopupMenuItem(
-                                    value: PrivacyMode.private,
-                                    child: Text(
-                                        'Privat - nur du kannst sehen/bearbeiten'),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (_isPinned)
+                                  IconButton(
+                                    tooltip: 'Angepinnt - tippen zum Loslösen',
+                                    onPressed: _togglePin,
+                                    icon: PhosphorIcon(
+                                      PhosphorIconsFill.pushPin,
+                                      size: 18,
+                                      color: Theme.of(context)
+                                          .primaryIconTheme
+                                          .color,
+                                    ),
                                   ),
-                                  const PopupMenuItem(
-                                    value: PrivacyMode.protected,
-                                    child: Text(
-                                        'Geschützt - alle können sehen, bearbeiten nur du'),
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                      left: 12, right: 12),
+                                  child: PopupMenuButton<PrivacyMode>(
+                                    enabled: widget.note.user?.username ==
+                                        AuthBackend()
+                                            .loggedInUser
+                                            ?.user
+                                            ?.username,
+                                    tooltip: 'Privatsphäre',
+                                    onSelected: (mode) =>
+                                        widget.onChangePrivacy?.call(mode),
+                                    itemBuilder: (context) => [
+                                      const PopupMenuItem(
+                                        value: PrivacyMode.private,
+                                        child: Text(
+                                            'Privat - nur du kannst sehen/bearbeiten'),
+                                      ),
+                                      const PopupMenuItem(
+                                        value: PrivacyMode.protected,
+                                        child: Text(
+                                            'Geschützt - alle können sehen, bearbeiten nur du'),
+                                      ),
+                                      const PopupMenuItem(
+                                        value: PrivacyMode.public,
+                                        child: Text(
+                                            'Öffentlich - alle können sehen/bearbeiten'),
+                                      ),
+                                    ],
+                                    child: Icon(
+                                      privacyIconFor(widget.note.privacyMode),
+                                      color: Theme.of(context)
+                                          .primaryIconTheme
+                                          .color,
+                                    ),
                                   ),
-                                  const PopupMenuItem(
-                                    value: PrivacyMode.public,
-                                    child: Text(
-                                        'Öffentlich - alle können sehen/bearbeiten'),
-                                  ),
-                                ],
-                                child: Icon(
-                                  privacyIconFor(widget.note.privacyMode),
-                                  color:
-                                      Theme.of(context).primaryIconTheme.color,
                                 ),
-                              ),
+                              ],
                             ),
                           ],
                         ),

@@ -1,5 +1,7 @@
 import 'package:ticktrack/enum/privacy_mode_enum.dart';
 import 'package:ticktrack/models/tasklist/task_list_api_model.dart';
+import 'package:ticktrack/state/pin_store.dart';
+import 'package:ticktrack/util/haptics.dart';
 import 'package:ticktrack/util/helpers.dart';
 import 'package:ticktrack/util/report_helper.dart';
 import 'package:ticktrack/widgets/accordion/accordion_section.dart';
@@ -44,6 +46,14 @@ class _TaskListWidgetState extends State<TaskListWidget> {
       widget.taskList.user?.username ==
       AuthBackend().loggedInUser?.user?.username;
 
+  bool get _isPinned =>
+      PinStore().isPinned(PinStore.taskListKind, widget.taskList.id);
+
+  Future<void> _togglePin() async {
+    Haptics.tick();
+    await PinStore().toggle(PinStore.taskListKind, widget.taskList.id);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -62,6 +72,22 @@ class _TaskListWidgetState extends State<TaskListWidget> {
           ),
           Slidable(
               key: UniqueKey(),
+              startActionPane: ActionPane(
+                motion: BehindMotion(),
+                extentRatio: 0.3,
+                children: [
+                  SlidableAction(
+                    borderRadius: BorderRadius.circular(12),
+                    onPressed: (_) => _togglePin(),
+                    backgroundColor: Theme.of(context).canvasColor,
+                    foregroundColor: Theme.of(context).primaryIconTheme.color,
+                    icon: _isPinned
+                        ? PhosphorIconsFill.pushPin
+                        : PhosphorIconsRegular.pushPin,
+                    label: _isPinned ? 'Loslösen' : 'Anpinnen',
+                  ),
+                ],
+              ),
               endActionPane: ActionPane(
                 motion: BehindMotion(),
                 extentRatio: 0.3,
@@ -69,7 +95,10 @@ class _TaskListWidgetState extends State<TaskListWidget> {
                   if (_isOwnList)
                     SlidableAction(
                       borderRadius: BorderRadius.circular(12),
-                      onPressed: (_) => widget.onDeletePress?.call(),
+                      onPressed: (_) {
+                        Haptics.warning();
+                        widget.onDeletePress?.call();
+                      },
                       backgroundColor: Colors.red,
                       foregroundColor: Colors.white,
                       icon: Icons.delete,
@@ -143,6 +172,18 @@ class _TaskListWidgetState extends State<TaskListWidget> {
                               ),
                             ),
                           ),
+                          if (_isPinned)
+                            Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: PhosphorIcon(
+                                PhosphorIconsFill.pushPin,
+                                size: 18,
+                                color: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? Colors.white
+                                    : Colors.grey[900],
+                              ),
+                            ),
                           Text(
                             widget.taskList.name,
                             style: Theme.of(context)

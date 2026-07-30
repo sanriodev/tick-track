@@ -6,8 +6,11 @@ import 'package:ticktrack/models/tasklist/dto/update_task_list_dto.dart';
 import 'package:ticktrack/models/tasklist/task_list_api_model.dart';
 import 'package:ticktrack/models/tasklist/dto/create_task_list_dto.dart';
 import 'package:ticktrack/state/group_context.dart';
+import 'package:ticktrack/state/pin_store.dart';
+import 'package:ticktrack/util/haptics.dart';
 import 'package:ticktrack/util/helpers.dart';
 import 'package:ticktrack/widgets/app_drawer_widget.dart';
+import 'package:ticktrack/widgets/empty_state_widget.dart';
 import 'package:ticktrack/widgets/group/group_context_switcher.dart';
 import 'package:ticktrack/widgets/navigation/bottom_menu.dart';
 import 'package:ticktrack/widgets/option_button.dart';
@@ -16,6 +19,7 @@ import 'package:ticktrack/widgets/task_list_widget.dart';
 import 'package:blvckleg_dart_core/exception/session_expired.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 class TaskListScreen extends StatefulWidget {
@@ -36,18 +40,27 @@ class _TaskListScreenState extends State<TaskListScreen> {
   void initState() {
     super.initState();
     GroupContext().addListener(_onGroupContextChanged);
+    PinStore().addListener(_onPinsChanged);
     getTaskLists();
   }
 
   @override
   void dispose() {
     GroupContext().removeListener(_onGroupContextChanged);
+    PinStore().removeListener(_onPinsChanged);
     super.dispose();
   }
 
   void _onGroupContextChanged() {
     if (mounted) {
       getTaskLists();
+    }
+  }
+
+  /// Pinning does not touch the backend, the list only has to regroup.
+  void _onPinsChanged() {
+    if (mounted) {
+      setState(() {});
     }
   }
 
@@ -70,6 +83,10 @@ class _TaskListScreenState extends State<TaskListScreen> {
               element.user!.username !=
               AuthBackend().loggedInUser?.user?.username)
           .toList();
+      // res is the full, unfiltered list for the active context, so stale
+      // pins of deleted lists can safely be dropped here
+      await PinStore()
+          .pruneMissing(PinStore.taskListKind, res.map((list) => list.id));
       setState(() {
         ownTaskLists = own;
         sharedTaskLists = shared;
@@ -153,6 +170,17 @@ class _TaskListScreenState extends State<TaskListScreen> {
     }
   }
 
+  /// Section heading above a group of task lists.
+  Widget _sectionHeader(String label) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Text(
+        label,
+        style: Theme.of(context).primaryTextTheme.displayLarge,
+      ),
+    );
+  }
+
   ListView getAllListItems(List<TaskList> taskLists) {
     return ListView.builder(
         shrinkWrap: true,
@@ -180,8 +208,90 @@ class _TaskListScreenState extends State<TaskListScreen> {
         });
   }
 
+  Future<void> _showCreateTaskListDialog() async {
+    final TextEditingController nameController =
+        TextEditingController(text: collectionName);
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(
+            'Neue Liste',
+            style: Theme.of(context).primaryTextTheme.bodySmall,
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextField(
+                controller: nameController,
+                autofocus: true,
+                style: Theme.of(context).primaryTextTheme.bodySmall,
+                decoration: InputDecoration(
+                  labelText: 'Name der Liste',
+                  labelStyle: Theme.of(context).primaryTextTheme.bodySmall,
+                ),
+              ),
+            ],
+          ),
+          actionsAlignment: MainAxisAlignment.spaceEvenly,
+          actionsPadding: const EdgeInsets.all(16),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text('Abbrechen',
+                  style: Theme.of(context).primaryTextTheme.titleSmall),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final name = nameController.text.trim();
+                if (name.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('Bitte einen Namen eingeben.')),
+                  );
+                  return;
+                }
+                await createNewItem(CreateTaskListDto(
+                  name: name,
+                  groupId: GroupContext().activeGroup?.id,
+                ));
+                if (mounted) {
+                  Navigator.of(dialogContext).pop();
+                }
+              },
+              child: Text(
+                'Erstellen',
+                style: Theme.of(context).primaryTextTheme.titleSmall?.copyWith(
+                      color: Theme.of(context).brightness == Brightness.light
+                          ? Colors.white
+                          : Colors.grey[900],
+                    ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    // pinned lists are lifted into their own section on top, no matter
+    // whether they are the user's own or shared with them
+    final own = PinStore().partition(
+      PinStore.taskListKind,
+      ownTaskLists,
+      (list) => list.id,
+    );
+    final shared = PinStore().partition(
+      PinStore.taskListKind,
+      sharedTaskLists,
+      (list) => list.id,
+    );
+    final pinned = [...own.pinned, ...shared.pinned];
+    final hasAnyList = ownTaskLists.isNotEmpty || sharedTaskLists.isNotEmpty;
+
     return Scaffold(
       key: _scaffoldKey,
       bottomNavigationBar: const BottomMenu(),
@@ -201,76 +311,9 @@ class _TaskListScreenState extends State<TaskListScreen> {
       ),
       endDrawer: AppDrawer(),
       floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final TextEditingController nameController =
-              TextEditingController(text: collectionName);
-          await showDialog<void>(
-            context: context,
-            builder: (dialogContext) {
-              return AlertDialog(
-                title: Text(
-                  'Neue Liste',
-                  style: Theme.of(context).primaryTextTheme.bodySmall,
-                ),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    TextField(
-                      controller: nameController,
-                      autofocus: true,
-                      style: Theme.of(context).primaryTextTheme.bodySmall,
-                      decoration: InputDecoration(
-                        labelText: 'Name der Liste',
-                        labelStyle:
-                            Theme.of(context).primaryTextTheme.bodySmall,
-                      ),
-                    ),
-                  ],
-                ),
-                actionsAlignment: MainAxisAlignment.spaceEvenly,
-                actionsPadding: const EdgeInsets.all(16),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(dialogContext).pop(),
-                    child: Text('Abbrechen',
-                        style: Theme.of(context).primaryTextTheme.titleSmall),
-                  ),
-                  ElevatedButton(
-                    onPressed: () async {
-                      final name = nameController.text.trim();
-                      if (name.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text('Bitte einen Namen eingeben.')),
-                        );
-                        return;
-                      }
-                      await createNewItem(CreateTaskListDto(
-                        name: name,
-                        groupId: GroupContext().activeGroup?.id,
-                      ));
-                      if (mounted) {
-                        Navigator.of(dialogContext).pop();
-                      }
-                    },
-                    child: Text(
-                      'Erstellen',
-                      style: Theme.of(context)
-                          .primaryTextTheme
-                          .titleSmall
-                          ?.copyWith(
-                            color:
-                                Theme.of(context).brightness == Brightness.light
-                                    ? Colors.white
-                                    : Colors.grey[900],
-                          ),
-                    ),
-                  ),
-                ],
-              );
-            },
-          );
+        onPressed: () {
+          Haptics.tap();
+          _showCreateTaskListDialog();
         },
         tooltip: 'Neue Liste',
         child: const Icon(Icons.add),
@@ -294,39 +337,36 @@ class _TaskListScreenState extends State<TaskListScreen> {
                   enabled: isLoading,
                   child: const SkeletonCard()),
             Expanded(
-              child: !isLoading
-                  ? SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (ownTaskLists.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 8),
-                              child: Text("Deine Listen",
-                                  style: Theme.of(context)
-                                      .primaryTextTheme
-                                      .displayLarge),
-                            ),
-                          getAllListItems(ownTaskLists),
-                          if (sharedTaskLists.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 8),
-                              child: Text(
-                                "Geteilte Listen",
-                                style: Theme.of(context)
-                                    .primaryTextTheme
-                                    .displayLarge,
-                              ),
-                            ),
-                          getAllListItems(sharedTaskLists)
-                        ],
-                      ),
-                    )
-                  : Container(),
+              child: isLoading
+                  ? Container()
+                  : !hasAnyList
+                      ? EmptyStateWidget(
+                          icon: PhosphorIconsRegular.checkSquare,
+                          title: 'Noch keine Aufgabenlisten',
+                          message:
+                              'Bündle Aufgaben in Listen und verfolge, was schon erledigt ist. '
+                              'Wische eine Liste nach rechts, um sie anzupinnen.',
+                          actionLabel: 'Erste Liste anlegen',
+                          onAction: _showCreateTaskListDialog,
+                        )
+                      : SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (pinned.isNotEmpty)
+                                _sectionHeader("Angepinnt"),
+                              if (pinned.isNotEmpty) getAllListItems(pinned),
+                              if (own.others.isNotEmpty)
+                                _sectionHeader("Deine Listen"),
+                              getAllListItems(own.others),
+                              if (shared.others.isNotEmpty)
+                                _sectionHeader("Geteilte Listen"),
+                              getAllListItems(shared.others),
+                            ],
+                          ),
+                        ),
             ),
           ],
         ),
