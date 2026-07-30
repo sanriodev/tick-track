@@ -513,6 +513,25 @@ class Backend extends ABackend {
     }
   }
 
+  /// Renames the logged in account and returns the name the backend stored.
+  ///
+  /// Like [changeOwnPassword] this goes through the backend's own endpoint
+  /// instead of the auth lib's `PATCH v2/user/:id`, which cannot work for a
+  /// self service change: its own-check compares the token id against the body
+  /// id, and the backend's whitelisting pipe strips that body id.
+  Future<String> changeOwnUsername(String username) async {
+    final body = json.encode({'username': username});
+    final res = await patch(body, 'v1/account/username');
+
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      final jsonData = await json.decode(utf8.decode(res.bodyBytes))['data']
+          as Map<String, dynamic>;
+      return jsonData['username'] as String;
+    } else {
+      throw res;
+    }
+  }
+
   /// Changes the password of the logged in user. Uses the backend's own
   /// change-password endpoint (the user id is taken from the bearer token).
   Future<void> changeOwnPassword(String password) async {
@@ -533,8 +552,7 @@ class Backend extends ABackend {
     String? email,
   }) async {
     final query = <String>[
-      if (username != null)
-        'username=${Uri.encodeQueryComponent(username)}',
+      if (username != null) 'username=${Uri.encodeQueryComponent(username)}',
       if (email != null) 'email=${Uri.encodeQueryComponent(email)}',
     ].join('&');
     final res = await get('v1/application/check-username?$query');

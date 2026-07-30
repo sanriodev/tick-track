@@ -57,6 +57,25 @@ Future<void> deleteBoxAndNavigateToLogin(BuildContext context) async {
   }
 }
 
+/// Writes a fresh username into the cached session after the account was
+/// renamed.
+///
+/// Ownership all over the app is decided by comparing a content's author
+/// against `AuthBackend().loggedInUser?.user?.username`. That cached copy
+/// would otherwise keep the old name until the next login, and the user would
+/// look like a stranger on their own notes and lists.
+Future<void> applyRenamedUsername(String username) async {
+  final session = AuthBackend().loggedInUser;
+  final user = session?.user;
+  if (session == null || user == null) {
+    return;
+  }
+
+  user.username = username;
+  final Box<LoginResponse> loginBox = Hive.box<LoginResponse>('auth');
+  await loginBox.put('auth', session);
+}
+
 /// Loads the group context after a successful login and decides where to
 /// go: users without any group are forced into the group onboarding,
 /// everyone else lands on the home screen.
