@@ -9,6 +9,7 @@ void main() async {
   await registerDartCore();
   await Hive.openBox('theme');
   await Hive.openBox('groupContext');
+  await Hive.openBox('pins');
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
   runApp(const MainAppScreen());

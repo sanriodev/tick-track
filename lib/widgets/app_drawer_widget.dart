@@ -1,10 +1,7 @@
 // ignore_for_file: use_build_context_synchronously, avoid_dynamic_calls
 
-import 'package:ticktrack/backend/service/backend_service.dart';
 import 'package:ticktrack/screens/home/main_app_screen.dart';
 import 'package:ticktrack/util/helpers.dart';
-import 'package:blvckleg_dart_core/exception/session_expired.dart';
-import 'package:blvckleg_dart_core/models/user/user_model.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -25,20 +22,10 @@ class _AppDrawerState extends State<AppDrawer> {
     buildNumber: 'Unknown',
   );
 
-  User? _ownUser;
-
   @override
   void initState() {
     super.initState();
     _initPackageInfo();
-    _getOwnUser();
-  }
-
-  Future<void> _getOwnUser() async {
-    final res = await AuthBackend().getOwnUser();
-    setState(() {
-      _ownUser = res;
-    });
   }
 
   Future<void> _initPackageInfo() async {
@@ -46,277 +33,6 @@ class _AppDrawerState extends State<AppDrawer> {
     setState(() {
       _packageInfo = info;
     });
-  }
-
-  Future<void> _changePassword(String newPassword) async {
-    try {
-      await Backend().changeOwnPassword(newPassword);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Passwort erfolgreich geändert.')),
-      );
-    } catch (e) {
-      if (e is SessionExpiredException) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Bitte melde dich erneut an.')),
-        );
-
-        try {
-          await AuthBackend().postLogout();
-          await deleteBoxAndNavigateToLogin(context);
-        } catch (e) {
-          await deleteBoxAndNavigateToLogin(context);
-        }
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Passwort ändern fehlgeschlagen.')),
-        );
-      }
-    }
-  }
-
-  Future<void> _showChangePasswordDialogue() async {
-    String newPassword = '';
-    String newPasswordConfirm = '';
-    final theme = Theme.of(context);
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(
-            'Passwort ändern.',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          content: StatefulBuilder(
-            builder: (context, setDialogState) {
-              final passwordsMatch = newPassword.isNotEmpty &&
-                  newPasswordConfirm.isNotEmpty &&
-                  newPassword == newPasswordConfirm;
-              final showError =
-                  newPasswordConfirm.isNotEmpty && !passwordsMatch;
-
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextFormField(
-                    obscureText: true,
-                    style: theme.primaryTextTheme.bodySmall,
-                    decoration: InputDecoration(
-                      labelText: 'Neues Passwort',
-                      labelStyle: theme.primaryTextTheme.bodySmall,
-                      hintStyle: theme.primaryTextTheme.bodySmall,
-                      border: OutlineInputBorder(),
-                    ),
-                    onChanged: (value) {
-                      setDialogState(() {
-                        newPassword = value;
-                      });
-                    },
-                  ),
-                  SizedBox(height: 16),
-                  TextFormField(
-                    obscureText: true,
-                    style: theme.primaryTextTheme.bodySmall,
-                    decoration: InputDecoration(
-                      labelText: 'Passwort bestätigen',
-                      labelStyle: theme.primaryTextTheme.bodySmall,
-                      hintStyle: theme.primaryTextTheme.bodySmall,
-                      border: OutlineInputBorder(),
-                      errorText:
-                          showError ? 'Passwörter stimmen nicht überein' : null,
-                      errorStyle: theme.primaryTextTheme.bodySmall?.copyWith(
-                        color: Colors.red,
-                      ),
-                      errorBorder: showError
-                          ? OutlineInputBorder(
-                              borderSide:
-                                  BorderSide(color: Colors.red, width: 2),
-                            )
-                          : null,
-                      focusedErrorBorder: showError
-                          ? OutlineInputBorder(
-                              borderSide:
-                                  BorderSide(color: Colors.red, width: 2),
-                            )
-                          : null,
-                    ),
-                    onChanged: (value) {
-                      setDialogState(() {
-                        newPasswordConfirm = value;
-                      });
-                    },
-                  ),
-                ],
-              );
-            },
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('Abbrechen'),
-            ),
-            TextButton(
-              onPressed: () async {
-                if (newPasswordConfirm != newPassword ||
-                    newPassword.isEmpty ||
-                    _ownUser == null) {
-                  return;
-                }
-                await _changePassword(newPassword);
-                if (context.mounted) {
-                  Navigator.of(context).pop();
-                }
-              },
-              child: Text('Bestätigen'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<void> _changeActivityPrivacy() async {
-    try {
-      final backend = Backend();
-      if (_ownUser != null && _ownUser!.publicActivity != null) {
-        await backend.setActivityPrivacy(!_ownUser!.publicActivity!);
-      }
-    } catch (e) {
-      if (e is SessionExpiredException) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Bitte melde dich erneut an.')),
-        );
-
-        try {
-          await AuthBackend().postLogout();
-          await deleteBoxAndNavigateToLogin(context);
-        } catch (e) {
-          await deleteBoxAndNavigateToLogin(context);
-        }
-      }
-    }
-  }
-
-  /// Two-step confirmation: the account and everything in it is gone for
-  /// good, so a single mistap must not be enough.
-  Future<void> _showDeleteAccountDialogue() async {
-    final theme = Theme.of(context);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: Text(
-            'Account löschen?',
-            style: theme.textTheme.titleMedium,
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Dein Account wird endgültig gelöscht. Alle deine Notizen, '
-                'Aufgabenlisten und Aufgaben gehen dabei unwiderruflich '
-                'verloren, und du wirst aus allen Gruppen entfernt.',
-                style: theme.textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Das kann nicht rückgängig gemacht werden.',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: theme.colorScheme.error,
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop(false);
-              },
-              child: Text('Abbrechen'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop(true);
-              },
-              child: Text(
-                'Endgültig löschen',
-                style: TextStyle(color: theme.colorScheme.error),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (confirmed ?? false) {
-      await _deleteAccount();
-    }
-  }
-
-  Future<void> _deleteAccount() async {
-    try {
-      await Backend().deleteOwnAccount();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Dein Account wurde gelöscht.')),
-      );
-      // the account is gone, so there is no session left to log out of
-      await deleteBoxAndNavigateToLogin(context);
-    } catch (e) {
-      // an expired session means the account is still there - the user has to
-      // sign in again before they can delete it
-      await showBackendError(
-        context,
-        e,
-        'Account konnte nicht gelöscht werden',
-      );
-    }
-  }
-
-  void _showActivityDialogue() {
-    final isCurrentlyPublic = _ownUser != null &&
-        _ownUser!.publicActivity != null &&
-        _ownUser!.publicActivity!;
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(
-            isCurrentlyPublic
-                ? 'Aktivitäten nicht teilen?'
-                : 'Aktivitäten teilen?',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          content: Text(
-            isCurrentlyPublic
-                ? 'Aktivitäten werden nicht länger geteilt.'
-                : 'Andere Benutzer können sehen wenn Sie Einträge erstellen, aktualisieren oder löschen',
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('Abbrechen'),
-            ),
-            TextButton(
-              onPressed: () async {
-                await _changeActivityPrivacy();
-                await _getOwnUser();
-                if (context.mounted) {
-                  Navigator.of(context).pop();
-                }
-              },
-              child: Text('Bestätigen'),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   @override
@@ -382,20 +98,23 @@ class _AppDrawerState extends State<AppDrawer> {
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ),
+            const Divider(),
+            // everything about the own account lives in the profile screen -
+            // name, email, password and activity visibility
             ListTile(
               onTap: () {
-                _showActivityDialogue();
+                Navigator.of(context).pop();
+                navigateToRoute(context, 'profile', backEnabled: true);
               },
               leading: PhosphorIcon(
-                PhosphorIcons.pulse(),
+                PhosphorIconsRegular.userCircle,
                 color: Theme.of(context).primaryIconTheme.color,
               ),
               title: Text(
-                'Aktivität - ${_ownUser != null && _ownUser!.publicActivity != null && _ownUser!.publicActivity! ? 'Öffentlich' : 'Privat'}',
+                'Profil bearbeiten',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ),
-            const Divider(),
             ListTile(
               onTap: () {
                 Navigator.of(context).pop();
@@ -412,19 +131,6 @@ class _AppDrawerState extends State<AppDrawer> {
             ),
             const Spacer(),
             ListTile(
-              onTap: () {
-                _showChangePasswordDialogue();
-              },
-              leading: PhosphorIcon(
-                PhosphorIconsRegular.password,
-                color: Theme.of(context).primaryIconTheme.color,
-              ),
-              title: Text(
-                'Passwort ändern',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ),
-            ListTile(
               onTap: () async {
                 try {
                   await AuthBackend().postLogout();
@@ -440,21 +146,6 @@ class _AppDrawerState extends State<AppDrawer> {
               title: Text(
                 'Abmelden',
                 style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ),
-            ListTile(
-              onTap: () {
-                _showDeleteAccountDialogue();
-              },
-              leading: PhosphorIcon(
-                PhosphorIconsRegular.trash,
-                color: Theme.of(context).colorScheme.error,
-              ),
-              title: Text(
-                'Account löschen',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
               ),
             ),
             Align(

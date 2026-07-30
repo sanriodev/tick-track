@@ -7,6 +7,7 @@ import 'package:ticktrack/screens/login/login_screen.dart';
 import 'package:ticktrack/screens/login/onboarding/onboarding_screen.dart';
 import 'package:ticktrack/screens/notes/notes_edit_screen.dart';
 import 'package:ticktrack/screens/notes/notes_screen.dart';
+import 'package:ticktrack/screens/profile/profile_screen.dart';
 import 'package:ticktrack/screens/splash/splash_screen.dart';
 import 'package:ticktrack/screens/task-lists/task_list_screen.dart';
 import 'package:ticktrack/screens/task-lists/tasks_screen.dart';
@@ -118,6 +119,22 @@ GoRouter createRouter() {
           key: state.pageKey,
           name: 'group-details',
           child: const GroupDetailsScreen(),
+          transitionDuration: const Duration(milliseconds: transitionDuration),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: CurveTween(curve: Curves.easeIn).animate(animation),
+              child: child,
+            );
+          },
+        ),
+      ),
+      GoRoute(
+        name: 'profile',
+        path: '/profile',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          name: 'profile',
+          child: const ProfileScreen(),
           transitionDuration: const Duration(milliseconds: transitionDuration),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(

@@ -12,19 +12,26 @@ import 'package:http/http.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-void navigateToRoute(
+/// Navigates to [routeName].
+///
+/// With [backEnabled] the target is pushed on top of the current screen and
+/// the returned future completes once it is popped again - callers await it to
+/// reload content the target may have changed. Without it the stack is
+/// replaced and the future completes right away.
+Future<T?> navigateToRoute<T>(
   BuildContext context,
   String routeName, {
   Object? extra,
   bool backEnabled = false,
-}) {
-  if (context.mounted) {
-    if (backEnabled) {
-      context.pushNamed(routeName, extra: extra);
-    } else {
-      context.goNamed(routeName, extra: extra);
-    }
+}) async {
+  if (!context.mounted) {
+    return null;
   }
+  if (backEnabled) {
+    return context.pushNamed<T>(routeName, extra: extra);
+  }
+  context.goNamed(routeName, extra: extra);
+  return null;
 }
 
 Future<void> launchUrlInBrowser(Uri url) async {
@@ -48,6 +55,25 @@ Future<void> deleteBoxAndNavigateToLogin(BuildContext context) async {
       'login',
     );
   }
+}
+
+/// Writes a fresh username into the cached session after the account was
+/// renamed.
+///
+/// Ownership all over the app is decided by comparing a content's author
+/// against `AuthBackend().loggedInUser?.user?.username`. That cached copy
+/// would otherwise keep the old name until the next login, and the user would
+/// look like a stranger on their own notes and lists.
+Future<void> applyRenamedUsername(String username) async {
+  final session = AuthBackend().loggedInUser;
+  final user = session?.user;
+  if (session == null || user == null) {
+    return;
+  }
+
+  user.username = username;
+  final Box<LoginResponse> loginBox = Hive.box<LoginResponse>('auth');
+  await loginBox.put('auth', session);
 }
 
 /// Loads the group context after a successful login and decides where to

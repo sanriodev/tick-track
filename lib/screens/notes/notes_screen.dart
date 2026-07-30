@@ -6,8 +6,11 @@ import 'package:ticktrack/models/note/dto/update_note_dto.dart';
 import 'package:ticktrack/models/note/note_api_model.dart';
 import 'package:ticktrack/models/note/dto/create_note_dto.dart';
 import 'package:ticktrack/state/group_context.dart';
+import 'package:ticktrack/state/pin_store.dart';
+import 'package:ticktrack/util/haptics.dart';
 import 'package:ticktrack/util/helpers.dart';
 import 'package:ticktrack/widgets/app_drawer_widget.dart';
+import 'package:ticktrack/widgets/empty_state_widget.dart';
 import 'package:ticktrack/widgets/group/group_context_switcher.dart';
 import 'package:ticktrack/widgets/navigation/bottom_menu.dart';
 import 'package:ticktrack/widgets/note_widget.dart';
@@ -16,6 +19,7 @@ import 'package:ticktrack/widgets/skeleton/skeleton_card.dart';
 import 'package:blvckleg_dart_core/exception/session_expired.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 class NotesScreen extends StatefulWidget {
@@ -35,18 +39,27 @@ class _NotesScreenState extends State<NotesScreen> {
   void initState() {
     super.initState();
     GroupContext().addListener(_onGroupContextChanged);
+    PinStore().addListener(_onPinsChanged);
     getNotes();
   }
 
   @override
   void dispose() {
     GroupContext().removeListener(_onGroupContextChanged);
+    PinStore().removeListener(_onPinsChanged);
     super.dispose();
   }
 
   void _onGroupContextChanged() {
     if (mounted) {
       getNotes();
+    }
+  }
+
+  /// Pinning does not touch the backend, the list only has to regroup.
+  void _onPinsChanged() {
+    if (mounted) {
+      setState(() {});
     }
   }
 
@@ -69,6 +82,10 @@ class _NotesScreenState extends State<NotesScreen> {
               element.user!.username !=
               AuthBackend().loggedInUser?.user?.username)
           .toList();
+      // res is the full, unfiltered list for the active context, so stale
+      // pins of deleted notes can safely be dropped here
+      await PinStore()
+          .pruneMissing(PinStore.noteKind, res.map((note) => note.id));
       setState(() {
         isLoading = false;
         ownNotes = own;
@@ -158,16 +175,45 @@ class _NotesScreenState extends State<NotesScreen> {
     }
   }
 
+  /// Heading plus entries, or nothing at all for an empty group.
+  ///
+  /// Rendering an empty list is not free: a vertical [ListView] without an
+  /// explicit padding adopts the vertical insets of the ambient MediaQuery, so
+  /// even with zero items it keeps a height - which pushed the heading of the
+  /// group below it down.
+  List<Widget> _section(String label, List<Note> notes) {
+    if (notes.isEmpty) {
+      return const [];
+    }
+    return [
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Text(
+          label,
+          style: Theme.of(context).primaryTextTheme.displayLarge,
+        ),
+      ),
+      getAllListItems(notes),
+    ];
+  }
+
   ListView getAllListItems(List<Note> notes) {
     return ListView.builder(
         shrinkWrap: true,
+        // see _section: without this the list inherits the MediaQuery insets
+        padding: EdgeInsets.zero,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: notes.length,
         itemBuilder: (BuildContext context, int index) {
           return NoteWidget(
-            onTap: () {
-              navigateToRoute(context, 'notes-edit',
+            onTap: () async {
+              await navigateToRoute(context, 'notes-edit',
                   extra: notes[index].id, backEnabled: true);
+              // the editor saves on the way out, so title and content preview
+              // in this list are stale as soon as we are back
+              if (mounted) {
+                await getNotes();
+              }
             },
             onDeletePress: () {
               deleteItem(
@@ -183,8 +229,93 @@ class _NotesScreenState extends State<NotesScreen> {
         });
   }
 
+  Future<void> _showCreateNoteDialog() async {
+    final nameController = TextEditingController();
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(
+            'Neue Notiz',
+            style: Theme.of(context).primaryTextTheme.bodySmall,
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextField(
+                controller: nameController,
+                autofocus: true,
+                style: Theme.of(context).primaryTextTheme.bodySmall,
+                decoration: InputDecoration(
+                  labelText: 'Name der Notiz',
+                  labelStyle: Theme.of(context).primaryTextTheme.bodySmall,
+                ),
+              ),
+            ],
+          ),
+          actionsAlignment: MainAxisAlignment.spaceEvenly,
+          actionsPadding: const EdgeInsets.all(16),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text('Abbrechen',
+                  style: Theme.of(context).primaryTextTheme.titleSmall),
+            ),
+            ElevatedButton(
+                onPressed: () async {
+                  final name = nameController.text.trim();
+                  if (name.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Bitte einen Namen eingeben.'),
+                      ),
+                    );
+                    return;
+                  }
+                  await createNewItem(CreateNoteDto(
+                    title: name,
+                    content: '',
+                    groupId: GroupContext().activeGroup?.id,
+                  ));
+                  if (mounted) {
+                    Navigator.of(dialogContext).pop();
+                  }
+                },
+                child: Text(
+                  'Erstellen',
+                  style: Theme.of(context)
+                      .primaryTextTheme
+                      .titleSmall
+                      ?.copyWith(
+                        color: Theme.of(context).brightness == Brightness.light
+                            ? Colors.white
+                            : Colors.grey[900],
+                      ),
+                )),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    // pinned notes are lifted into their own section on top, no matter
+    // whether they are the user's own or shared with them
+    final own = PinStore().partition(
+      PinStore.noteKind,
+      ownNotes,
+      (note) => note.id,
+    );
+    final shared = PinStore().partition(
+      PinStore.noteKind,
+      sharedNotes,
+      (note) => note.id,
+    );
+    final pinned = [...own.pinned, ...shared.pinned];
+    final hasAnyNote = ownNotes.isNotEmpty || sharedNotes.isNotEmpty;
+
     return Scaffold(
       key: _scaffoldKey,
       bottomNavigationBar: const BottomMenu(),
@@ -204,76 +335,9 @@ class _NotesScreenState extends State<NotesScreen> {
       ),
       endDrawer: AppDrawer(),
       floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final nameController = TextEditingController();
-          await showDialog<void>(
-            context: context,
-            builder: (dialogContext) {
-              return AlertDialog(
-                title: Text(
-                  'Neue Notiz',
-                  style: Theme.of(context).primaryTextTheme.bodySmall,
-                ),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    TextField(
-                      controller: nameController,
-                      autofocus: true,
-                      style: Theme.of(context).primaryTextTheme.bodySmall,
-                      decoration: InputDecoration(
-                        labelText: 'Name der Notiz',
-                        labelStyle:
-                            Theme.of(context).primaryTextTheme.bodySmall,
-                      ),
-                    ),
-                  ],
-                ),
-                actionsAlignment: MainAxisAlignment.spaceEvenly,
-                actionsPadding: const EdgeInsets.all(16),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(dialogContext).pop(),
-                    child: Text('Abbrechen',
-                        style: Theme.of(context).primaryTextTheme.titleSmall),
-                  ),
-                  ElevatedButton(
-                      onPressed: () async {
-                        final name = nameController.text.trim();
-                        if (name.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Bitte einen Namen eingeben.'),
-                            ),
-                          );
-                          return;
-                        }
-                        await createNewItem(CreateNoteDto(
-                          title: name,
-                          content: '',
-                          groupId: GroupContext().activeGroup?.id,
-                        ));
-                        if (mounted) {
-                          Navigator.of(dialogContext).pop();
-                        }
-                      },
-                      child: Text(
-                        'Erstellen',
-                        style: Theme.of(context)
-                            .primaryTextTheme
-                            .titleSmall
-                            ?.copyWith(
-                              color: Theme.of(context).brightness ==
-                                      Brightness.light
-                                  ? Colors.white
-                                  : Colors.grey[900],
-                            ),
-                      )),
-                ],
-              );
-            },
-          );
+        onPressed: () {
+          Haptics.tap();
+          _showCreateNoteDialog();
         },
         tooltip: 'Neue Notiz',
         child: const Icon(Icons.add),
@@ -297,41 +361,28 @@ class _NotesScreenState extends State<NotesScreen> {
                   enabled: isLoading,
                   child: const SkeletonCard()),
             Expanded(
-              child: !isLoading
-                  ? SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (ownNotes.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 8),
-                              child: Text(
-                                "Deine Notizen",
-                                style: Theme.of(context)
-                                    .primaryTextTheme
-                                    .displayLarge,
-                              ),
-                            ),
-                          getAllListItems(ownNotes),
-                          if (sharedNotes.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 8),
-                              child: Text(
-                                "Geteilte Notizen",
-                                style: Theme.of(context)
-                                    .primaryTextTheme
-                                    .displayLarge,
-                              ),
-                            ),
-                          getAllListItems(sharedNotes)
-                        ],
-                      ),
-                    )
-                  : Container(),
+              child: isLoading
+                  ? Container()
+                  : !hasAnyNote
+                      ? const EmptyStateWidget(
+                          icon: PhosphorIconsRegular.note,
+                          title: 'Noch keine Notizen',
+                          message:
+                              'Halte hier Gedanken, Ideen und Absprachen fest. '
+                              'Wische eine Notiz nach rechts, um sie anzupinnen oder zu teilen.',
+                        )
+                      : SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ..._section("Angepinnt", pinned),
+                              ..._section("Deine Notizen", own.others),
+                              ..._section("Geteilte Notizen", shared.others),
+                            ],
+                          ),
+                        ),
             ),
           ],
         ),

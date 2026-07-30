@@ -13,4 +13,18 @@ enum PrivacyMode {
     }
     return PrivacyMode.private; // Default value
   }
+
+  /// Short name for the mode, e.g. as the title of a menu entry.
+  String get label => switch (this) {
+        PrivacyMode.private => 'Privat',
+        PrivacyMode.protected => 'Geschützt',
+        PrivacyMode.public => 'Öffentlich',
+      };
+
+  /// Spells out what the mode means for other members of the group.
+  String get description => switch (this) {
+        PrivacyMode.private => 'Nur du kannst sehen und bearbeiten',
+        PrivacyMode.protected => 'Alle können sehen, bearbeiten nur du',
+        PrivacyMode.public => 'Alle können sehen und bearbeiten',
+      };
 }
