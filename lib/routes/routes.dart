@@ -1,4 +1,6 @@
 import 'package:ticktrack/screens/activity/activity_screen.dart';
+import 'package:ticktrack/screens/calendar/calendar_event_edit_screen.dart';
+import 'package:ticktrack/screens/calendar/calendar_screen.dart';
 import 'package:ticktrack/screens/groups/group_create_screen.dart';
 import 'package:ticktrack/screens/groups/group_details_screen.dart';
 import 'package:ticktrack/screens/groups/group_onboarding_screen.dart';
@@ -183,6 +185,42 @@ GoRouter createRouter() {
               child: const NotesEditScreen(),
               key: state.pageKey,
               name: 'notes-edit',
+              transitionDuration:
+                  const Duration(milliseconds: transitionDuration),
+              transitionsBuilder:
+                  (context, animation, secondaryAnimation, child) {
+                return FadeTransition(
+                  opacity: CurveTween(curve: Curves.easeIn).animate(animation),
+                  child: child,
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+      GoRoute(
+        name: 'calendar',
+        path: '/calendar',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          child: const CalendarScreen(),
+          key: state.pageKey,
+          name: 'calendar',
+          transitionDuration: const Duration(milliseconds: transitionDuration),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: CurveTween(curve: Curves.easeIn).animate(animation),
+              child: child,
+            );
+          },
+        ),
+        routes: [
+          GoRoute(
+            name: 'calendar-event-edit',
+            path: 'calendar-event-edit',
+            pageBuilder: (context, state) => CustomTransitionPage(
+              child: const CalendarEventEditScreen(),
+              key: state.pageKey,
+              name: 'calendar-event-edit',
               transitionDuration:
                   const Duration(milliseconds: transitionDuration),
               transitionsBuilder:

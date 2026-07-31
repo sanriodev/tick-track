@@ -10,6 +10,7 @@ void main() async {
   await Hive.openBox('theme');
   await Hive.openBox('groupContext');
   await Hive.openBox('pins');
+  await Hive.openBox('avatars');
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
   runApp(const MainAppScreen());

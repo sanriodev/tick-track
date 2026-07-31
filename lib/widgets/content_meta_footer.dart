@@ -1,3 +1,4 @@
+import 'package:ticktrack/widgets/user_avatar_widget.dart';
 import 'package:blvckleg_dart_core/models/user/user_model.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -45,6 +46,13 @@ class ContentMetaFooter extends StatelessWidget {
       runSpacing: 4,
       children: [
         _MetaItem(
+          // the picture replaces the generic person icon here, it says who
+          // created this faster than the name next to it does
+          avatar: UserAvatarWidget(
+            userId: author?.id,
+            username: author?.username,
+            radius: 9,
+          ),
           icon: PhosphorIconsRegular.user,
           // spells out what the icon means - two bare icons next to each
           // other left the reader guessing which name was which
@@ -73,6 +81,10 @@ class _MetaItem extends StatelessWidget {
   final IconData icon;
   final String label;
 
+  /// Shown instead of [icon] when the entry stands for a person we have a
+  /// picture slot for.
+  final Widget? avatar;
+
   /// What the icon stands for, e.g. "Erstellt von". Doubles as the screen
   /// reader label so the row is not just two names in a row.
   final String tooltip;
@@ -83,6 +95,7 @@ class _MetaItem extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.tooltip,
+    this.avatar,
     this.style,
     this.iconColor,
   });
@@ -97,7 +110,7 @@ class _MetaItem extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            PhosphorIcon(icon, size: 13, color: iconColor),
+            avatar ?? PhosphorIcon(icon, size: 13, color: iconColor),
             const SizedBox(width: 5),
             Text(label, style: style),
           ],

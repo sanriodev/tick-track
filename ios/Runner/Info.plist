@@ -18,6 +18,10 @@
 	<string>ticktrack</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Damit du ein Foto für dein Profilbild aufnehmen kannst.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Damit du ein Bild aus deinen Fotos als Profilbild auswählen kannst.</string>
 	<key>CFBundleShortVersionString</key>
 	<string>$(FLUTTER_BUILD_NAME)</string>
 	<key>CFBundleSignature</key>

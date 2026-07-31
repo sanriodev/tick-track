@@ -81,6 +81,11 @@ const List<BottomMenuNavigationItem> _pages = [
     label: 'Notizen',
     materialRoute: 'notes',
   ),
+  BottomMenuNavigationItem(
+    icon: PhosphorIcon(PhosphorIconsRegular.calendarBlank),
+    label: 'Kalender',
+    materialRoute: 'calendar',
+  ),
   // BottomMenuNavigationItem(
   //   icon: PhosphorIcon(PhosphorIconsRegular.clock),
   //   label: 'Timer',

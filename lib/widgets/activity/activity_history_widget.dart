@@ -1,4 +1,5 @@
 import 'package:ticktrack/models/activity/activity_model.dart';
+import 'package:ticktrack/widgets/user_avatar_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -120,20 +121,42 @@ class _ActivityItem extends StatelessWidget {
             width: 40,
             child: Column(
               children: [
-                Container(
+                // who acted as the picture, what they did as the badge on it -
+                // in a shared feed the person is the first thing to scan for
+                SizedBox(
                   width: 32,
                   height: 32,
-                  decoration: BoxDecoration(
-                    color:
-                        Theme.of(context).colorScheme.surfaceContainerHighest,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: PhosphorIcon(
-                      icon,
-                      size: 16,
-                      color: Theme.of(context).iconTheme.color,
-                    ),
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      UserAvatarWidget(
+                        userId: activity.user.id,
+                        username: activity.user.username,
+                        radius: 16,
+                      ),
+                      Positioned(
+                        right: -2,
+                        bottom: -2,
+                        child: Container(
+                          padding: const EdgeInsets.all(3),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerHighest,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Theme.of(context).cardColor,
+                              width: 1.5,
+                            ),
+                          ),
+                          child: PhosphorIcon(
+                            icon,
+                            size: 10,
+                            color: Theme.of(context).iconTheme.color,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 if (!isLast)
@@ -188,6 +211,7 @@ class _ActivityItem extends StatelessWidget {
       'note' => PhosphorIconsRegular.note,
       'task' => PhosphorIconsRegular.checkSquare,
       'task_list' || 'tasklist' => PhosphorIconsRegular.listChecks,
+      'calendar_event' => PhosphorIconsRegular.calendarBlank,
       'group' => PhosphorIconsRegular.usersThree,
       'group_membership' => activity.isGroupLeave
           ? PhosphorIconsRegular.signOut
@@ -205,6 +229,7 @@ class _ActivityItem extends StatelessWidget {
       'note' => 'Notiz',
       'task' => 'Aufgabe',
       'task_list' || 'tasklist' => 'Aufgabenliste',
+      'calendar_event' => 'Termin',
       _ => activity.entityType,
     };
 

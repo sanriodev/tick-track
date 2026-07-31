@@ -3,12 +3,14 @@
 import 'package:ticktrack/backend/service/backend_service.dart';
 import 'package:ticktrack/models/block/blocked_user_model.dart';
 import 'package:ticktrack/models/group/group_api_model.dart';
+import 'package:ticktrack/state/avatar_store.dart';
 import 'package:ticktrack/state/group_context.dart';
 import 'package:ticktrack/util/helpers.dart';
 import 'package:ticktrack/widgets/app_drawer_widget.dart';
 import 'package:ticktrack/widgets/group/group_context_switcher.dart';
 import 'package:ticktrack/widgets/option_button.dart';
 import 'package:ticktrack/widgets/skeleton/skeleton_card.dart';
+import 'package:ticktrack/widgets/user_avatar_widget.dart';
 import 'package:blvckleg_dart_core/models/user/user_model.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:flutter/material.dart';
@@ -82,6 +84,8 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
         _blocked = blocked;
         _isLoading = false;
       });
+      // one call for the whole list instead of one per member tile
+      AvatarStore().sync(group.members.map((member) => member.id));
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
       await showBackendError(context, e, 'Gruppe konnte nicht geladen werden');
@@ -685,14 +689,11 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
     final showMenu = !isSelf;
 
     return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: theme.colorScheme.surfaceContainerHighest,
-        child: Text(
-          member.username.isNotEmpty
-              ? member.username.substring(0, 1).toUpperCase()
-              : '?',
-          style: theme.textTheme.bodyMedium,
-        ),
+      leading: UserAvatarWidget(
+        userId: member.id,
+        username: member.username,
+        // the ring saves repeating the owner's name below the member count
+        borderColor: isGroupOwner ? theme.primaryColor : null,
       ),
       title: Row(
         children: [
