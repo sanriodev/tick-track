@@ -102,7 +102,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   // ------------------------------------------------------------------ avatar
 
-  /// Camera, gallery and - only when there is one - removing the picture.
   Future<void> _showAvatarSheet() async {
     final theme = Theme.of(context);
     final userId = _ownUser?.id;
@@ -170,11 +169,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  /// Picks an image and uploads it.
-  ///
-  /// The picker already downscales and re-compresses on the device: it keeps
-  /// the request small on a mobile connection, and a 12 MP photo would
-  /// otherwise be sent in full only for the backend to shrink it to 512px.
+  /// The picker downscales on the device already: otherwise a 12 MP photo goes
+  /// over the wire in full, only for the backend to shrink it to 512px.
   Future<void> _pickAndUpload(ImageSource source) async {
     XFile? picked;
     try {
@@ -198,7 +194,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
       return;
     }
-    // the user backed out of the picker, nothing to report
+    // the user backed out of the picker
     if (picked == null) {
       return;
     }
@@ -538,8 +534,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  /// The own picture with a camera badge, tapping it opens the picker sheet.
-  ///
   /// The badge is what makes the avatar readable as a control - a bare circle
   /// with initials looks like decoration and nobody would try tapping it.
   Widget _buildAvatar(ThemeData theme, int? userId, String? username) {
@@ -564,7 +558,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 decoration: BoxDecoration(
                   color: theme.primaryColor,
                   shape: BoxShape.circle,
-                  // lifts the badge off a picture of any color
+                  // keeps the badge visible on a picture of any color
                   border: Border.all(color: theme.cardColor, width: 2),
                 ),
                 child: PhosphorIcon(

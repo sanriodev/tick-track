@@ -2,10 +2,8 @@ import 'package:ticktrack/models/calendar/calendar_event_model.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-/// The next few dates on the home screen.
-///
-/// Shows what is coming up rather than a count - a number of appointments tells
-/// nobody anything, "heute 18:00 Müll" does.
+/// The next few dates on the home screen. Shows what is coming up rather than a
+/// count - "heute 18:00 Müll" says something, "4 Termine" does not.
 class CalendarPreviewWidget extends StatelessWidget {
   const CalendarPreviewWidget({
     super.key,
@@ -19,8 +17,8 @@ class CalendarPreviewWidget extends StatelessWidget {
   final bool isLoading;
   final VoidCallback onPressed;
 
-  /// "Heute", "Morgen" or the weekday with date - a bare date makes the reader
-  /// work out whether it is soon.
+  /// "Heute" / "Morgen" / weekday - a bare date makes the reader work out
+  /// whether it is soon.
   String _dayLabel(DateTime day) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);

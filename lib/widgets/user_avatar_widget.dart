@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 
 /// A user's profile picture, falling back to their initials.
 ///
-/// Reads straight from the [AvatarStore] cache and asks it to catch up in the
-/// background, so a list of members costs one request for the whole list
-/// instead of one future per row. Rebuilds itself once the picture arrives.
+/// Reads from the [AvatarStore] cache and asks it to catch up in the
+/// background, so a member list costs one request instead of one future per
+/// row. Rebuilds itself once the picture arrives.
 class UserAvatarWidget extends StatefulWidget {
-  /// Whose picture to show. Null renders the placeholder without asking the
-  /// backend, for content whose author no longer exists.
+  /// Null renders the placeholder without asking the backend, for content whose
+  /// author no longer exists.
   final int? userId;
 
   /// Used for the initials and as the screen reader label.
@@ -59,8 +59,8 @@ class _UserAvatarWidgetState extends State<UserAvatarWidget> {
     }
   }
 
-  /// The store deduplicates and skips what is already current, so a whole list
-  /// of avatars asking at once still results in a single call.
+  /// The store deduplicates, so a whole list asking at once still results in a
+  /// single call.
   void _requestSync() {
     final userId = widget.userId;
     if (userId == null) {
@@ -69,7 +69,6 @@ class _UserAvatarWidgetState extends State<UserAvatarWidget> {
     AvatarStore().sync([userId]);
   }
 
-  /// First letter of the name, or a neutral glyph when there is no name.
   String get _initials {
     final name = widget.username?.trim() ?? '';
     if (name.isEmpty) {
@@ -95,7 +94,7 @@ class _UserAvatarWidgetState extends State<UserAvatarWidget> {
           ? Text(
               _initials,
               style: theme.primaryTextTheme.bodySmall?.copyWith(
-                // scales with the avatar so the same widget works at 14 and 48
+                // scales along, so one widget works at radius 9 and at 32
                 fontSize: widget.radius * 0.8,
                 fontWeight: FontWeight.w600,
               ),

@@ -6,41 +6,36 @@ import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 
-/// Holds the profile pictures the app currently knows about.
+/// Holds the profile pictures the app knows about.
 ///
-/// Avatars are read far more often than they change - every member list, every
-/// activity entry wants one - so they are cached on the device and only
-/// refetched when the backend reports a newer version. Widgets read from the
-/// cache synchronously and rebuild through the [ChangeNotifier] once a picture
+/// Avatars are read far more often than they change, so they are cached on the
+/// device and only refetched when the backend reports a newer version. Widgets
+/// read synchronously and rebuild through the [ChangeNotifier] once a picture
 /// arrives, which keeps them free of per-avatar futures.
 class AvatarStore extends ChangeNotifier {
   static final AvatarStore _instance = AvatarStore._privateConstructor();
   factory AvatarStore() => _instance;
   AvatarStore._privateConstructor();
 
-  /// Decoded pictures, kept in memory so a rebuild does not decode base64
-  /// again. Only ever holds what the cache box also has.
+  /// Decoded pictures, so a rebuild does not decode base64 again.
   final Map<int, Uint8List> _decoded = {};
 
-  /// Users we know have no picture, so their widgets stop asking.
+  /// Users known to have no picture, so their widgets stop asking.
   final Set<int> _withoutAvatar = {};
 
-  /// Requests currently in flight, keyed by the user set they cover, to keep
-  /// several avatar widgets appearing at once from firing the same call.
+  /// Keeps several avatar widgets appearing at once from firing the same call.
   final Set<int> _inFlight = {};
 
   Box get _box => Hive.box('avatars');
 
-  /// Pictures of different accounts on the same device stay separate - group
+  /// Pictures of different accounts on one device stay separate - group
   /// membership decides who may see which avatar.
-  String get _accountScope =>
-      AuthBackend().loggedInUser?.user?.username ?? '';
+  String get _accountScope => AuthBackend().loggedInUser?.user?.username ?? '';
 
   String _dataKey(int userId) => 'data:$_accountScope:$userId';
   String _versionKey(int userId) => 'version:$_accountScope:$userId';
 
-  /// The picture of a user if it is cached, else null. Never triggers a
-  /// request - call [sync] for that.
+  /// Cached picture of a user, else null. Never requests - see [sync].
   Uint8List? bytesFor(int userId) {
     final cached = _decoded[userId];
     if (cached != null) {
@@ -66,12 +61,12 @@ class AvatarStore extends ChangeNotifier {
     }
   }
 
-  /// Brings the cache for [userIds] up to date: asks the backend which of them
-  /// have a picture and how current it is, then downloads only what changed.
+  /// Asks which of [userIds] have a picture and how current it is, then
+  /// downloads only what changed.
   ///
-  /// Safe to call on every screen build cycle - it does nothing when everything
-  /// is already current. Failures are swallowed on purpose: a missing avatar
-  /// falls back to initials, and no screen should show an error over one.
+  /// Safe to call repeatedly - it does nothing when everything is current.
+  /// Failures are swallowed on purpose: a missing avatar falls back to
+  /// initials, and no screen should show an error over one.
   Future<void> sync(Iterable<int> userIds) async {
     final wanted =
         userIds.where((id) => !_inFlight.contains(id)).toSet().toList();
@@ -84,7 +79,7 @@ class AvatarStore extends ChangeNotifier {
       final metas = await Backend().getAvatarMeta(wanted);
       final withAvatar = {for (final meta in metas) meta.userId: meta};
 
-      // everybody the backend did not name has no picture (or is not visible)
+      // whoever the backend did not name has no picture, or is not visible
       var changed = false;
       for (final userId in wanted) {
         if (!withAvatar.containsKey(userId)) {
@@ -124,17 +119,14 @@ class AvatarStore extends ChangeNotifier {
         DateTime.tryParse(version) != meta.updatedAt;
   }
 
-  /// Uploads a new picture for the own account and caches it right away, so
-  /// the change is visible without a round trip.
+  /// Caches the picture right away, so the change shows without a round trip.
   Future<void> setOwn(String imageBase64) async {
     final meta = await Backend().setOwnAvatar(imageBase64);
     await _store(meta.userId, imageBase64, meta.updatedAt);
     notifyListeners();
   }
 
-  /// Removes the picture of the own account.
-  ///
-  /// [userId] has to be passed in because the cached session only carries the
+  /// [userId] is passed in because the cached session only carries the
   /// username - the id comes from the loaded profile.
   Future<void> removeOwn(int userId) async {
     await Backend().deleteOwnAvatar();
@@ -148,7 +140,7 @@ class AvatarStore extends ChangeNotifier {
     String imageBase64,
     DateTime updatedAt,
   ) async {
-    // the upload may carry a data: prefix, the cache stores the payload only
+    // an upload may carry a data: prefix, the cache stores the payload only
     final payload =
         imageBase64.replaceFirst(RegExp('^data:[^;,]*(;[^,]*)*,'), '');
     await _box.put(_dataKey(userId), payload);
@@ -161,7 +153,7 @@ class AvatarStore extends ChangeNotifier {
     }
   }
 
-  /// Drops a user from the cache, returning whether anything was there.
+  /// Returns whether anything was cached for the user.
   bool _forget(int userId) {
     final had = _decoded.remove(userId) != null ||
         _box.get(_dataKey(userId)) != null;
@@ -170,9 +162,8 @@ class AvatarStore extends ChangeNotifier {
     return had;
   }
 
-  /// Called on logout: the next account must not see the previous one's
-  /// pictures. The box keeps its per-account entries, only the memory state
-  /// and the "has no avatar" knowledge are reset.
+  /// Called on logout so the next account does not see the previous one's
+  /// pictures. The box keeps its per-account entries, only memory is reset.
   void clear() {
     _decoded.clear();
     _withoutAvatar.clear();

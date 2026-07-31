@@ -1,8 +1,8 @@
 import 'package:ticktrack/enum/event_recurrence_enum.dart';
 import 'package:ticktrack/enum/privacy_mode_enum.dart';
 
-/// Partial update of an event. Only the fields that are set are sent, so a
-/// screen that just flips the privacy mode does not have to know the rest.
+/// Partial update: only fields that are set get sent, so a screen that just
+/// flips the privacy mode does not have to know the rest.
 ///
 /// Editing always affects the whole series - single dates of a repetition
 /// cannot be moved on their own.
@@ -17,9 +17,8 @@ class UpdateCalendarEventDto {
   EventRecurrence? recurrence;
   DateTime? recurrenceEndDate;
 
-  /// Sends an explicit null for the series end, which reopens a series that had
-  /// one. Needed because leaving [recurrenceEndDate] null means "do not touch",
-  /// and the two cases have to stay distinguishable on the wire.
+  /// Sends an explicit null, which reopens a series that had an end. Needed
+  /// because a null [recurrenceEndDate] already means "do not touch".
   bool clearRecurrenceEndDate;
 
   PrivacyMode? privacyMode;

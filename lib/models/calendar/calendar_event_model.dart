@@ -3,8 +3,8 @@ import 'package:ticktrack/enum/privacy_mode_enum.dart';
 import 'package:ticktrack/models/base/base_user_relation.dart';
 import 'package:blvckleg_dart_core/models/user/user_model.dart';
 
-/// An appointment as it is stored: a repeating event is one of these, no matter
-/// how many dates it produces. See [CalendarOccurrence] for a single date.
+/// An appointment as stored: a repeating event is one of these, no matter how
+/// many dates it produces. See [CalendarOccurrence] for a single date.
 class CalendarEvent extends BaseUserRelation {
   int id;
   String title;
@@ -60,11 +60,8 @@ class CalendarEvent extends BaseUserRelation {
   }
 }
 
-/// One date of an event.
-///
-/// A weekly event appears once per week it falls on, each time with the same
-/// [event] but its own [startAt] / [endAt] - the backend resolves the series
-/// for the requested range, the app never computes dates itself.
+/// One date of an event: same [event], own [startAt] / [endAt]. The backend
+/// resolves the series for the requested range, the app never computes dates.
 class CalendarOccurrence {
   final CalendarEvent event;
   final DateTime startAt;
@@ -89,11 +86,9 @@ class CalendarOccurrence {
     );
   }
 
-  /// The day this date belongs to, used to bucket occurrences per calendar
-  /// cell. Normalized to midnight so it works as a map key.
+  /// Normalized to midnight so it works as a map key when bucketing by day.
   DateTime get day => DateTime(startAt.year, startAt.month, startAt.day);
 
-  /// Whether the date stretches over more than one calendar day.
   bool get spansDays => endAt.day != startAt.day ||
       endAt.month != startAt.month ||
       endAt.year != startAt.year;

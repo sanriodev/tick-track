@@ -46,8 +46,7 @@ class ContentMetaFooter extends StatelessWidget {
       runSpacing: 4,
       children: [
         _MetaItem(
-          // the picture replaces the generic person icon here, it says who
-          // created this faster than the name next to it does
+          // the picture says who created this faster than the name next to it
           avatar: UserAvatarWidget(
             userId: author?.id,
             username: author?.username,
@@ -81,8 +80,7 @@ class _MetaItem extends StatelessWidget {
   final IconData icon;
   final String label;
 
-  /// Shown instead of [icon] when the entry stands for a person we have a
-  /// picture slot for.
+  /// Shown instead of [icon] when the entry stands for a person.
   final Widget? avatar;
 
   /// What the icon stands for, e.g. "Erstellt von". Doubles as the screen

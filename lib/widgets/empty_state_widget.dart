@@ -9,16 +9,25 @@ class EmptyStateWidget extends StatelessWidget {
   final String title;
   final String message;
 
+  /// Set to false inside a sliver: the surrounding CustomScrollView already
+  /// scrolls, and a nested scrollable would swallow the pull to refresh.
+  final bool scrollable;
+
   const EmptyStateWidget({
     super.key,
     required this.icon,
     required this.title,
     required this.message,
+    this.scrollable = true,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    if (!scrollable) {
+      return _buildContent(theme);
+    }
 
     // stays scrollable and fills the viewport so it sits centered and
     // pull to refresh keeps working on an otherwise empty screen

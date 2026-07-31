@@ -12,11 +12,26 @@ class ActivityHistoryWidget extends StatelessWidget {
   final List<EventlogMessage<dynamic>> activities;
   final int? maxItems; // optional limit on displayed items
 
+  /// Set to false to get the bare timeline, for embedding into a card that
+  /// already exists - the home screen preview does that so both places render
+  /// through this widget instead of keeping two copies of the same list.
+  final bool wrapInCard;
+
   const ActivityHistoryWidget({
     super.key,
     required this.activities,
     this.maxItems,
+    this.wrapInCard = true,
   });
+
+  /// Keeps the card optional without duplicating either branch of [build].
+  Widget _wrap(Widget child, EdgeInsets padding) {
+    final padded = Padding(padding: padding, child: child);
+    if (!wrapInCard) {
+      return padded;
+    }
+    return Card(clipBehavior: Clip.antiAlias, child: padded);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,39 +48,34 @@ class ActivityHistoryWidget extends StatelessWidget {
     final grouped = _groupByMonth(displayed);
 
     if (displayed.isEmpty) {
-      return Card(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Center(
-            child: Text(
-              'Noch keine Aktivitäten',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
+      return _wrap(
+        Center(
+          child: Text(
+            'Noch keine Aktivitäten',
+            style: Theme.of(context).textTheme.bodySmall,
           ),
         ),
+        const EdgeInsets.all(24),
       );
     }
 
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            for (final entry in grouped.entries) ...[
-              _MonthHeader(monthYear: entry.key),
-              const SizedBox(height: 8),
-              ...entry.value.map((activity) => _ActivityItem(
-                    activity: activity,
-                    isLast: activity == entry.value.last &&
-                        entry.key == grouped.keys.last,
-                  )),
-              if (entry.key != grouped.keys.last) const SizedBox(height: 16),
-            ],
+    return _wrap(
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final entry in grouped.entries) ...[
+            _MonthHeader(monthYear: entry.key),
+            const SizedBox(height: 8),
+            ...entry.value.map((activity) => _ActivityItem(
+                  activity: activity,
+                  isLast: activity == entry.value.last &&
+                      entry.key == grouped.keys.last,
+                )),
+            if (entry.key != grouped.keys.last) const SizedBox(height: 16),
           ],
-        ),
+        ],
       ),
+      const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
     );
   }
 
@@ -121,8 +131,8 @@ class _ActivityItem extends StatelessWidget {
             width: 40,
             child: Column(
               children: [
-                // who acted as the picture, what they did as the badge on it -
-                // in a shared feed the person is the first thing to scan for
+                // the person as the picture, what they did as a badge on it -
+                // in a shared feed the person is what you scan for first
                 SizedBox(
                   width: 32,
                   height: 32,
@@ -229,7 +239,7 @@ class _ActivityItem extends StatelessWidget {
       'note' => 'Notiz',
       'task' => 'Aufgabe',
       'task_list' || 'tasklist' => 'Aufgabenliste',
-      'calendar_event' => 'Termin',
+      'calendar_event' => 'Kalendereintrag',
       _ => activity.entityType,
     };
 

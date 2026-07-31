@@ -16,11 +16,14 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
+/// Wide enough for the longest date label ("Endet am") so none of them wraps.
+const double _labelWidth = 84;
+
 /// Creates or edits an event.
 ///
-/// Saving is explicit here rather than autosaved like the note editor: dates
-/// and repetition only make sense together, and writing half a changed series
-/// on every keystroke would produce events nobody asked for.
+/// Saving is explicit rather than autosaved like the note editor: dates and
+/// repetition only make sense together, and writing half a changed series on
+/// every keystroke would produce events nobody asked for.
 class CalendarEventEditScreen extends StatefulWidget {
   const CalendarEventEditScreen({super.key});
 
@@ -45,8 +48,7 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
   DateTime? _recurrenceEndDate;
   PrivacyMode _privacyMode = PrivacyMode.private;
 
-  /// Whether the series had an end date when the screen opened - needed to tell
-  /// "never had one" from "the user just cleared it".
+  /// Tells "never had an end date" from "the user just cleared it".
   bool _hadRecurrenceEnd = false;
 
   bool get _isNew => _event == null;
@@ -85,7 +87,7 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
         );
         Navigator.of(context).pop();
       });
-      // keeps the fields initialized for the frame before the pop lands
+      // initialized for the frame before the pop lands
       _startAt = DateTime.now();
       _endAt = _startAt;
       return;
@@ -99,9 +101,7 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
     }
   }
 
-  /// A new event starts at the next full hour of the selected day and lasts an
-  /// hour - the most likely intent, and it means two taps less in the common
-  /// case.
+  /// Next full hour, one hour long - two taps less in the common case.
   void _prefillNew(DateTime day) {
     final now = DateTime.now();
     final hour = day.year == now.year &&
@@ -153,7 +153,7 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
         current.minute,
       );
       if (isStart) {
-        // keep the duration when the start moves, that is what a user expects
+        // moving the start drags the end along, keeping the duration
         final duration = _endAt.difference(_startAt);
         _startAt = updated;
         _endAt = _startAt.add(duration);
@@ -225,7 +225,7 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
     setState(() => _busy = true);
     final description = _descriptionController.text.trim();
     final location = _locationController.text.trim();
-    // a series end without a repetition would be rejected by the backend
+    // the backend rejects a series end without a repetition
     final seriesEnd = _recurrence.repeats ? _recurrenceEndDate : null;
 
     try {
@@ -253,7 +253,6 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
           allDay: _allDay,
           recurrence: _recurrence,
           recurrenceEndDate: seriesEnd,
-          // tells the backend to drop a series end that is gone now
           clearRecurrenceEndDate: seriesEnd == null && _hadRecurrenceEnd,
           // only the owner may move the privacy mode
           privacyMode: _isOwnEvent ? _privacyMode : null,
@@ -390,8 +389,8 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
               setState(() {
                 _allDay = value;
                 if (value) {
-                  // a whole day, not a moment - so the event covers the day it
-                  // was placed on even without a time
+                  // stretch over the whole day, so it still covers the day it
+                  // was placed on once the time is hidden
                   _startAt =
                       DateTime(_startAt.year, _startAt.month, _startAt.day);
                   _endAt =
@@ -413,7 +412,7 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
       child: Row(
         children: [
           SizedBox(
-            width: 70,
+            width: _labelWidth,
             child: Text(
               isStart ? 'Beginn' : 'Ende',
               style: theme.primaryTextTheme.titleSmall,
@@ -423,7 +422,9 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
             child: OutlinedButton(
               onPressed: readOnly ? null : () => _pickDate(isStart: isStart),
               child: Text(
-                DateFormat('EEE, d. MMM y').format(value),
+                // numeric on purpose: "Fr., 31.07.2026" always fits next to
+                // the time button, a spelled out month does not
+                DateFormat('EE, dd.MM.y').format(value),
                 style: theme.primaryTextTheme.titleSmall,
               ),
             ),
@@ -446,45 +447,41 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
     );
   }
 
+  /// Label inside the field: "Wiederholung" does not fit the narrow label column
+  /// the date rows use, and the text fields on this screen are labelled that way
+  /// anyway.
   Widget _buildRecurrenceRow(ThemeData theme, bool readOnly) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 70,
-            child: Text('Wiederholt',
-                style: theme.primaryTextTheme.titleSmall),
-          ),
-          Expanded(
-            child: DropdownButtonFormField<EventRecurrence>(
-              initialValue: _recurrence,
-              isExpanded: true,
-              dropdownColor: theme.cardColor,
-              style: theme.primaryTextTheme.titleSmall,
-              items: [
-                for (final value in EventRecurrence.values)
-                  DropdownMenuItem(
-                    value: value,
-                    child: Text(value.label,
-                        style: theme.primaryTextTheme.titleSmall),
-                  ),
-              ],
-              onChanged: readOnly
-                  ? null
-                  : (value) {
-                      if (value == null) return;
-                      Haptics.tick();
-                      setState(() {
-                        _recurrence = value;
-                        if (!value.repeats) {
-                          _recurrenceEndDate = null;
-                        }
-                      });
-                    },
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: DropdownButtonFormField<EventRecurrence>(
+        initialValue: _recurrence,
+        isExpanded: true,
+        dropdownColor: theme.cardColor,
+        style: theme.primaryTextTheme.titleSmall,
+        decoration: InputDecoration(
+          labelText: 'Wiederholung',
+          labelStyle: theme.primaryTextTheme.bodySmall,
+        ),
+        items: [
+          for (final value in EventRecurrence.values)
+            DropdownMenuItem(
+              value: value,
+              child:
+                  Text(value.label, style: theme.primaryTextTheme.titleSmall),
             ),
-          ),
         ],
+        onChanged: readOnly
+            ? null
+            : (value) {
+                if (value == null) return;
+                Haptics.tick();
+                setState(() {
+                  _recurrence = value;
+                  if (!value.repeats) {
+                    _recurrenceEndDate = null;
+                  }
+                });
+              },
       ),
     );
   }
@@ -496,16 +493,14 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
       child: Row(
         children: [
           SizedBox(
-            width: 70,
-            child: Text('Bis', style: theme.primaryTextTheme.titleSmall),
+            width: _labelWidth,
+            child: Text('Endet am', style: theme.primaryTextTheme.titleSmall),
           ),
           Expanded(
             child: OutlinedButton(
               onPressed: readOnly ? null : _pickRecurrenceEnd,
               child: Text(
-                end != null
-                    ? DateFormat('d. MMM y').format(end)
-                    : 'Ohne Ende',
+                end != null ? DateFormat('dd.MM.y').format(end) : 'Ohne Ende',
                 style: theme.primaryTextTheme.titleSmall,
               ),
             ),
@@ -529,53 +524,50 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
     // matching the backend: only the owner may change who sees an event
     final canChange = !readOnly && (_isNew || _isOwnEvent);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 70,
-            child:
-                Text('Sichtbar', style: theme.primaryTextTheme.titleSmall),
-          ),
-          Expanded(
-            child: DropdownButtonFormField<PrivacyMode>(
-              initialValue: _privacyMode,
-              isExpanded: true,
-              dropdownColor: theme.cardColor,
-              style: theme.primaryTextTheme.titleSmall,
-              items: [
-                for (final value in PrivacyMode.values)
-                  DropdownMenuItem(
-                    value: value,
-                    child: Row(
-                      children: [
-                        Icon(
-                          privacyIconFor(value),
-                          size: 16,
-                          color: theme.primaryIconTheme.color,
-                        ),
-                        const SizedBox(width: 8),
-                        Flexible(
-                          child: Text(
-                            value.label,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.primaryTextTheme.titleSmall,
-                          ),
-                        ),
-                      ],
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: DropdownButtonFormField<PrivacyMode>(
+        initialValue: _privacyMode,
+        isExpanded: true,
+        dropdownColor: theme.cardColor,
+        style: theme.primaryTextTheme.titleSmall,
+        decoration: InputDecoration(
+          labelText: 'Sichtbarkeit',
+          labelStyle: theme.primaryTextTheme.bodySmall,
+          // "Geschützt" alone is open to interpretation
+          helperText: _privacyMode.description,
+          helperStyle: theme.primaryTextTheme.displayMedium,
+          helperMaxLines: 2,
+        ),
+        items: [
+          for (final value in PrivacyMode.values)
+            DropdownMenuItem(
+              value: value,
+              child: Row(
+                children: [
+                  Icon(
+                    privacyIconFor(value),
+                    size: 16,
+                    color: theme.primaryIconTheme.color,
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      value.label,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.primaryTextTheme.titleSmall,
                     ),
                   ),
-              ],
-              onChanged: canChange
-                  ? (value) {
-                      if (value == null) return;
-                      Haptics.tick();
-                      setState(() => _privacyMode = value);
-                    }
-                  : null,
+                ],
+              ),
             ),
-          ),
         ],
+        onChanged: canChange
+            ? (value) {
+                if (value == null) return;
+                Haptics.tick();
+                setState(() => _privacyMode = value);
+              }
+            : null,
       ),
     );
   }

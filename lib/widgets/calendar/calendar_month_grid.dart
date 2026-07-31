@@ -3,16 +3,14 @@ import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 /// A month as a tappable 7 column grid, with a dot on every day that carries
-/// something.
-///
-/// Purely presentational - it neither loads nor knows about events, it is
-/// handed the set of days that have any and reports taps back.
+/// something. Purely presentational: it is handed the days that have events and
+/// reports taps back.
 class CalendarMonthGrid extends StatelessWidget {
   /// Any day inside the month to render.
   final DateTime visibleMonth;
   final DateTime selectedDay;
 
-  /// Days that carry at least one date, normalized to midnight.
+  /// Days carrying at least one date, normalized to midnight.
   final Set<DateTime> daysWithEvents;
 
   final void Function(DateTime day) onDaySelected;
@@ -73,7 +71,7 @@ class CalendarMonthGrid extends StatelessWidget {
   }
 
   Widget _buildWeekdayLabels(ThemeData theme) {
-    // Monday first, as everywhere in German speaking countries
+    // Monday first
     const labels = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
     return Row(
       children: [
@@ -89,8 +87,8 @@ class CalendarMonthGrid extends StatelessWidget {
 
   List<Widget> _buildWeeks(ThemeData theme) {
     final first = DateTime(visibleMonth.year, visibleMonth.month);
-    // DateTime.weekday is 1 for Monday, so this is how many leading cells of
-    // the previous month the first row needs
+    // weekday is 1 for Monday, so this is how many cells of the previous month
+    // the first row needs
     final leading = first.weekday - 1;
     final daysInMonth =
         DateTime(visibleMonth.year, visibleMonth.month + 1, 0).day;
@@ -116,7 +114,7 @@ class CalendarMonthGrid extends StatelessWidget {
     int leading,
     int cellIndex,
   ) {
-    // days before/after the month are still rendered, just muted - an empty
+    // days outside the month are rendered muted rather than blank - an empty
     // corner reads as a broken grid
     final day = DateTime(
       firstOfMonth.year,
@@ -156,8 +154,7 @@ class CalendarMonthGrid extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: isSelected ? theme.primaryColor : null,
                   shape: BoxShape.circle,
-                  // today keeps a ring so it stays findable while another day
-                  // is selected
+                  // a ring keeps today findable while another day is selected
                   border: isToday && !isSelected
                       ? Border.all(color: theme.primaryColor, width: 1.5)
                       : null,
@@ -174,8 +171,8 @@ class CalendarMonthGrid extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 3),
-              // the dot is what makes the grid worth having: it shows where
-              // something is happening without opening every day
+              // the dot is the point of the grid: it shows where something is
+              // happening without opening every day
               Container(
                 width: 5,
                 height: 5,

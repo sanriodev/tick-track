@@ -107,8 +107,8 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  /// The next two weeks, which is what the preview shows. Deliberately not the
-  /// backend's 90 day default - a term two months out is not "coming up".
+  /// Two weeks, not the backend's 90 day default - a date two months out is not
+  /// "coming up".
   Future<void> _getUpcomingEvents() async {
     try {
       final now = DateTime.now();

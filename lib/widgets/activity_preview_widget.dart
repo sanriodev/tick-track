@@ -1,10 +1,15 @@
 import 'package:ticktrack/models/activity/activity_model.dart';
+import 'package:ticktrack/widgets/activity/activity_history_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-class ActivityPreviewWidget extends StatefulWidget {
-  final VoidCallback onPressed;
-
+/// The activity teaser on the home screen.
+///
+/// Only the card around it belongs to this widget - the entries themselves come
+/// from [ActivityHistoryWidget], the same list the activity screen shows. It
+/// used to render its own copy, which drifted: no profile pictures, different
+/// colors, and every unknown entity type ended up as "Element".
+class ActivityPreviewWidget extends StatelessWidget {
   const ActivityPreviewWidget({
     super.key,
     required this.onPressed,
@@ -12,56 +17,15 @@ class ActivityPreviewWidget extends StatefulWidget {
     required this.isLoading,
   });
 
+  final VoidCallback onPressed;
   final List<EventlogMessage<dynamic>> activities;
   final bool isLoading;
 
   @override
-  State<ActivityPreviewWidget> createState() => _ActivityPreviewWidgetState();
-}
-
-class _ActivityPreviewWidgetState extends State<ActivityPreviewWidget> {
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  String _formatTimeAgo(DateTime dateTime) {
-    final now = DateTime.now();
-    final difference = now.difference(dateTime);
-
-    if (difference.inMinutes < 60) {
-      return 'vor ${difference.inMinutes} Minuten';
-    } else if (difference.inHours < 24) {
-      return 'vor ${difference.inHours} Stunden';
-    } else if (difference.inDays < 7) {
-      return 'vor ${difference.inDays} Tagen';
-    } else if (difference.inDays < 30) {
-      final weeks = (difference.inDays / 7).floor();
-      return 'vor $weeks Wochen';
-    } else if (difference.inDays < 365) {
-      final months = (difference.inDays / 30).floor();
-      return 'vor $months Monaten';
-    } else {
-      final years = (difference.inDays / 365).floor();
-      return 'vor $years Jahren';
-    }
-  }
-
-  String _getActionText(String action) {
-    switch (action) {
-      case '1':
-        return 'erstellt';
-      case '2':
-        return 'aktualisiert';
-      case '4':
-        return 'gelöscht';
-      default:
-        return action;
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final accent = theme.primaryColor;
+
     return Card(
       elevation: 2.0,
       margin: EdgeInsets.zero,
@@ -74,140 +38,48 @@ class _ActivityPreviewWidgetState extends State<ActivityPreviewWidget> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context)
-                            .primaryColor
-                            .withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: Theme.of(context)
-                              .primaryColor
-                              .withValues(alpha: 0.3),
-                        ),
-                      ),
-                      child: PhosphorIcon(
-                        PhosphorIconsRegular.pulse,
-                        color: Theme.of(context).primaryColor,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Text(
-                      'Aktivitäten',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                  ],
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: accent.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: accent.withValues(alpha: 0.3)),
+                  ),
+                  child: PhosphorIcon(
+                    PhosphorIconsRegular.pulse,
+                    color: accent,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'Aktivitäten',
+                  style: theme.textTheme.titleMedium
+                      ?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            if (widget.isLoading)
-              const Center(child: CircularProgressIndicator())
-            else if (widget.activities.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6.0),
-                child: Text(
-                  'Keine Aktivitäten vorhanden',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Colors.grey,
-                      ),
-                ),
+            const SizedBox(height: 8),
+            if (isLoading)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Center(child: CircularProgressIndicator()),
               )
             else
-              ...widget.activities.reversed.take(5).map((activity) {
-                final IconData icon;
-                final String entityName;
-
-                switch (activity.entityType) {
-                  case 'note':
-                    icon = Icons.note_alt;
-                    entityName = 'Notiz';
-                  case 'task':
-                    icon = Icons.check_box;
-                    entityName = 'Aufgabe';
-                  case 'task_list':
-                    icon = Icons.checklist;
-                    entityName = 'Aufgabenliste';
-                  case groupEntityType:
-                    icon = Icons.groups;
-                    entityName = 'Gruppe';
-                  case groupMembershipEntityType:
-                    icon = activity.isGroupLeave
-                        ? Icons.logout
-                        : Icons.person_add_alt;
-                    entityName = 'Gruppe';
-                  default:
-                    icon = Icons.circle;
-                    entityName = 'Element';
-                }
-
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6.0),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .surfaceContainerHighest,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          icon,
-                          size: 16,
-                          color: Theme.of(context).iconTheme.color,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              activity.groupActivityText ??
-                                  '${activity.user.username} hat $entityName ${_getActionText(activity.actionType)}${activity.group != null ? ' in "${activity.group!.name}"' : ''}',
-                              style: Theme.of(context).textTheme.bodyMedium,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            Text(
-                              _formatTimeAgo(activity.date),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .labelSmall
-                                  ?.copyWith(
-                                    color: Theme.of(context)
-                                        .textTheme
-                                        .labelSmall
-                                        ?.color
-                                        ?.withValues(alpha: 0.7),
-                                  ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }),
-            const SizedBox(height: 8),
+              ActivityHistoryWidget(
+                activities: activities,
+                maxItems: 5,
+                wrapInCard: false,
+              ),
             Align(
               alignment: Alignment.centerRight,
               child: TextButton(
-                onPressed: widget.onPressed,
+                onPressed: onPressed,
                 child: Text(
                   'Mehr anzeigen',
                   style: TextStyle(
-                    color: Theme.of(context).primaryColor,
+                    color: accent,
                     fontWeight: FontWeight.w600,
                   ),
                 ),

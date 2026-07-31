@@ -12,14 +12,14 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 /// One date of an event in the day list.
 ///
 /// Shows the time of *this* date, not the stored one - for a repetition those
-/// differ, and the date the user is looking at is the one that matters.
+/// differ, and the date on screen is the one that matters.
 class CalendarOccurrenceTile extends StatefulWidget {
   final CalendarOccurrence occurrence;
   final void Function()? onTap;
   final void Function()? onDelete;
 
-  /// Called after the author was blocked from the report dialog, so the
-  /// calendar can reload and drop the now hidden event.
+  /// Called after the author was blocked from the report dialog, so the calendar
+  /// can reload and drop the now hidden event.
   final void Function()? onBlocked;
 
   const CalendarOccurrenceTile({
@@ -56,7 +56,7 @@ class _CalendarOccurrenceTileState extends State<CalendarOccurrenceTile>
   bool get _isOwnEvent =>
       _event.user?.username == AuthBackend().loggedInUser?.user?.username;
 
-  /// "18:00 - 20:00", "Ganztägig", or a range with dates for a multi day event.
+  /// "18:00 - 20:00", "Ganztägig", or a range with dates when it spans days.
   String get _timeLabel {
     if (_event.allDay) {
       if (!widget.occurrence.spansDays) {
@@ -69,7 +69,7 @@ class _CalendarOccurrenceTileState extends State<CalendarOccurrenceTile>
 
     final time = DateFormat('HH:mm');
     final start = time.format(widget.occurrence.startAt);
-    // a zero length event is a point in time, showing "18:00 - 18:00" is noise
+    // "18:00 - 18:00" is noise for an event without a duration
     if (widget.occurrence.endAt == widget.occurrence.startAt) {
       return start;
     }
@@ -143,7 +143,7 @@ class _CalendarOccurrenceTileState extends State<CalendarOccurrenceTile>
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // colored spine, so a dense day is scannable by block
+                      // spine, so a dense day is scannable by block
                       Container(
                         width: 4,
                         height: 42,

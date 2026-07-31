@@ -21,8 +21,8 @@ import 'package:skeletonizer/skeletonizer.dart';
 
 /// The shared calendar: a month at a glance plus the dates of the selected day.
 ///
-/// Loads a whole month at a time rather than per day - the grid has to mark
-/// every day that carries something anyway, so the day list is free.
+/// Loads a whole month at a time - the grid has to mark every day that carries
+/// something anyway, so the day list comes for free.
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
 
@@ -33,11 +33,10 @@ class CalendarScreen extends StatefulWidget {
 class _CalendarScreenState extends State<CalendarScreen> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  /// First day of the month currently shown in the grid.
+  /// First day of the month shown in the grid.
   late DateTime _visibleMonth;
   late DateTime _selectedDay;
 
-  /// Dates of the visible month, bucketed by day.
   Map<DateTime, List<CalendarOccurrence>> _byDay = {};
   bool _isLoading = true;
 
@@ -63,9 +62,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
     }
   }
 
-  /// Loads the visible month plus a few days on either side, so events that
-  /// reach into the month from outside still show up in the first and last row
-  /// of the grid.
+  /// A week of slack on either side, so events reaching into the month from
+  /// outside still show up in the first and last row of the grid.
   Future<void> _load() async {
     setState(() => _isLoading = true);
     final from = DateTime(_visibleMonth.year, _visibleMonth.month)
@@ -86,19 +84,17 @@ class _CalendarScreenState extends State<CalendarScreen> {
       });
       // the tiles show who created an event, fetch those pictures in one go
       AvatarStore().sync(
-        occurrences
-            .map((o) => o.event.user?.id)
-            .whereType<int>()
-            .toSet(),
+        occurrences.map((o) => o.event.user?.id).whereType<int>().toSet(),
       );
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
-      await showBackendError(context, e, 'Termine konnten nicht geladen werden');
+      await showBackendError(
+          context, e, 'Termine konnten nicht geladen werden');
     }
   }
 
-  /// Buckets by day, listing a multi day event on every day it covers so it
-  /// does not disappear from the days between its start and end.
+  /// Lists a multi day event on every day it covers, so it does not vanish from
+  /// the days between its start and end.
   Map<DateTime, List<CalendarOccurrence>> _bucketByDay(
     List<CalendarOccurrence> occurrences,
   ) {
@@ -110,7 +106,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         occurrence.endAt.month,
         occurrence.endAt.day,
       );
-      // guard against a pathological range rather than looping forever
+      // guards against a pathological range instead of looping forever
       var guard = 0;
       while (!day.isAfter(lastDay) && guard < 400) {
         map.putIfAbsent(day, () => []).add(occurrence);
@@ -133,10 +129,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
   void _changeMonth(int delta) {
     Haptics.tick();
     setState(() {
-      _visibleMonth =
-          DateTime(_visibleMonth.year, _visibleMonth.month + delta);
-      // keep a sensible selection: the same day number if it exists, else the
-      // first of the month
+      _visibleMonth = DateTime(_visibleMonth.year, _visibleMonth.month + delta);
+      // keeps the day number if the new month has it, else the first
       final daysInMonth =
           DateTime(_visibleMonth.year, _visibleMonth.month + 1, 0).day;
       _selectedDay = DateTime(
@@ -151,8 +145,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
   void _jumpToToday() {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final sameMonth = _visibleMonth.year == today.year &&
-        _visibleMonth.month == today.month;
+    final sameMonth =
+        _visibleMonth.year == today.year && _visibleMonth.month == today.month;
     Haptics.tick();
     setState(() {
       _visibleMonth = DateTime(today.year, today.month);
@@ -170,7 +164,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       extra: CalendarEditorArgs(event: event, day: _selectedDay),
       backEnabled: true,
     );
-    // the editor saves on the way out, so the month is stale once we are back
+    // the editor may have changed the month we are showing
     if (mounted) {
       await _load();
     }
@@ -257,75 +251,97 @@ class _CalendarScreenState extends State<CalendarScreen> {
         tooltip: 'Neuer Termin',
         child: const Icon(Icons.add),
       ),
+      // one scrollable for grid and day list together, so pulling anywhere on
+      // the screen refreshes - with the grid in a Column above the list, a pull
+      // on the grid did nothing
       body: RefreshIndicator(
         onRefresh: _load,
-        child: Column(
-          children: [
-            CalendarMonthGrid(
-              visibleMonth: _visibleMonth,
-              selectedDay: _selectedDay,
-              daysWithEvents: _byDay.keys.toSet(),
-              onDaySelected: (day) {
-                Haptics.tick();
-                setState(() => _selectedDay = day);
-              },
-              onPreviousMonth: () => _changeMonth(-1),
-              onNextMonth: () => _changeMonth(1),
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          slivers: [
+            SliverToBoxAdapter(
+              child: CalendarMonthGrid(
+                visibleMonth: _visibleMonth,
+                selectedDay: _selectedDay,
+                daysWithEvents: _byDay.keys.toSet(),
+                onDaySelected: (day) {
+                  Haptics.tick();
+                  setState(() => _selectedDay = day);
+                },
+                onPreviousMonth: () => _changeMonth(-1),
+                onNextMonth: () => _changeMonth(1),
+              ),
             ),
-            const Divider(height: 1),
-            Expanded(child: _buildDayList(theme, selected)),
+            const SliverToBoxAdapter(child: Divider(height: 1)),
+            ..._buildDaySlivers(theme, selected),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildDayList(ThemeData theme, List<CalendarOccurrence> selected) {
+  List<Widget> _buildDaySlivers(
+    ThemeData theme,
+    List<CalendarOccurrence> selected,
+  ) {
     if (_isLoading) {
-      return Skeletonizer(
-        effect: ShimmerEffect(
-          baseColor: theme.canvasColor,
-          duration: const Duration(seconds: 3),
+      return [
+        SliverToBoxAdapter(
+          child: Skeletonizer(
+            effect: ShimmerEffect(
+              baseColor: theme.canvasColor,
+              duration: const Duration(seconds: 3),
+            ),
+            child: const SkeletonCard(),
+          ),
         ),
-        child: const SkeletonCard(),
-      );
+      ];
     }
     if (selected.isEmpty) {
-      return EmptyStateWidget(
-        icon: PhosphorIconsRegular.calendarBlank,
-        title: 'Nichts am ${DateFormat('d. MMMM').format(_selectedDay)}',
-        message: 'Müllabfuhr, Putztag, Besuch - trag ein, was die WG '
-            'wissen sollte. Termine mit Wiederholung musst du nur einmal anlegen.',
-      );
+      return [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: EmptyStateWidget(
+              scrollable: false,
+              icon: PhosphorIconsRegular.calendarBlank,
+              title: 'Nichts am ${DateFormat('d. MMMM').format(_selectedDay)}',
+              message: 'Müllabfuhr, Putztag, Besuch - trag ein, was die Gruppe '
+                  'wissen sollte.'),
+        ),
+      ];
     }
 
-    return ListView.builder(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 88),
-      itemCount: selected.length + 1,
-      itemBuilder: (context, index) {
-        if (index == 0) {
-          return Padding(
-            padding: const EdgeInsets.fromLTRB(4, 0, 4, 8),
-            child: Text(
-              DateFormat('EEEE, d. MMMM y').format(_selectedDay),
-              style: theme.primaryTextTheme.displayLarge,
-            ),
-          );
-        }
-        final occurrence = selected[index - 1];
-        return CalendarOccurrenceTile(
-          occurrence: occurrence,
-          onTap: () => _openEditor(event: occurrence.event),
-          onDelete: () => _deleteEvent(occurrence.event),
-        );
-      },
-    );
+    return [
+      SliverToBoxAdapter(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          child: Text(
+            DateFormat('EEEE, d. MMMM y').format(_selectedDay),
+            style: theme.primaryTextTheme.displayLarge,
+          ),
+        ),
+      ),
+      SliverPadding(
+        // room for the floating action button below the last tile
+        padding: const EdgeInsets.fromLTRB(12, 0, 12, 88),
+        sliver: SliverList.builder(
+          itemCount: selected.length,
+          itemBuilder: (context, index) {
+            final occurrence = selected[index];
+            return CalendarOccurrenceTile(
+              occurrence: occurrence,
+              onTap: () => _openEditor(event: occurrence.event),
+              onDelete: () => _deleteEvent(occurrence.event),
+              onBlocked: _load,
+            );
+          },
+        ),
+      ),
+    ];
   }
 }
 
-/// What the editor route needs: the event to edit, or the day a new event
-/// should default to.
+/// The event to edit, or the day a new one should default to.
 class CalendarEditorArgs {
   final CalendarEvent? event;
   final DateTime day;

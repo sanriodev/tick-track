@@ -1,7 +1,5 @@
-/// How often a calendar event repeats.
-///
-/// Mirrors the backend's EventRecurrence, which is a string enum there - the
-/// wire format is the lower case name, not the index.
+/// Mirrors the backend's EventRecurrence, a string enum there - so the wire
+/// format is the lower case name, not the index.
 enum EventRecurrence {
   none,
   daily,
@@ -22,7 +20,6 @@ enum EventRecurrence {
     return EventRecurrence.none;
   }
 
-  /// Short name for the mode, e.g. as the title of a menu entry.
   String get label => switch (this) {
         EventRecurrence.none => 'Einmalig',
         EventRecurrence.daily => 'Täglich',
