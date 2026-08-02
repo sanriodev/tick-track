@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:ticktrack/enum/privacy_mode_enum.dart';
+import 'package:ticktrack/state/avatar_store.dart';
 import 'package:ticktrack/state/group_context.dart';
 import 'package:blvckleg_dart_core/exception/session_expired.dart';
 import 'package:blvckleg_dart_core/models/auth/login_response_model.dart';
@@ -48,6 +49,8 @@ Future<void> deleteBoxAndNavigateToLogin(BuildContext context) async {
   final AuthBackend authBackend = AuthBackend();
   authBackend.loggedInUser = null;
   GroupContext().clear();
+  // the next account on this device must not see the previous one's pictures
+  AvatarStore().clear();
 
   if (context.mounted) {
     navigateToRoute(

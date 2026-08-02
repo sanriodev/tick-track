@@ -3,10 +3,11 @@ import 'package:ticktrack/util/helpers.dart';
 import 'package:flutter/material.dart';
 
 /// Shows the "report content" dialog, asks for an optional reason and reports
-/// the content to the backend. Shared by notes, tasks and task lists.
+/// the content to the backend. Shared by notes, tasks, task lists and calendar
+/// events.
 ///
-/// [entityType] is one of 'note', 'task', 'task_list'. [entityLabel] is the
-/// German noun shown in the dialog (e.g. "Notiz").
+/// [entityType] is one of 'note', 'task', 'task_list', 'calendar_event'.
+/// [entityLabel] is the German noun shown in the dialog (e.g. "Notiz").
 ///
 /// When [authorId] is given, the dialog also offers to block that user. If the
 /// reporter opts in, the author is blocked after the report and their content

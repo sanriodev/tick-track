@@ -1,13 +1,17 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'dart:async';
+import 'dart:convert';
 
+import 'package:image_picker/image_picker.dart';
 import 'package:ticktrack/backend/service/backend_service.dart';
+import 'package:ticktrack/state/avatar_store.dart';
 import 'package:ticktrack/util/haptics.dart';
 import 'package:ticktrack/util/helpers.dart';
 import 'package:ticktrack/widgets/app_drawer_widget.dart';
 import 'package:ticktrack/widgets/option_button.dart';
 import 'package:ticktrack/widgets/skeleton/skeleton_card.dart';
+import 'package:ticktrack/widgets/user_avatar_widget.dart';
 import 'package:blvckleg_dart_core/models/user/user_model.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:flutter/material.dart';
@@ -90,6 +94,152 @@ class _ProfileScreenState extends State<ProfileScreen> {
         context,
         e,
         'Benutzername konnte nicht geändert werden',
+      );
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  // ------------------------------------------------------------------ avatar
+
+  Future<void> _showAvatarSheet() async {
+    final theme = Theme.of(context);
+    final userId = _ownUser?.id;
+    final hasAvatar = userId != null && AvatarStore().bytesFor(userId) != null;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: theme.cardColor,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                'Profilbild',
+                style: theme.primaryTextTheme.bodySmall,
+              ),
+            ),
+            ListTile(
+              leading: PhosphorIcon(
+                PhosphorIconsRegular.camera,
+                color: theme.primaryIconTheme.color,
+              ),
+              title: Text('Foto aufnehmen',
+                  style: theme.primaryTextTheme.titleSmall),
+              onTap: () {
+                Navigator.of(sheetContext).pop();
+                _pickAndUpload(ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: PhosphorIcon(
+                PhosphorIconsRegular.image,
+                color: theme.primaryIconTheme.color,
+              ),
+              title: Text('Aus Galerie wählen',
+                  style: theme.primaryTextTheme.titleSmall),
+              onTap: () {
+                Navigator.of(sheetContext).pop();
+                _pickAndUpload(ImageSource.gallery);
+              },
+            ),
+            if (hasAvatar)
+              ListTile(
+                leading: PhosphorIcon(
+                  PhosphorIconsRegular.trash,
+                  color: theme.colorScheme.error,
+                ),
+                title: Text(
+                  'Profilbild entfernen',
+                  style: theme.primaryTextTheme.titleSmall
+                      ?.copyWith(color: theme.colorScheme.error),
+                ),
+                onTap: () {
+                  Navigator.of(sheetContext).pop();
+                  _removeAvatar();
+                },
+              ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// The picker downscales on the device already: otherwise a 12 MP photo goes
+  /// over the wire in full, only for the backend to shrink it to 512px.
+  Future<void> _pickAndUpload(ImageSource source) async {
+    XFile? picked;
+    try {
+      picked = await ImagePicker().pickImage(
+        source: source,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+    } catch (e) {
+      Haptics.warning();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Kein Zugriff auf Kamera oder Fotos. '
+              'Du kannst das in den Systemeinstellungen erlauben.',
+            ),
+          ),
+        );
+      }
+      return;
+    }
+    // the user backed out of the picker
+    if (picked == null) {
+      return;
+    }
+
+    setState(() => _busy = true);
+    try {
+      final bytes = await picked.readAsBytes();
+      await AvatarStore().setOwn(base64Encode(bytes));
+      Haptics.tap();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profilbild aktualisiert.')),
+        );
+      }
+    } catch (e) {
+      Haptics.warning();
+      await showBackendError(
+        context,
+        e,
+        'Profilbild konnte nicht gespeichert werden',
+      );
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _removeAvatar() async {
+    final userId = _ownUser?.id;
+    if (userId == null) {
+      return;
+    }
+    setState(() => _busy = true);
+    try {
+      await AvatarStore().removeOwn(userId);
+      Haptics.tap();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profilbild entfernt.')),
+        );
+      }
+    } catch (e) {
+      Haptics.warning();
+      await showBackendError(
+        context,
+        e,
+        'Profilbild konnte nicht entfernt werden',
       );
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -358,21 +508,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: theme.primaryColor.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: theme.primaryColor.withValues(alpha: 0.3),
-                ),
-              ),
-              child: PhosphorIcon(
-                PhosphorIconsRegular.userCircle,
-                color: theme.primaryColor,
-                size: 28,
-              ),
-            ),
+            _buildAvatar(theme, user?.id, user?.username),
             const SizedBox(width: 16),
             Expanded(
               child: Column(
@@ -389,6 +525,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     style: theme.textTheme.bodySmall,
                   ),
                 ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// The badge is what makes the avatar readable as a control - a bare circle
+  /// with initials looks like decoration and nobody would try tapping it.
+  Widget _buildAvatar(ThemeData theme, int? userId, String? username) {
+    return Semantics(
+      button: true,
+      label: 'Profilbild ändern',
+      child: InkWell(
+        onTap: _busy ? null : _showAvatarSheet,
+        customBorder: const CircleBorder(),
+        child: Stack(
+          children: [
+            UserAvatarWidget(
+              userId: userId,
+              username: username,
+              radius: 32,
+            ),
+            Positioned(
+              right: 0,
+              bottom: 0,
+              child: Container(
+                padding: const EdgeInsets.all(5),
+                decoration: BoxDecoration(
+                  color: theme.primaryColor,
+                  shape: BoxShape.circle,
+                  // keeps the badge visible on a picture of any color
+                  border: Border.all(color: theme.cardColor, width: 2),
+                ),
+                child: PhosphorIcon(
+                  PhosphorIconsRegular.camera,
+                  size: 12,
+                  color: theme.brightness == Brightness.light
+                      ? Colors.white
+                      : Colors.grey[900],
+                ),
               ),
             ),
           ],

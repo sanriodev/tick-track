@@ -1,6 +1,7 @@
 import 'package:ticktrack/routes/routes.dart';
 import 'package:ticktrack/ui/theme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
 
@@ -55,12 +56,21 @@ class _MainAppScreenState extends State<MainAppScreen> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-        title: 'TickTrack',
-        debugShowCheckedModeBanner: false,
-        themeMode: currentTheme,
-        theme: appThemeLight,
-        darkTheme: appThemeDark,
-        routerConfig: _router,
+      title: 'TickTrack',
+      debugShowCheckedModeBanner: false,
+      themeMode: currentTheme,
+      theme: appThemeLight,
+      darkTheme: appThemeDark,
+      // pinned rather than following the system: every string is German, so an
+      // English device would show German labels in an English date picker
+      locale: const Locale('de', 'DE'),
+      supportedLocales: const [Locale('de', 'DE')],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      routerConfig: _router,
     );
   }
 }

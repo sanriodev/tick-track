@@ -115,8 +115,6 @@ class _ActivityScreenState extends State<ActivityScreen> {
       ),
       endDrawer: AppDrawer(),
       body: RefreshIndicator(
-        color: Theme.of(context).primaryColor,
-        backgroundColor: Theme.of(context).secondaryHeaderColor,
         onRefresh: () async {
           setState(() {
             isLoading = true;

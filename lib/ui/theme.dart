@@ -113,7 +113,87 @@ ThemeData appThemeLight = ThemeData(
   ),
   dialogTheme: DialogThemeData(backgroundColor: Colors.grey[100]),
   dividerColor: Colors.grey[400],
+  datePickerTheme: _datePickerTheme(Brightness.light),
+  timePickerTheme: _timePickerTheme(Brightness.light),
 );
+
+/// The pickers ship with a Material 3 look of their own, which arrives in the
+/// seed colour's tints and ignores the greyscale the rest of the app uses.
+/// Both are themed from the same values here so a date and a time picker do not
+/// end up looking like two different apps.
+DatePickerThemeData _datePickerTheme(Brightness brightness) {
+  final light = brightness == Brightness.light;
+  final surface = light ? Colors.grey[100]! : Colors.grey[850]!;
+  final accent = light ? Colors.grey[700]! : Colors.grey[400]!;
+  final onAccent = light ? Colors.white : Colors.grey[900]!;
+  final text = light ? Colors.grey[800]! : Colors.grey[300]!;
+
+  return DatePickerThemeData(
+    backgroundColor: surface,
+    surfaceTintColor: Colors.transparent,
+    headerBackgroundColor: accent,
+    headerForegroundColor: onAccent,
+    dividerColor: light ? Colors.grey[400] : Colors.grey[700],
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    dayForegroundColor: WidgetStateProperty.resolveWith(
+      (states) => states.contains(WidgetState.selected) ? onAccent : text,
+    ),
+    dayBackgroundColor: WidgetStateProperty.resolveWith(
+      (states) =>
+          states.contains(WidgetState.selected) ? accent : Colors.transparent,
+    ),
+    todayForegroundColor: WidgetStateProperty.resolveWith(
+      (states) => states.contains(WidgetState.selected) ? onAccent : accent,
+    ),
+    todayBorder: BorderSide(color: accent, width: 1.5),
+    yearForegroundColor: WidgetStateProperty.resolveWith(
+      (states) => states.contains(WidgetState.selected) ? onAccent : text,
+    ),
+    yearBackgroundColor: WidgetStateProperty.resolveWith(
+      (states) =>
+          states.contains(WidgetState.selected) ? accent : Colors.transparent,
+    ),
+    weekdayStyle: TextStyle(color: text.withValues(alpha: 0.7), fontSize: 12),
+    dayStyle: TextStyle(color: text, fontSize: 14),
+    confirmButtonStyle: TextButton.styleFrom(foregroundColor: accent),
+    cancelButtonStyle: TextButton.styleFrom(foregroundColor: text),
+  );
+}
+
+TimePickerThemeData _timePickerTheme(Brightness brightness) {
+  final light = brightness == Brightness.light;
+  final surface = light ? Colors.grey[100]! : Colors.grey[850]!;
+  final accent = light ? Colors.grey[700]! : Colors.grey[400]!;
+  final onAccent = light ? Colors.white : Colors.grey[900]!;
+  final text = light ? Colors.grey[800]! : Colors.grey[300]!;
+  final field = light ? Colors.grey[200]! : Colors.grey[800]!;
+
+  return TimePickerThemeData(
+    backgroundColor: surface,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    hourMinuteColor: WidgetStateColor.resolveWith(
+      (states) => states.contains(WidgetState.selected) ? accent : field,
+    ),
+    hourMinuteTextColor: WidgetStateColor.resolveWith(
+      (states) => states.contains(WidgetState.selected) ? onAccent : text,
+    ),
+    dayPeriodColor: WidgetStateColor.resolveWith(
+      (states) => states.contains(WidgetState.selected) ? accent : field,
+    ),
+    dayPeriodTextColor: WidgetStateColor.resolveWith(
+      (states) => states.contains(WidgetState.selected) ? onAccent : text,
+    ),
+    dialBackgroundColor: field,
+    dialHandColor: accent,
+    dialTextColor: WidgetStateColor.resolveWith(
+      (states) => states.contains(WidgetState.selected) ? onAccent : text,
+    ),
+    entryModeIconColor: accent,
+    helpTextStyle: TextStyle(color: text, fontSize: 12),
+    confirmButtonStyle: TextButton.styleFrom(foregroundColor: accent),
+    cancelButtonStyle: TextButton.styleFrom(foregroundColor: text),
+  );
+}
 
 ThemeData appThemeDark = ThemeData(
     colorScheme: ColorScheme.fromSeed(
@@ -155,7 +235,8 @@ ThemeData appThemeDark = ThemeData(
         style: ButtonStyle(
       backgroundColor: WidgetStatePropertyAll(Colors.grey[400]),
       foregroundColor: WidgetStatePropertyAll(Colors.grey[300]),
-      textStyle: WidgetStatePropertyAll(TextStyle(fontSize: 16, color: Colors.grey[300])),
+      textStyle: WidgetStatePropertyAll(
+          TextStyle(fontSize: 16, color: Colors.grey[300])),
     )),
     iconButtonTheme: IconButtonThemeData(
       style: ButtonStyle(
@@ -186,6 +267,8 @@ ThemeData appThemeDark = ThemeData(
     primaryTextTheme: textThemeDark(),
     textTheme: textThemeDark(),
     dividerColor: Colors.grey[700],
+    datePickerTheme: _datePickerTheme(Brightness.dark),
+    timePickerTheme: _timePickerTheme(Brightness.dark),
     dialogTheme: DialogThemeData(backgroundColor: Colors.grey[850]));
 
 TextTheme textThemeLight() {

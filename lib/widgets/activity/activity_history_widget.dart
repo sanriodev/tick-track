@@ -1,4 +1,5 @@
 import 'package:ticktrack/models/activity/activity_model.dart';
+import 'package:ticktrack/widgets/user_avatar_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -11,11 +12,26 @@ class ActivityHistoryWidget extends StatelessWidget {
   final List<EventlogMessage<dynamic>> activities;
   final int? maxItems; // optional limit on displayed items
 
+  /// Set to false to get the bare timeline, for embedding into a card that
+  /// already exists - the home screen preview does that so both places render
+  /// through this widget instead of keeping two copies of the same list.
+  final bool wrapInCard;
+
   const ActivityHistoryWidget({
     super.key,
     required this.activities,
     this.maxItems,
+    this.wrapInCard = true,
   });
+
+  /// Keeps the card optional without duplicating either branch of [build].
+  Widget _wrap(Widget child, EdgeInsets padding) {
+    final padded = Padding(padding: padding, child: child);
+    if (!wrapInCard) {
+      return padded;
+    }
+    return Card(clipBehavior: Clip.antiAlias, child: padded);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,39 +48,34 @@ class ActivityHistoryWidget extends StatelessWidget {
     final grouped = _groupByMonth(displayed);
 
     if (displayed.isEmpty) {
-      return Card(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Center(
-            child: Text(
-              'Noch keine Aktivitäten',
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
+      return _wrap(
+        Center(
+          child: Text(
+            'Noch keine Aktivitäten',
+            style: Theme.of(context).textTheme.bodySmall,
           ),
         ),
+        const EdgeInsets.all(24),
       );
     }
 
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            for (final entry in grouped.entries) ...[
-              _MonthHeader(monthYear: entry.key),
-              const SizedBox(height: 8),
-              ...entry.value.map((activity) => _ActivityItem(
-                    activity: activity,
-                    isLast: activity == entry.value.last &&
-                        entry.key == grouped.keys.last,
-                  )),
-              if (entry.key != grouped.keys.last) const SizedBox(height: 16),
-            ],
+    return _wrap(
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final entry in grouped.entries) ...[
+            _MonthHeader(monthYear: entry.key),
+            const SizedBox(height: 8),
+            ...entry.value.map((activity) => _ActivityItem(
+                  activity: activity,
+                  isLast: activity == entry.value.last &&
+                      entry.key == grouped.keys.last,
+                )),
+            if (entry.key != grouped.keys.last) const SizedBox(height: 16),
           ],
-        ),
+        ],
       ),
+      const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
     );
   }
 
@@ -120,20 +131,42 @@ class _ActivityItem extends StatelessWidget {
             width: 40,
             child: Column(
               children: [
-                Container(
+                // the person as the picture, what they did as a badge on it -
+                // in a shared feed the person is what you scan for first
+                SizedBox(
                   width: 32,
                   height: 32,
-                  decoration: BoxDecoration(
-                    color:
-                        Theme.of(context).colorScheme.surfaceContainerHighest,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: PhosphorIcon(
-                      icon,
-                      size: 16,
-                      color: Theme.of(context).iconTheme.color,
-                    ),
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      UserAvatarWidget(
+                        userId: activity.user.id,
+                        username: activity.user.username,
+                        radius: 16,
+                      ),
+                      Positioned(
+                        right: -2,
+                        bottom: -2,
+                        child: Container(
+                          padding: const EdgeInsets.all(3),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerHighest,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Theme.of(context).cardColor,
+                              width: 1.5,
+                            ),
+                          ),
+                          child: PhosphorIcon(
+                            icon,
+                            size: 10,
+                            color: Theme.of(context).iconTheme.color,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 if (!isLast)
@@ -188,6 +221,7 @@ class _ActivityItem extends StatelessWidget {
       'note' => PhosphorIconsRegular.note,
       'task' => PhosphorIconsRegular.checkSquare,
       'task_list' || 'tasklist' => PhosphorIconsRegular.listChecks,
+      'calendar_event' => PhosphorIconsRegular.calendarBlank,
       'group' => PhosphorIconsRegular.usersThree,
       'group_membership' => activity.isGroupLeave
           ? PhosphorIconsRegular.signOut
@@ -205,6 +239,7 @@ class _ActivityItem extends StatelessWidget {
       'note' => 'Notiz',
       'task' => 'Aufgabe',
       'task_list' || 'tasklist' => 'Aufgabenliste',
+      'calendar_event' => 'Kalenderevent',
       _ => activity.entityType,
     };
 

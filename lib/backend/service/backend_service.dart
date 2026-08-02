@@ -4,7 +4,11 @@ import 'dart:convert';
 
 import 'package:ticktrack/models/activity/activity_model.dart';
 import 'package:ticktrack/models/application/availability_model.dart';
+import 'package:ticktrack/models/avatar/avatar_model.dart';
 import 'package:ticktrack/models/block/blocked_user_model.dart';
+import 'package:ticktrack/models/calendar/calendar_event_model.dart';
+import 'package:ticktrack/models/calendar/dto/create_calendar_event_dto.dart';
+import 'package:ticktrack/models/calendar/dto/update_calendar_event_dto.dart';
 import 'package:ticktrack/models/group/group_api_model.dart';
 import 'package:ticktrack/models/note/note_api_model.dart';
 import 'package:ticktrack/models/task/dto/create_task_dto.dart';
@@ -540,6 +544,143 @@ class Backend extends ABackend {
 
     if (res.statusCode == 200 || res.statusCode == 201) {
       return;
+    } else {
+      throw res;
+    }
+  }
+
+  /// All dates in [from] .. [to], repetitions already resolved by the backend.
+  ///
+  /// Without a [groupId] this returns the personal calendar. The range is
+  /// inclusive on both ends and may not span more than 400 days.
+  Future<List<CalendarOccurrence>> getCalendarEvents({
+    int? groupId,
+    required DateTime from,
+    required DateTime to,
+  }) async {
+    final query = <String>[
+      if (groupId != null) 'groupId=$groupId',
+      'from=${Uri.encodeQueryComponent(from.toUtc().toIso8601String())}',
+      'to=${Uri.encodeQueryComponent(to.toUtc().toIso8601String())}',
+    ].join('&');
+    final res = await get('v1/calendar-event/?$query');
+
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      final jsonData = await json.decode(utf8.decode(res.bodyBytes))['data']
+          as List<dynamic>;
+      return jsonData
+          .map((e) => CalendarOccurrence.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } else {
+      throw res;
+    }
+  }
+
+  Future<CalendarEvent> createCalendarEvent(
+    CreateCalendarEventDto event,
+  ) async {
+    final body = json.encode(event.toJson());
+    final res = await post(body, 'v1/calendar-event/');
+
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      final jsonData = await json.decode(utf8.decode(res.bodyBytes))['data']
+          as Map<String, dynamic>;
+      return CalendarEvent.fromJson(jsonData);
+    } else {
+      throw res;
+    }
+  }
+
+  Future<CalendarEvent> updateCalendarEvent(
+    UpdateCalendarEventDto event,
+  ) async {
+    final body = json.encode(event.toJson());
+    final res = await put(body, 'v1/calendar-event/');
+
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      final jsonData = await json.decode(utf8.decode(res.bodyBytes))['data']
+          as Map<String, dynamic>;
+      return CalendarEvent.fromJson(jsonData);
+    } else {
+      throw res;
+    }
+  }
+
+  /// Deletes an event with all its dates. Owner only.
+  Future<CalendarEvent> deleteCalendarEvent(int id) async {
+    final res = await delete('v1/calendar-event/$id');
+
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      final jsonData = await json.decode(utf8.decode(res.bodyBytes))['data']
+          as Map<String, dynamic>;
+      return CalendarEvent.fromJson(jsonData);
+    } else {
+      throw res;
+    }
+  }
+
+  /// Sets the profile picture of the logged in account and returns the version
+  /// the backend stored, which is what the avatar cache keys off.
+  ///
+  /// The image goes over as base64 inside the JSON body rather than as a
+  /// multipart upload: the shared HTTP client of the core package only knows
+  /// how to send bodies, and it is the client that attaches the bearer token.
+  Future<AvatarMeta> setOwnAvatar(String imageBase64) async {
+    final body = json.encode({'imageBase64': imageBase64});
+    final res = await put(body, 'v1/avatar/');
+
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      final jsonData = await json.decode(utf8.decode(res.bodyBytes))['data']
+          as Map<String, dynamic>;
+      return AvatarMeta.fromJson(jsonData);
+    } else {
+      throw res;
+    }
+  }
+
+  /// Removes the profile picture of the logged in account. Succeeds even if
+  /// there was none.
+  Future<void> deleteOwnAvatar() async {
+    final res = await delete('v1/avatar/');
+
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      return;
+    } else {
+      throw res;
+    }
+  }
+
+  /// The profile picture of a user, or null if they have none. Only available
+  /// for the own account and for members of a shared group.
+  Future<Avatar?> getAvatar(int userId) async {
+    final res = await get('v1/avatar/$userId');
+
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      final jsonData = await json.decode(utf8.decode(res.bodyBytes))['data']
+          as Map<String, dynamic>;
+      return Avatar.fromJson(jsonData);
+    }
+    // no picture set is the normal case, not a failure worth an exception
+    if (res.statusCode == 404) {
+      return null;
+    }
+    throw res;
+  }
+
+  /// Which of [userIds] have a profile picture and which version it is, in one
+  /// request. Users without one are absent from the result.
+  Future<List<AvatarMeta>> getAvatarMeta(Iterable<int> userIds) async {
+    if (userIds.isEmpty) {
+      return [];
+    }
+    final res = await get('v1/avatar/?userIds=${userIds.join(',')}');
+
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      final jsonData = await json.decode(utf8.decode(res.bodyBytes))['data']
+          as List<dynamic>;
+      return jsonData
+          .map((e) => AvatarMeta.fromJson(e as Map<String, dynamic>))
+          .toList();
     } else {
       throw res;
     }

@@ -277,8 +277,7 @@ class _GroupOnboardingScreenState extends State<GroupOnboardingScreen> {
                 width: double.infinity,
                 child: OutlinedButton.icon(
                   onPressed: () {
-                    navigateToRoute(context, 'group-create',
-                        backEnabled: true);
+                    navigateToRoute(context, 'group-create', backEnabled: true);
                   },
                   icon: Icon(
                     Icons.add,
@@ -315,9 +314,7 @@ class _GroupOnboardingScreenState extends State<GroupOnboardingScreen> {
           width: isActive ? 24 : 8,
           height: 8,
           decoration: BoxDecoration(
-            color: isActive
-                ? theme.colorScheme.primary
-                : theme.dividerColor,
+            color: isActive ? theme.colorScheme.primary : theme.dividerColor,
             borderRadius: BorderRadius.circular(4),
           ),
         );

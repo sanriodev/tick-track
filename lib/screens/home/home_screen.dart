@@ -2,6 +2,7 @@
 
 import 'package:ticktrack/backend/service/backend_service.dart';
 import 'package:ticktrack/models/activity/activity_model.dart';
+import 'package:ticktrack/models/calendar/calendar_event_model.dart';
 import 'package:ticktrack/models/note/note_api_model.dart';
 import 'package:ticktrack/models/tasklist/task_list_api_model.dart';
 import 'package:ticktrack/screens/home/main_app_screen.dart';
@@ -9,6 +10,7 @@ import 'package:ticktrack/state/group_context.dart';
 import 'package:ticktrack/util/helpers.dart';
 import 'package:ticktrack/widgets/activity_preview_widget.dart';
 import 'package:ticktrack/widgets/app_drawer_widget.dart';
+import 'package:ticktrack/widgets/calendar_preview_widget.dart';
 import 'package:ticktrack/widgets/group/group_context_switcher.dart';
 import 'package:ticktrack/widgets/navigation/bottom_menu.dart';
 import 'package:ticktrack/widgets/notes_preview_widget.dart';
@@ -31,6 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<TaskList> _taskLists = [];
   List<Note> _notes = [];
   List<EventlogMessage<dynamic>> _activities = [];
+  List<CalendarOccurrence> _upcoming = [];
 
   bool isLoading = true;
   final _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -104,13 +107,33 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  /// Two weeks, not the backend's 90 day default - a date two months out is not
+  /// "coming up".
+  Future<void> _getUpcomingEvents() async {
+    try {
+      final now = DateTime.now();
+      final res = await Backend().getCalendarEvents(
+        groupId: GroupContext().activeGroup?.id,
+        from: now,
+        to: now.add(const Duration(days: 14)),
+      );
+      _upcoming = res;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<void> _loadData() async {
     try {
       setState(() {
         isLoading = true;
       });
-      await Future.wait(
-          [_getTaskLists(), _getNotes(), _getActivities()]);
+      await Future.wait([
+        _getTaskLists(),
+        _getNotes(),
+        _getActivities(),
+        _getUpcomingEvents(),
+      ]);
 
       setState(() {
         isLoading = false;
@@ -186,6 +209,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       },
                       isLoading: isLoading,
                       notes: _notes),
+                  const SizedBox(height: 16),
+                  CalendarPreviewWidget(
+                    occurrences: _upcoming,
+                    isLoading: isLoading,
+                    onPressed: () {
+                      navigateToRoute(context, 'calendar');
+                    },
+                  ),
                   const SizedBox(height: 16),
                   ActivityPreviewWidget(
                     onPressed: () {
