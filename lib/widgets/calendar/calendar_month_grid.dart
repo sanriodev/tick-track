@@ -124,6 +124,7 @@ class CalendarMonthGrid extends StatelessWidget {
     final inMonth = day.month == firstOfMonth.month;
     final isSelected = _isSameDay(day, selectedDay);
     final isToday = _isSameDay(day, DateTime.now());
+
     final hasEvents = daysWithEvents.contains(day);
 
     final textColor = isSelected

@@ -1,3 +1,4 @@
+import 'package:ticktrack/enum/event_color_enum.dart';
 import 'package:ticktrack/models/calendar/calendar_event_model.dart';
 import 'package:ticktrack/util/haptics.dart';
 import 'package:ticktrack/util/report_helper.dart';
@@ -85,6 +86,7 @@ class _CalendarOccurrenceTileState extends State<CalendarOccurrenceTile>
     final theme = Theme.of(context);
     final description = _event.description?.trim() ?? '';
     final location = _event.location?.trim() ?? '';
+    final accent = eventColorOf(context, _event.color);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
@@ -149,7 +151,7 @@ class _CalendarOccurrenceTileState extends State<CalendarOccurrenceTile>
                         height: 42,
                         margin: const EdgeInsets.only(right: 12, top: 2),
                         decoration: BoxDecoration(
-                          color: theme.primaryColor,
+                          color: accent,
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -186,7 +188,7 @@ class _CalendarOccurrenceTileState extends State<CalendarOccurrenceTile>
                             Text(
                               _timeLabel,
                               style: theme.primaryTextTheme.titleSmall
-                                  ?.copyWith(color: theme.primaryColor),
+                                  ?.copyWith(color: accent),
                             ),
                             if (location.isNotEmpty)
                               Padding(

@@ -1,3 +1,4 @@
+import 'package:ticktrack/enum/event_color_enum.dart';
 import 'package:ticktrack/enum/event_recurrence_enum.dart';
 import 'package:ticktrack/enum/privacy_mode_enum.dart';
 import 'package:ticktrack/models/base/base_user_relation.dart';
@@ -15,6 +16,7 @@ class CalendarEvent extends BaseUserRelation {
   bool allDay;
   EventRecurrence recurrence;
   DateTime? recurrenceEndDate;
+  EventColor? color;
   PrivacyMode privacyMode;
   int? groupId;
 
@@ -29,6 +31,7 @@ class CalendarEvent extends BaseUserRelation {
     this.description,
     this.location,
     this.recurrenceEndDate,
+    this.color,
     this.groupId,
     super.user,
     super.lastModifiedUser,
@@ -48,6 +51,7 @@ class CalendarEvent extends BaseUserRelation {
       recurrenceEndDate: json['recurrenceEndDate'] != null
           ? DateTime.parse(json['recurrenceEndDate'] as String).toLocal()
           : null,
+      color: EventColor.fromJson(json['color']),
       privacyMode: PrivacyMode.fromJson(json['privacyMode']),
       groupId: json['groupId'] as int?,
       user: json['user'] != null

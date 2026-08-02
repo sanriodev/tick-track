@@ -1,3 +1,4 @@
+import 'package:ticktrack/enum/event_color_enum.dart';
 import 'package:ticktrack/models/calendar/calendar_event_model.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -95,6 +96,16 @@ class CalendarPreviewWidget extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 6.0),
                       child: Row(
                         children: [
+                          Container(
+                            width: 8,
+                            height: 8,
+                            margin: const EdgeInsets.only(right: 8),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color:
+                                  eventColorOf(context, occurrence.event.color),
+                            ),
+                          ),
                           SizedBox(
                             width: 84,
                             child: Text(

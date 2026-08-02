@@ -1,5 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'package:ticktrack/enum/event_color_enum.dart';
 import 'package:ticktrack/enum/event_recurrence_enum.dart';
 import 'package:ticktrack/enum/privacy_mode_enum.dart';
 import 'package:ticktrack/backend/service/backend_service.dart';
@@ -46,7 +47,11 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
   bool _allDay = false;
   EventRecurrence _recurrence = EventRecurrence.none;
   DateTime? _recurrenceEndDate;
+  EventColor? _color;
   PrivacyMode _privacyMode = PrivacyMode.private;
+
+  /// Tells "never had a colour" from "the user just removed it".
+  bool _hadColor = false;
 
   /// Tells "never had an end date" from "the user just cleared it".
   bool _hadRecurrenceEnd = false;
@@ -128,6 +133,8 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
     _recurrence = event.recurrence;
     _recurrenceEndDate = event.recurrenceEndDate;
     _hadRecurrenceEnd = event.recurrenceEndDate != null;
+    _color = event.color;
+    _hadColor = event.color != null;
     _privacyMode = event.privacyMode;
   }
 
@@ -239,6 +246,7 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
           allDay: _allDay,
           recurrence: _recurrence,
           recurrenceEndDate: seriesEnd,
+          color: _color,
           privacyMode: _privacyMode,
           groupId: GroupContext().activeGroup?.id,
         ));
@@ -254,6 +262,8 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
           recurrence: _recurrence,
           recurrenceEndDate: seriesEnd,
           clearRecurrenceEndDate: seriesEnd == null && _hadRecurrenceEnd,
+          color: _color,
+          clearColor: _color == null && _hadColor,
           // only the owner may move the privacy mode
           privacyMode: _isOwnEvent ? _privacyMode : null,
         ));
@@ -337,6 +347,7 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
             const SizedBox(height: 8),
             _buildRecurrenceRow(theme, readOnly),
             if (_recurrence.repeats) _buildRecurrenceEndRow(theme, readOnly),
+            _buildColorRow(theme, readOnly),
             if (GroupContext().activeGroup != null)
               _buildPrivacyRow(theme, readOnly),
             const SizedBox(height: 12),
@@ -516,6 +527,78 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
               onPressed: () => setState(() => _recurrenceEndDate = null),
             ),
         ],
+      ),
+    );
+  }
+
+  /// Swatches rather than a dropdown: a colour is recognised by looking at it,
+  /// and eight of them fit in the space a dropdown would take anyway.
+  Widget _buildColorRow(ThemeData theme, bool readOnly) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Farbe', style: theme.primaryTextTheme.titleSmall),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: [
+              _buildSwatch(theme, readOnly, null),
+              for (final value in EventColor.values)
+                _buildSwatch(theme, readOnly, value),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSwatch(ThemeData theme, bool readOnly, EventColor? value) {
+    final isSelected = _color == value;
+    final swatchColor = value?.resolve(theme.brightness);
+
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      label: value?.label ?? 'Ohne Farbe',
+      excludeSemantics: true,
+      child: Tooltip(
+        message: value?.label ?? 'Ohne Farbe',
+        child: InkWell(
+          onTap: readOnly ? null : () {
+            Haptics.tick();
+            setState(() => _color = value);
+          },
+          customBorder: const CircleBorder(),
+          child: Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: swatchColor ?? Colors.transparent,
+              shape: BoxShape.circle,
+              border: Border.all(
+                // the selected swatch gets a ring in the text colour, which
+                // stays visible on every one of the eight fills
+                color: isSelected
+                    ? (theme.primaryTextTheme.bodySmall?.color ??
+                        theme.primaryColor)
+                    : theme.dividerColor,
+                width: isSelected ? 2.5 : 1.5,
+              ),
+            ),
+            // the "no colour" swatch is an empty circle with a slash
+            child: value == null
+                ? Icon(
+                    Icons.block,
+                    size: 16,
+                    color: theme.primaryTextTheme.displayMedium?.color
+                        ?.withValues(alpha: 0.6),
+                  )
+                : null,
+          ),
+        ),
       ),
     );
   }

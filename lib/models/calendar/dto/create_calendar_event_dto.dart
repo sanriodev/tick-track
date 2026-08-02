@@ -1,3 +1,4 @@
+import 'package:ticktrack/enum/event_color_enum.dart';
 import 'package:ticktrack/enum/event_recurrence_enum.dart';
 import 'package:ticktrack/enum/privacy_mode_enum.dart';
 
@@ -10,6 +11,7 @@ class CreateCalendarEventDto {
   bool allDay;
   EventRecurrence recurrence;
   DateTime? recurrenceEndDate;
+  EventColor? color;
   PrivacyMode? privacyMode;
   int? groupId;
 
@@ -22,6 +24,7 @@ class CreateCalendarEventDto {
     this.description,
     this.location,
     this.recurrenceEndDate,
+    this.color,
     this.privacyMode,
     this.groupId,
   });
@@ -38,6 +41,7 @@ class CreateCalendarEventDto {
       'recurrence': recurrence.toJson(),
       if (recurrenceEndDate != null)
         'recurrenceEndDate': recurrenceEndDate!.toUtc().toIso8601String(),
+      if (color != null) 'color': color!.toJson(),
       if (privacyMode != null) 'privacyMode': privacyMode!.toJson(),
       if (groupId != null) 'groupId': groupId,
     };

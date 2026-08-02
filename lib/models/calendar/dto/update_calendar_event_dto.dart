@@ -1,3 +1,4 @@
+import 'package:ticktrack/enum/event_color_enum.dart';
 import 'package:ticktrack/enum/event_recurrence_enum.dart';
 import 'package:ticktrack/enum/privacy_mode_enum.dart';
 
@@ -21,6 +22,12 @@ class UpdateCalendarEventDto {
   /// because a null [recurrenceEndDate] already means "do not touch".
   bool clearRecurrenceEndDate;
 
+  EventColor? color;
+
+  /// Same reasoning as [clearRecurrenceEndDate]: a null [color] means "leave
+  /// it", so removing a colour needs its own flag.
+  bool clearColor;
+
   PrivacyMode? privacyMode;
 
   UpdateCalendarEventDto({
@@ -34,6 +41,8 @@ class UpdateCalendarEventDto {
     this.recurrence,
     this.recurrenceEndDate,
     this.clearRecurrenceEndDate = false,
+    this.color,
+    this.clearColor = false,
     this.privacyMode,
   });
 
@@ -51,6 +60,10 @@ class UpdateCalendarEventDto {
         'recurrenceEndDate': null
       else if (recurrenceEndDate != null)
         'recurrenceEndDate': recurrenceEndDate!.toUtc().toIso8601String(),
+      if (clearColor)
+        'color': null
+      else if (color != null)
+        'color': color!.toJson(),
       if (privacyMode != null) 'privacyMode': privacyMode!.toJson(),
     };
   }
