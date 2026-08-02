@@ -17,6 +17,10 @@ class CalendarEvent extends BaseUserRelation {
   EventRecurrence recurrence;
   DateTime? recurrenceEndDate;
   EventColor? color;
+
+  /// Minutes before the start the device should remind, null for no reminder.
+  int? remindMinutesBefore;
+
   PrivacyMode privacyMode;
   int? groupId;
 
@@ -32,6 +36,7 @@ class CalendarEvent extends BaseUserRelation {
     this.location,
     this.recurrenceEndDate,
     this.color,
+    this.remindMinutesBefore,
     this.groupId,
     super.user,
     super.lastModifiedUser,
@@ -52,6 +57,7 @@ class CalendarEvent extends BaseUserRelation {
           ? DateTime.parse(json['recurrenceEndDate'] as String).toLocal()
           : null,
       color: EventColor.fromJson(json['color']),
+      remindMinutesBefore: json['remindMinutesBefore'] as int?,
       privacyMode: PrivacyMode.fromJson(json['privacyMode']),
       groupId: json['groupId'] as int?,
       user: json['user'] != null

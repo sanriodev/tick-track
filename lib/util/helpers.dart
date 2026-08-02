@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:ticktrack/enum/privacy_mode_enum.dart';
 import 'package:ticktrack/state/avatar_store.dart';
 import 'package:ticktrack/state/group_context.dart';
+import 'package:ticktrack/state/reminder_scheduler.dart';
 import 'package:blvckleg_dart_core/exception/session_expired.dart';
 import 'package:blvckleg_dart_core/models/auth/login_response_model.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
@@ -51,6 +52,8 @@ Future<void> deleteBoxAndNavigateToLogin(BuildContext context) async {
   GroupContext().clear();
   // the next account on this device must not see the previous one's pictures
   AvatarStore().clear();
+  // nor be reminded of their events
+  await ReminderScheduler().cancelAll();
 
   if (context.mounted) {
     navigateToRoute(

@@ -9,6 +9,7 @@ import 'package:ticktrack/models/calendar/dto/create_calendar_event_dto.dart';
 import 'package:ticktrack/models/calendar/dto/update_calendar_event_dto.dart';
 import 'package:ticktrack/screens/calendar/calendar_screen.dart';
 import 'package:ticktrack/state/group_context.dart';
+import 'package:ticktrack/state/reminder_scheduler.dart';
 import 'package:ticktrack/util/haptics.dart';
 import 'package:ticktrack/util/helpers.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
@@ -19,6 +20,22 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 /// Wide enough for the longest date label ("Endet am") so none of them wraps.
 const double _labelWidth = 84;
+
+/// Offsets offered for a reminder, null meaning none. Fixed choices instead of
+/// a free number: these cover what people actually pick, and each one is a tap.
+const List<int?> _reminderOffsets = [null, 0, 5, 15, 30, 60, 120, 1440, 2880];
+
+String _reminderLabel(int? minutes) {
+  return switch (minutes) {
+    null => 'Keine Erinnerung',
+    0 => 'Zum Beginn',
+    60 => '1 Stunde vorher',
+    120 => '2 Stunden vorher',
+    1440 => '1 Tag vorher',
+    2880 => '2 Tage vorher',
+    _ => '$minutes Minuten vorher',
+  };
+}
 
 /// Creates or edits an event.
 ///
@@ -48,10 +65,14 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
   EventRecurrence _recurrence = EventRecurrence.none;
   DateTime? _recurrenceEndDate;
   EventColor? _color;
+  int? _remindMinutesBefore;
   PrivacyMode _privacyMode = PrivacyMode.private;
 
   /// Tells "never had a colour" from "the user just removed it".
   bool _hadColor = false;
+
+  /// Same for the reminder.
+  bool _hadReminder = false;
 
   /// Tells "never had an end date" from "the user just cleared it".
   bool _hadRecurrenceEnd = false;
@@ -135,6 +156,8 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
     _hadRecurrenceEnd = event.recurrenceEndDate != null;
     _color = event.color;
     _hadColor = event.color != null;
+    _remindMinutesBefore = event.remindMinutesBefore;
+    _hadReminder = event.remindMinutesBefore != null;
     _privacyMode = event.privacyMode;
   }
 
@@ -248,6 +271,7 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
           recurrence: _recurrence,
           recurrenceEndDate: seriesEnd,
           color: _color,
+          remindMinutesBefore: _remindMinutesBefore,
           privacyMode: _privacyMode,
           groupId: GroupContext().activeGroup?.id,
         ));
@@ -265,6 +289,8 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
           clearRecurrenceEndDate: seriesEnd == null && _hadRecurrenceEnd,
           color: _color,
           clearColor: _color == null && _hadColor,
+          remindMinutesBefore: _remindMinutesBefore,
+          clearReminder: _remindMinutesBefore == null && _hadReminder,
           // only the owner may move the privacy mode
           privacyMode: _isOwnEvent ? _privacyMode : null,
         ));
@@ -348,6 +374,7 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
             const SizedBox(height: 8),
             _buildRecurrenceRow(theme, readOnly),
             if (_recurrence.repeats) _buildRecurrenceEndRow(theme, readOnly),
+            _buildReminderRow(theme, readOnly),
             _buildColorRow(theme, readOnly),
             if (GroupContext().activeGroup != null)
               _buildPrivacyRow(theme, readOnly),
@@ -601,6 +628,61 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
                   )
                 : null,
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReminderRow(ThemeData theme, bool readOnly) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: DropdownButtonFormField<int?>(
+        initialValue: _remindMinutesBefore,
+        isExpanded: true,
+        dropdownColor: theme.cardColor,
+        style: theme.primaryTextTheme.titleSmall,
+        decoration: InputDecoration(
+          labelText: 'Erinnerung',
+          labelStyle: theme.primaryTextTheme.bodySmall,
+          helperText: 'Erinnerungen laufen nur auf diesem Gerät',
+          helperStyle: theme.primaryTextTheme.displayMedium,
+        ),
+        items: [
+          for (final value in _reminderOffsets)
+            DropdownMenuItem(
+              value: value,
+              child: Text(
+                _reminderLabel(value),
+                style: theme.primaryTextTheme.titleSmall,
+              ),
+            ),
+        ],
+        onChanged: readOnly ? null : _onReminderChanged,
+      ),
+    );
+  }
+
+  /// Asks for the notification permission the moment a reminder is picked -
+  /// a system dialog makes sense right here and nowhere else.
+  Future<void> _onReminderChanged(int? value) async {
+    Haptics.tick();
+    setState(() => _remindMinutesBefore = value);
+    if (value == null) {
+      return;
+    }
+
+    final allowed = await ReminderScheduler().requestPermission();
+    if (allowed || !mounted) {
+      return;
+    }
+    // the setting is still saved: the user may allow it later, and then the
+    // reminder works without them having to edit the event again
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Benachrichtigungen sind nicht erlaubt. Die Erinnerung wird '
+          'gespeichert, greift aber erst, wenn du sie in den '
+          'Systemeinstellungen zulässt.',
         ),
       ),
     );

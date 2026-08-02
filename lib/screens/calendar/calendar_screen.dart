@@ -5,6 +5,7 @@ import 'package:ticktrack/enum/event_color_enum.dart';
 import 'package:ticktrack/models/calendar/calendar_event_model.dart';
 import 'package:ticktrack/state/avatar_store.dart';
 import 'package:ticktrack/state/group_context.dart';
+import 'package:ticktrack/state/reminder_scheduler.dart';
 import 'package:ticktrack/util/haptics.dart';
 import 'package:ticktrack/util/helpers.dart';
 import 'package:ticktrack/widgets/app_drawer_widget.dart';
@@ -87,6 +88,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
       AvatarStore().sync(
         occurrences.map((o) => o.event.user?.id).whereType<int>().toSet(),
       );
+      // the loaded month is the freshest picture of what to remind about
+      ReminderScheduler().reschedule(occurrences);
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
       await showBackendError(

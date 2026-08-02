@@ -28,6 +28,11 @@ class UpdateCalendarEventDto {
   /// it", so removing a colour needs its own flag.
   bool clearColor;
 
+  int? remindMinutesBefore;
+
+  /// Switches the reminder off, for the same reason [clearColor] exists.
+  bool clearReminder;
+
   PrivacyMode? privacyMode;
 
   UpdateCalendarEventDto({
@@ -43,6 +48,8 @@ class UpdateCalendarEventDto {
     this.clearRecurrenceEndDate = false,
     this.color,
     this.clearColor = false,
+    this.remindMinutesBefore,
+    this.clearReminder = false,
     this.privacyMode,
   });
 
@@ -64,6 +71,10 @@ class UpdateCalendarEventDto {
         'color': null
       else if (color != null)
         'color': color!.toJson(),
+      if (clearReminder)
+        'remindMinutesBefore': null
+      else if (remindMinutesBefore != null)
+        'remindMinutesBefore': remindMinutesBefore,
       if (privacyMode != null) 'privacyMode': privacyMode!.toJson(),
     };
   }

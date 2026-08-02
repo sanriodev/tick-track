@@ -12,6 +12,7 @@ class CreateCalendarEventDto {
   EventRecurrence recurrence;
   DateTime? recurrenceEndDate;
   EventColor? color;
+  int? remindMinutesBefore;
   PrivacyMode? privacyMode;
   int? groupId;
 
@@ -25,6 +26,7 @@ class CreateCalendarEventDto {
     this.location,
     this.recurrenceEndDate,
     this.color,
+    this.remindMinutesBefore,
     this.privacyMode,
     this.groupId,
   });
@@ -42,6 +44,8 @@ class CreateCalendarEventDto {
       if (recurrenceEndDate != null)
         'recurrenceEndDate': recurrenceEndDate!.toUtc().toIso8601String(),
       if (color != null) 'color': color!.toJson(),
+      if (remindMinutesBefore != null)
+        'remindMinutesBefore': remindMinutesBefore,
       if (privacyMode != null) 'privacyMode': privacyMode!.toJson(),
       if (groupId != null) 'groupId': groupId,
     };

@@ -170,6 +170,19 @@ class _CalendarOccurrenceTileState extends State<CalendarOccurrenceTile>
                                         ?.copyWith(fontWeight: FontWeight.w600),
                                   ),
                                 ),
+                                if (_event.remindMinutesBefore != null)
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 6),
+                                    child: Tooltip(
+                                      message: 'Erinnerung aktiv',
+                                      child: PhosphorIcon(
+                                        PhosphorIconsRegular.bell,
+                                        size: 15,
+                                        color: theme.primaryIconTheme.color
+                                            ?.withValues(alpha: 0.8),
+                                      ),
+                                    ),
+                                  ),
                                 if (_event.recurrence.repeats)
                                   Tooltip(
                                     message: _event.recurrence.label,
