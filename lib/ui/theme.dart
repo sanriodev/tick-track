@@ -235,7 +235,8 @@ ThemeData appThemeDark = ThemeData(
         style: ButtonStyle(
       backgroundColor: WidgetStatePropertyAll(Colors.grey[400]),
       foregroundColor: WidgetStatePropertyAll(Colors.grey[300]),
-      textStyle: WidgetStatePropertyAll(TextStyle(fontSize: 16, color: Colors.grey[300])),
+      textStyle: WidgetStatePropertyAll(
+          TextStyle(fontSize: 16, color: Colors.grey[300])),
     )),
     iconButtonTheme: IconButtonThemeData(
       style: ButtonStyle(

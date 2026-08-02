@@ -37,9 +37,10 @@ class BottomMenu extends StatelessWidget {
             selectedItemColor: Theme.of(context).brightness == Brightness.light
                 ? Colors.black
                 : Theme.of(context).colorScheme.primary,
-            unselectedItemColor: Theme.of(context).brightness == Brightness.light
-                ? Colors.grey[500]
-                : Theme.of(context).appBarTheme.titleTextStyle!.color,
+            unselectedItemColor:
+                Theme.of(context).brightness == Brightness.light
+                    ? Colors.grey[500]
+                    : Theme.of(context).appBarTheme.titleTextStyle!.color,
             currentIndex: current,
             onTap: (int index) {
               navigateToRoute(

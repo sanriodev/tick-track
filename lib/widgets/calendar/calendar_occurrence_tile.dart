@@ -32,8 +32,7 @@ class CalendarOccurrenceTile extends StatefulWidget {
   });
 
   @override
-  State<CalendarOccurrenceTile> createState() =>
-      _CalendarOccurrenceTileState();
+  State<CalendarOccurrenceTile> createState() => _CalendarOccurrenceTileState();
 }
 
 class _CalendarOccurrenceTileState extends State<CalendarOccurrenceTile>
@@ -123,7 +122,7 @@ class _CalendarOccurrenceTileState extends State<CalendarOccurrenceTile>
                       context,
                       entityType: 'calendar_event',
                       entityId: _event.id,
-                      entityLabel: 'Termin',
+                      entityLabel: 'Kalenderevent',
                       authorId: _event.user?.id,
                       authorName: _event.user?.username,
                       onBlocked: widget.onBlocked,
@@ -168,8 +167,7 @@ class _CalendarOccurrenceTileState extends State<CalendarOccurrenceTile>
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                     style: theme.primaryTextTheme.labelLarge
-                                        ?.copyWith(
-                                            fontWeight: FontWeight.w600),
+                                        ?.copyWith(fontWeight: FontWeight.w600),
                                   ),
                                 ),
                                 if (_event.recurrence.repeats)

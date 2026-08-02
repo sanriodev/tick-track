@@ -40,7 +40,9 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
   List<BlockedUser> _blocked = [];
 
   bool get _isOwner =>
-      _ownUser != null && _group?.ownerId != null && _group!.ownerId == _ownUser!.id;
+      _ownUser != null &&
+      _group?.ownerId != null &&
+      _group!.ownerId == _ownUser!.id;
 
   @override
   void initState() {
@@ -460,7 +462,8 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
-        title: Text('Gruppendetails', style: theme.primaryTextTheme.titleMedium),
+        title:
+            Text('Gruppendetails', style: theme.primaryTextTheme.titleMedium),
         backgroundColor: theme.scaffoldBackgroundColor,
         centerTitle: false,
         leading: Padding(

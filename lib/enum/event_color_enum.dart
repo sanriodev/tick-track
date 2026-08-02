@@ -67,4 +67,5 @@ enum EventColor {
 /// The colour to paint an event with, falling back to the theme's own accent
 /// for events nobody coloured.
 Color eventColorOf(BuildContext context, EventColor? color) =>
-    color?.resolve(Theme.of(context).brightness) ?? Theme.of(context).primaryColor;
+    color?.resolve(Theme.of(context).brightness) ??
+    Theme.of(context).primaryColor;

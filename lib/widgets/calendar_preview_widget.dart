@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 /// The next few dates on the home screen. Shows what is coming up rather than a
-/// count - "heute 18:00 Müll" says something, "4 Termine" does not.
+/// count - "heute 18:00 Müll" says something, "4 Kalenderevents" does not.
 class CalendarPreviewWidget extends StatelessWidget {
   const CalendarPreviewWidget({
     super.key,
@@ -23,9 +23,8 @@ class CalendarPreviewWidget extends StatelessWidget {
   String _dayLabel(DateTime day) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final difference = DateTime(day.year, day.month, day.day)
-        .difference(today)
-        .inDays;
+    final difference =
+        DateTime(day.year, day.month, day.day).difference(today).inDays;
 
     return switch (difference) {
       0 => 'Heute',
@@ -72,7 +71,7 @@ class CalendarPreviewWidget extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  'Termine',
+                  'Kalenderevents',
                   style: theme.textTheme.titleMedium
                       ?.copyWith(fontWeight: FontWeight.bold),
                 ),
@@ -85,9 +84,9 @@ class CalendarPreviewWidget extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6.0),
                 child: Text(
-                  'Keine Termine in den nächsten Tagen',
-                  style: theme.textTheme.bodyMedium
-                      ?.copyWith(color: Colors.grey),
+                  'Keine Kalenderevents in den nächsten Tagen',
+                  style:
+                      theme.textTheme.bodyMedium?.copyWith(color: Colors.grey),
                 ),
               )
             else

@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:ticktrack/backend/service/backend_service.dart';
+import 'package:ticktrack/enum/event_color_enum.dart';
 import 'package:ticktrack/models/calendar/calendar_event_model.dart';
 import 'package:ticktrack/state/avatar_store.dart';
 import 'package:ticktrack/state/group_context.dart';
@@ -89,7 +90,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
       await showBackendError(
-          context, e, 'Termine konnten nicht geladen werden');
+          context, e, 'Kalenderevents konnten nicht geladen werden');
     }
   }
 
@@ -124,6 +125,16 @@ class _CalendarScreenState extends State<CalendarScreen> {
       });
     }
     return map;
+  }
+
+  /// The grid only needs the colours, in the order the day list shows them.
+  Map<DateTime, List<EventColor?>> _colorsByDay() {
+    return _byDay.map(
+      (day, occurrences) => MapEntry(
+        day,
+        occurrences.map((occurrence) => occurrence.event.color).toList(),
+      ),
+    );
   }
 
   void _changeMonth(int delta) {
@@ -175,7 +186,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(
-          'Termin löschen?',
+          'Kalenderevent löschen?',
           style: Theme.of(context).primaryTextTheme.bodySmall,
         ),
         content: Text(
@@ -213,7 +224,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
       await _load();
     } catch (e) {
       Haptics.warning();
-      await showBackendError(context, e, 'Termin konnte nicht gelöscht werden');
+      await showBackendError(
+          context, e, 'Kalenderevent konnte nicht gelöscht werden');
     }
   }
 
@@ -248,7 +260,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           Haptics.tap();
           _openEditor();
         },
-        tooltip: 'Neuer Termin',
+        tooltip: 'Neues Kalenderevent',
         child: const Icon(Icons.add),
       ),
       // one scrollable for grid and day list together, so pulling anywhere on
@@ -263,7 +275,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
               child: CalendarMonthGrid(
                 visibleMonth: _visibleMonth,
                 selectedDay: _selectedDay,
-                daysWithEvents: _byDay.keys.toSet(),
+                eventColorsByDay: _colorsByDay(),
                 onDaySelected: (day) {
                   Haptics.tick();
                   setState(() => _selectedDay = day);

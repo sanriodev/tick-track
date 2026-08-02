@@ -105,8 +105,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _showAvatarSheet() async {
     final theme = Theme.of(context);
     final userId = _ownUser?.id;
-    final hasAvatar =
-        userId != null && AvatarStore().bytesFor(userId) != null;
+    final hasAvatar = userId != null && AvatarStore().bytesFor(userId) != null;
 
     await showModalBottomSheet<void>(
       context: context,

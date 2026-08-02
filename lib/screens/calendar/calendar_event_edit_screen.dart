@@ -88,7 +88,8 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
     if (extra is! CalendarEditorArgs) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Fehlender Parameter für den Termin.')),
+          const SnackBar(
+              content: Text('Fehlender Parameter für das Kalenderevent.')),
         );
         Navigator.of(context).pop();
       });
@@ -109,11 +110,10 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
   /// Next full hour, one hour long - two taps less in the common case.
   void _prefillNew(DateTime day) {
     final now = DateTime.now();
-    final hour = day.year == now.year &&
-            day.month == now.month &&
-            day.day == now.day
-        ? now.hour + 1
-        : 9;
+    final hour =
+        day.year == now.year && day.month == now.month && day.day == now.day
+            ? now.hour + 1
+            : 9;
     _startAt = DateTime(day.year, day.month, day.day, hour);
     _endAt = _startAt.add(const Duration(hours: 1));
     // in a group the point of an event is that the others see it
@@ -198,7 +198,8 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
   }
 
   Future<void> _pickRecurrenceEnd() async {
-    final initial = _recurrenceEndDate ?? _startAt.add(const Duration(days: 30));
+    final initial =
+        _recurrenceEndDate ?? _startAt.add(const Duration(days: 30));
     final picked = await showDatePicker(
       context: context,
       initialDate: initial.isBefore(_startAt) ? _startAt : initial,
@@ -278,7 +279,7 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
       await showBackendError(
         context,
         e,
-        'Termin konnte nicht gespeichert werden',
+        'Kalenderevent konnte nicht gespeichert werden',
       );
     }
   }
@@ -293,7 +294,7 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          _isNew ? 'Neuer Termin' : 'Termin bearbeiten',
+          _isNew ? 'Neues Kalenderevent' : 'Kalenderevent bearbeiten',
           style: theme.primaryTextTheme.titleMedium,
         ),
         backgroundColor: theme.scaffoldBackgroundColor,
@@ -323,7 +324,7 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
               Padding(
                 padding: const EdgeInsets.only(bottom: 16),
                 child: Text(
-                  'Diesen Termin hat ${_event?.user?.username ?? 'jemand anderes'} '
+                  'Dieses Kalenderevent hat ${_event?.user?.username ?? 'jemand anderes'} '
                   'erstellt, du kannst ihn nur ansehen.',
                   style: theme.primaryTextTheme.titleSmall,
                 ),
@@ -567,10 +568,12 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
       child: Tooltip(
         message: value?.label ?? 'Ohne Farbe',
         child: InkWell(
-          onTap: readOnly ? null : () {
-            Haptics.tick();
-            setState(() => _color = value);
-          },
+          onTap: readOnly
+              ? null
+              : () {
+                  Haptics.tick();
+                  setState(() => _color = value);
+                },
           customBorder: const CircleBorder(),
           child: Container(
             width: 34,

@@ -115,8 +115,7 @@ class AvatarStore extends ChangeNotifier {
       return true;
     }
     final version = _box.get(_versionKey(meta.userId));
-    return version is! String ||
-        DateTime.tryParse(version) != meta.updatedAt;
+    return version is! String || DateTime.tryParse(version) != meta.updatedAt;
   }
 
   /// Caches the picture right away, so the change shows without a round trip.
@@ -155,8 +154,8 @@ class AvatarStore extends ChangeNotifier {
 
   /// Returns whether anything was cached for the user.
   bool _forget(int userId) {
-    final had = _decoded.remove(userId) != null ||
-        _box.get(_dataKey(userId)) != null;
+    final had =
+        _decoded.remove(userId) != null || _box.get(_dataKey(userId)) != null;
     _box.delete(_dataKey(userId));
     _box.delete(_versionKey(userId));
     return had;

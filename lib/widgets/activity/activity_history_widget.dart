@@ -239,7 +239,7 @@ class _ActivityItem extends StatelessWidget {
       'note' => 'Notiz',
       'task' => 'Aufgabe',
       'task_list' || 'tasklist' => 'Aufgabenliste',
-      'calendar_event' => 'Kalendereintrag',
+      'calendar_event' => 'Kalenderevent',
       _ => activity.entityType,
     };
 

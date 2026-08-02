@@ -93,7 +93,8 @@ class CalendarOccurrence {
   /// Normalized to midnight so it works as a map key when bucketing by day.
   DateTime get day => DateTime(startAt.year, startAt.month, startAt.day);
 
-  bool get spansDays => endAt.day != startAt.day ||
+  bool get spansDays =>
+      endAt.day != startAt.day ||
       endAt.month != startAt.month ||
       endAt.year != startAt.year;
 }

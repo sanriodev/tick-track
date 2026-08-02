@@ -1,6 +1,10 @@
+import 'package:ticktrack/enum/event_color_enum.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+
+/// How many event dots a day cell shows before it stops adding more.
+const int _maxDots = 3;
 
 /// A month as a tappable 7 column grid, with a dot on every day that carries
 /// something. Purely presentational: it is handed the days that have events and
@@ -10,8 +14,9 @@ class CalendarMonthGrid extends StatelessWidget {
   final DateTime visibleMonth;
   final DateTime selectedDay;
 
-  /// Days carrying at least one date, normalized to midnight.
-  final Set<DateTime> daysWithEvents;
+  /// Colours of the events per day, keyed by midnight. A null entry is an event
+  /// the user did not colour; a day missing from the map has nothing on it.
+  final Map<DateTime, List<EventColor?>> eventColorsByDay;
 
   final void Function(DateTime day) onDaySelected;
   final VoidCallback onPreviousMonth;
@@ -21,7 +26,7 @@ class CalendarMonthGrid extends StatelessWidget {
     super.key,
     required this.visibleMonth,
     required this.selectedDay,
-    required this.daysWithEvents,
+    required this.eventColorsByDay,
     required this.onDaySelected,
     required this.onPreviousMonth,
     required this.onNextMonth,
@@ -125,7 +130,16 @@ class CalendarMonthGrid extends StatelessWidget {
     final isSelected = _isSameDay(day, selectedDay);
     final isToday = _isSameDay(day, DateTime.now());
 
-    final hasEvents = daysWithEvents.contains(day);
+    final colors = eventColorsByDay[day] ?? const [];
+    final hasEvents = colors.isNotEmpty;
+    // resolved once, so the tint and the dots agree on the same shades
+    final resolved = colors
+        .map((color) => color?.resolve(theme.brightness) ?? theme.primaryColor)
+        .toList();
+    // the first event of the day sets the tint, the dots show the rest
+    final tint = hasEvents && !isSelected
+        ? resolved.first.withValues(alpha: inMonth ? 0.22 : 0.1)
+        : null;
 
     final textColor = isSelected
         ? (theme.brightness == Brightness.light
@@ -140,7 +154,7 @@ class CalendarMonthGrid extends StatelessWidget {
       button: true,
       selected: isSelected,
       label: DateFormat('EEEE, d. MMMM').format(day) +
-          (hasEvents ? ', hat Termine' : ''),
+          (hasEvents ? ', hat Kalenderevents' : ''),
       excludeSemantics: true,
       child: InkWell(
         onTap: () => onDaySelected(day),
@@ -153,7 +167,7 @@ class CalendarMonthGrid extends StatelessWidget {
                 width: 34,
                 height: 34,
                 decoration: BoxDecoration(
-                  color: isSelected ? theme.primaryColor : null,
+                  color: isSelected ? theme.primaryColor : tint,
                   shape: BoxShape.circle,
                   // a ring keeps today findable while another day is selected
                   border: isToday && !isSelected
@@ -172,19 +186,25 @@ class CalendarMonthGrid extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 3),
-              // the dot is the point of the grid: it shows where something is
-              // happening without opening every day
-              Container(
-                width: 5,
+              // the dots are the point of the grid: they show where something
+              // is happening, and in which colour, without opening every day
+              SizedBox(
                 height: 5,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: hasEvents
-                      ? (isSelected
-                          ? theme.primaryColor
-                          : theme.primaryColor
-                              .withValues(alpha: inMonth ? 1 : 0.4))
-                      : Colors.transparent,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // more than three would not be distinguishable at this size
+                    for (final color in resolved.take(_maxDots))
+                      Container(
+                        width: 5,
+                        height: 5,
+                        margin: const EdgeInsets.symmetric(horizontal: 1),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: color.withValues(alpha: inMonth ? 1 : 0.4),
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ],

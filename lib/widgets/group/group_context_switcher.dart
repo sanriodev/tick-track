@@ -36,8 +36,7 @@ class GroupContextSwitcher extends StatelessWidget {
                   itemCount: groupContext.groups.length,
                   itemBuilder: (BuildContext listContext, int index) {
                     final group = groupContext.groups[index];
-                    final isActive =
-                        group.id == groupContext.activeGroup?.id;
+                    final isActive = group.id == groupContext.activeGroup?.id;
                     return ListTile(
                       leading: PhosphorIcon(
                         isActive
