@@ -46,7 +46,12 @@ variables:
 
 android_feature_manual:
   extends: .android_build
-  only:
+  stage: build
+  except:
+    - dev
+    - main
+    - tags
+  when:
     - manual
   script:
     - flutter build apk --no-tree-shake-icons --build-name=dev --build-number=$CI_PIPELINE_IID
