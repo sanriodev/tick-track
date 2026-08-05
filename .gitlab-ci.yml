@@ -20,15 +20,24 @@ variables:
   before_script:
     - export ANDROID_HOME="$HOME/Library/Android/sdk"
     - export ANDROID_SDK_ROOT="$ANDROID_HOME"
-    # macOS ships only a Java stub. Prefer a standalone JDK: Android Studio's
-    # bundled JBR lives inside an .app bundle, where child-process spawning is
-    # fragile, and its path breaks on every Studio update. Fall back to it only
-    # if no real JDK is installed.
+    # A standalone JDK 21 (or 17) is required; macOS itself ships only a stub.
+    # Do NOT fall back to Android Studio's bundled JBR: Studio now bundles JDK
+    # 25, which Gradle 8.14 cannot even parse — it fails resolving
+    # dev.flutter.flutter-plugin-loader with a bare "> 25.0.2". Gradle 8.14
+    # supports up to Java 24, and Flutter/AGP want 17 or 21. Fail loudly here
+    # instead of handing a broken toolchain to Gradle.
     - |
-      if /usr/libexec/java_home -v 21 >/dev/null 2>&1; then
-        export JAVA_HOME="$(/usr/libexec/java_home -v 21)"
-      else
-        export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
+      unset JAVA_HOME  # never inherit a JAVA_HOME from the runner's own environment
+      for v in 21 17; do
+        if /usr/libexec/java_home -v "$v" >/dev/null 2>&1; then
+          export JAVA_HOME="$(/usr/libexec/java_home -v "$v")"
+          break
+        fi
+      done
+      if [ -z "$JAVA_HOME" ]; then
+        echo "No supported JDK found. Install one on the runner:" >&2
+        echo "  brew install --cask temurin@21" >&2
+        exit 1
       fi
     - export PATH="$JAVA_HOME/bin:$PATH"
     # ':app:compileFlutterBuildRelease' makes the Gradle JVM fork the Flutter
