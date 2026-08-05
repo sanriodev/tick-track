@@ -23,37 +23,29 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV FLUTTER_HOME=/opt/flutter
 ENV PATH="/opt/flutter/bin:/opt/flutter/bin/cache/dart-sdk/bin:${PATH}"
 
-# SDK components. Deliberately generous — plugins routinely pull in older
-# platforms, and a fat image is cheaper than re-downloading on every job.
+# Only what this project actually pulls in — the base image already provides
+# platform-tools, build-tools and platform 35.
 #
-# Split across several RUN steps on purpose: it keeps individual layers small
-# enough for registries that choke on multi-GB blob uploads. The NDK gets its
-# own layer because it is by far the largest component.
+#   android-36  app compileSdk (flutter.compileSdkVersion)
+#   android-34  package_info_plus
+#   android-33  fluttertoast
+#   ndk + cmake  package:jni builds native code via externalNativeBuild
+#
+# Split across RUN steps so no single layer becomes a multi-GB blob.
 RUN yes | sdkmanager --licenses > /dev/null
 
 RUN sdkmanager --install \
-      "platform-tools" \
       "platforms;android-36" \
-      "platforms;android-35" \
-    > /dev/null
-
-RUN sdkmanager --install \
       "platforms;android-34" \
       "platforms;android-33" \
-      "platforms;android-32" \
-      "platforms;android-31" \
-    > /dev/null
-
-RUN sdkmanager --install \
       "build-tools;36.0.0" \
-      "build-tools;35.0.0" \
-      "build-tools;34.0.0" \
-      "build-tools;33.0.1" \
     > /dev/null
-
-RUN sdkmanager --install "ndk;28.2.13676358" > /dev/null
 
 RUN sdkmanager --install "cmake;3.22.1" > /dev/null
+
+# By far the largest component; unavoidable as long as package:jni is a
+# (transitive) dependency.
+RUN sdkmanager --install "ndk;28.2.13676358" > /dev/null
 
 # Flutter SDK, split from the engine artifacts for the same layer-size reason.
 RUN git clone https://github.com/flutter/flutter.git --depth 1 -b "${FLUTTER_VERSION}" "${FLUTTER_HOME}" && \

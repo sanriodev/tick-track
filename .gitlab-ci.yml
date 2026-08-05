@@ -37,14 +37,20 @@ ci_image:
         echo "error: could not read Flutter version from .fvmrc" >&2
         exit 1
       fi
-    - ANDROID_CI_IMAGE="$CI_REGISTRY_IMAGE/android-ci:$FLUTTER_VERSION"
+    # The Dockerfile hash is part of the tag, so editing the image definition
+    # produces a new tag and actually triggers a rebuild — a plain version tag
+    # would keep matching the stale image that is already on the daemon.
+    - DOCKERFILE_HASH=$(sha256sum ci_scripts/Dockerfile.android | cut -c1-8)
+    - ANDROID_CI_IMAGE="$CI_REGISTRY_IMAGE/android-ci:$FLUTTER_VERSION-$DOCKERFILE_HASH"
     # Hand both down to the build and deploy jobs, including their image:.
     - printf 'FLUTTER_VERSION=%s\nANDROID_CI_IMAGE=%s\n' "$FLUTTER_VERSION" "$ANDROID_CI_IMAGE" > ci_image.env
     - cat ci_image.env
     - echo "$CI_TOKEN" | docker login "$CI_REGISTRY" -u "$CI_USER" --password-stdin
     - |
-      if docker manifest inspect "$ANDROID_CI_IMAGE" > /dev/null 2>&1; then
-        echo "$ANDROID_CI_IMAGE already in the registry — using it as-is"
+      # The job containers run on this very daemon, so a locally present image
+      # is all the build jobs need — check here, not in the registry.
+      if docker image inspect "$ANDROID_CI_IMAGE" > /dev/null 2>&1; then
+        echo "$ANDROID_CI_IMAGE already present on the host daemon — nothing to do"
         exit 0
       fi
       echo "No image for Flutter $FLUTTER_VERSION yet — building it once."
@@ -60,9 +66,13 @@ ci_image:
         -t "$ANDROID_CI_IMAGE" \
         -f ci_scripts/Dockerfile.android .
     - |
-      # Large blobs occasionally fail mid-upload ("resumable blob upload
-      # invalid"). Already-pushed layers are skipped, so retrying makes
-      # progress instead of starting over.
+      # Pushing is a nice-to-have, not a requirement: the image already sits on
+      # the daemon that runs the job containers. It only buys portability to a
+      # second runner, so a failing push must not fail the pipeline.
+      #
+      # Multi-GB blobs regularly hit a proxy timeout (HTTP 499); layers that
+      # made it through stay in the registry, so retries resume rather than
+      # restart.
       for attempt in 1 2 3; do
         if docker push "$ANDROID_CI_IMAGE"; then
           echo "Pushed $ANDROID_CI_IMAGE"
@@ -71,11 +81,14 @@ ci_image:
         echo "Push attempt $attempt failed — retrying in 15s"
         sleep 15
       done
-      echo "error: could not push $ANDROID_CI_IMAGE after 3 attempts" >&2
-      exit 1
+      echo "warning: could not push $ANDROID_CI_IMAGE — continuing with the local image" >&2
 
 .android_build:
-  image: $ANDROID_CI_IMAGE
+  image:
+    name: $ANDROID_CI_IMAGE
+    # ci_image builds onto this same daemon, so the image is already here even
+    # when the registry push did not go through.
+    pull_policy: if-not-present
   stage: build
   # Pulls FLUTTER_VERSION and ANDROID_CI_IMAGE in via ci_image's dotenv report.
   needs: [ci_image]
@@ -145,7 +158,9 @@ android_tag:
 
 play_internal:
   # Same image as the build jobs — fastlane is baked in, no gem install per run.
-  image: $ANDROID_CI_IMAGE
+  image:
+    name: $ANDROID_CI_IMAGE
+    pull_policy: if-not-present
   stage: deploy
   rules:
     - if: $CI_COMMIT_TAG
@@ -160,7 +175,9 @@ play_internal:
     - cd android && fastlane internal
 
 play_production:
-  image: $ANDROID_CI_IMAGE
+  image:
+    name: $ANDROID_CI_IMAGE
+    pull_policy: if-not-present
   stage: deploy
   rules:
     - if: $CI_COMMIT_TAG
