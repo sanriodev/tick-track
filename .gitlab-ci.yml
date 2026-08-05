@@ -44,6 +44,14 @@ variables:
     - cp build/app/outputs/apk/release/app-release.apk output/ 2>/dev/null || true
     - cp build/app/outputs/bundle/release/app-release.aab output/ 2>/dev/null || true
 
+android_feature_manual:
+  extends: .android_build
+  only:
+    - master
+  script:
+    - flutter build apk --no-tree-shake-icons --build-name=dev --build-number=$CI_PIPELINE_IID
+    - flutter build appbundle --no-tree-shake-icons --build-name=dev --build-number=$CI_PIPELINE_IID
+
 android_development:
   extends: .android_build
   rules:
@@ -80,7 +88,7 @@ play_internal:
     AAB_PATH: '$CI_PROJECT_DIR/output/app-release.aab'
     SUPPLY_JSON_KEY: '$CI_PROJECT_DIR/play-store-service-account.json'
   cache:
-    key: "bundler"
+    key: 'bundler'
     paths:
       - android/vendor/bundle/
   before_script:
@@ -103,7 +111,7 @@ play_production:
   variables:
     SUPPLY_JSON_KEY: '$CI_PROJECT_DIR/play-store-service-account.json'
   cache:
-    key: "bundler"
+    key: 'bundler'
     paths:
       - android/vendor/bundle/
   before_script:
