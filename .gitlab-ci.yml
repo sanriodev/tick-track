@@ -1,0 +1,135 @@
+default:
+  tags: [docker-internal]
+
+stages:
+  - build
+  - deploy
+
+variables:
+  # GitLab Secure Files (key.properties, upload keystore, Play service account)
+  # are downloaded into the project root before every build.
+  SECURE_FILES_DOWNLOAD_PATH: '.'
+  # Keep toolchains inside the project dir so they can be cached.
+  FLUTTER_HOME: '$CI_PROJECT_DIR/.flutter'
+  GRADLE_USER_HOME: '$CI_PROJECT_DIR/.gradle'
+  PUB_CACHE: '$CI_PROJECT_DIR/.pub-cache'
+
+.android_build:
+  # Provides the Android SDK, cmdline-tools and JDK 17 (required by AGP 8.11).
+  image: ghcr.io/cirruslabs/android-sdk:35
+  stage: build
+  cache:
+    - key:
+        files: [.fvmrc]
+      paths:
+        - .flutter/
+    - key: "gradle-$CI_COMMIT_REF_SLUG"
+      paths:
+        - .gradle/
+        - .pub-cache/
+  artifacts:
+    name: Packages
+    paths:
+      - output/
+    expire_in: 1 week
+  before_script:
+    # Installs the Flutter version pinned in .fvmrc — same source of truth as
+    # ios/ci_scripts/ci_post_clone.sh uses for Xcode Cloud.
+    - ./ci_scripts/install_flutter_linux.sh
+    - export PATH="$FLUTTER_HOME/bin:$PATH"
+    - curl --silent "https://gitlab.com/gitlab-org/incubation-engineering/mobile-devops/download-secure-files/-/raw/main/installer" | bash
+    - flutter pub get
+  after_script:
+    - mkdir -p output
+    - cp build/app/outputs/apk/release/app-release.apk output/ 2>/dev/null || true
+    - cp build/app/outputs/bundle/release/app-release.aab output/ 2>/dev/null || true
+
+android_development:
+  extends: .android_build
+  rules:
+    - if: $CI_COMMIT_BRANCH == "dev"
+  script:
+    - flutter build apk --no-tree-shake-icons --build-name=dev --build-number=$CI_PIPELINE_IID
+    - flutter build appbundle --no-tree-shake-icons --build-name=dev --build-number=$CI_PIPELINE_IID
+
+android_release:
+  extends: .android_build
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+  script:
+    - flutter build apk --no-tree-shake-icons --build-name=release --build-number=$CI_PIPELINE_IID
+    - flutter build appbundle --no-tree-shake-icons --build-name=release --build-number=$CI_PIPELINE_IID
+
+android_tag:
+  extends: .android_build
+  rules:
+    - if: $CI_COMMIT_TAG
+  script:
+    # Strip a leading "v" so the Play Store version name stays clean (v1.6.0 -> 1.6.0).
+    - VERSION="${CI_COMMIT_TAG#v}"
+    - flutter build apk --no-tree-shake-icons --build-name=$VERSION --build-number=$CI_PIPELINE_IID
+    - flutter build appbundle --no-tree-shake-icons --build-name=$VERSION --build-number=$CI_PIPELINE_IID
+
+play_internal:
+  image: ruby:3.3
+  stage: deploy
+  rules:
+    - if: $CI_COMMIT_TAG
+  needs: [android_tag]
+  variables:
+    AAB_PATH: '$CI_PROJECT_DIR/output/app-release.aab'
+    SUPPLY_JSON_KEY: '$CI_PROJECT_DIR/play-store-service-account.json'
+  cache:
+    key: "bundler"
+    paths:
+      - android/vendor/bundle/
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq curl
+    - curl --silent "https://gitlab.com/gitlab-org/incubation-engineering/mobile-devops/download-secure-files/-/raw/main/installer" | bash
+    - cd android
+    - bundle config set --local path 'vendor/bundle'
+    - bundle install --quiet
+  script:
+    - bundle exec fastlane internal
+
+play_production:
+  image: ruby:3.3
+  stage: deploy
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: manual
+  allow_failure: true
+  needs: [play_internal]
+  variables:
+    SUPPLY_JSON_KEY: '$CI_PROJECT_DIR/play-store-service-account.json'
+  cache:
+    key: "bundler"
+    paths:
+      - android/vendor/bundle/
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq curl
+    - curl --silent "https://gitlab.com/gitlab-org/incubation-engineering/mobile-devops/download-secure-files/-/raw/main/installer" | bash
+    - cd android
+    - bundle config set --local path 'vendor/bundle'
+    - bundle install --quiet
+  script:
+    - bundle exec fastlane promote_production
+
+gitlab_release:
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  stage: deploy
+  rules:
+    - if: $CI_COMMIT_TAG
+  needs: [android_tag]
+  script:
+    - echo "Creating GitLab release for $CI_COMMIT_TAG"
+  release:
+    tag_name: $CI_COMMIT_TAG
+    description: $CI_COMMIT_TAG
+    ref: $CI_COMMIT_SHA
+    assets:
+      links:
+        - name: APK
+          url: '$CI_PROJECT_URL/-/jobs/artifacts/$CI_COMMIT_TAG/raw/output/app-release.apk?job=android_tag'
+        - name: AAB
+          url: '$CI_PROJECT_URL/-/jobs/artifacts/$CI_COMMIT_TAG/raw/output/app-release.aab?job=android_tag'

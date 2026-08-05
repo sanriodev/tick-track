@@ -5,6 +5,15 @@ plugins {
     id "dev.flutter.flutter-gradle-plugin"
 }
 
+// Signing credentials live in key.properties in the repo root. In CI it is
+// pulled in as a GitLab Secure File before the build; locally it is absent,
+// in which case release builds fall back to the debug key.
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file("../key.properties")
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.withInputStream { keystoreProperties.load(it) }
+}
+
 android {
     namespace = "app.ticktrack.todonotes"
     compileSdk = flutter.compileSdkVersion
@@ -30,11 +39,24 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (keystorePropertiesFile.exists()) {
+            release {
+                keyAlias = keystoreProperties["keyAlias"]
+                keyPassword = keystoreProperties["keyPassword"]
+                storeFile = rootProject.file("../${keystoreProperties["storeFile"]}")
+                storePassword = keystoreProperties["storePassword"]
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.debug
+            // Signed with the upload key when key.properties is present (CI),
+            // otherwise with the debug key so `flutter run --release` still works.
+            signingConfig = keystorePropertiesFile.exists()
+                ? signingConfigs.release
+                : signingConfigs.debug
         }
     }
 }
