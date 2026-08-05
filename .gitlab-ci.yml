@@ -49,11 +49,26 @@ ci_image:
       fi
       echo "No image for Flutter $FLUTTER_VERSION yet — building it once."
       echo "This runs under Rosetta and will take a while; later pipelines reuse it."
-      docker build --platform linux/amd64 \
+      # --provenance=false keeps buildx from emitting an attestation manifest
+      # list, which the registry does not need and not every version digests.
+      docker build --platform linux/amd64 --provenance=false \
         --build-arg FLUTTER_VERSION="$FLUTTER_VERSION" \
         -t "$ANDROID_CI_IMAGE" \
         -f ci_scripts/Dockerfile.android .
-      docker push "$ANDROID_CI_IMAGE"
+    - |
+      # Large blobs occasionally fail mid-upload ("resumable blob upload
+      # invalid"). Already-pushed layers are skipped, so retrying makes
+      # progress instead of starting over.
+      for attempt in 1 2 3; do
+        if docker push "$ANDROID_CI_IMAGE"; then
+          echo "Pushed $ANDROID_CI_IMAGE"
+          exit 0
+        fi
+        echo "Push attempt $attempt failed — retrying in 15s"
+        sleep 15
+      done
+      echo "error: could not push $ANDROID_CI_IMAGE after 3 attempts" >&2
+      exit 1
 
 .android_build:
   image: $ANDROID_CI_IMAGE
