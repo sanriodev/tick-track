@@ -76,6 +76,14 @@ variables:
     # /opt/homebrew/bin/fvm reads ./.fvmrc, so the Flutter version stays in one place — same source
     # of truth that ios/ci_scripts/ci_post_clone.sh uses for Xcode Cloud.
     - /opt/homebrew/bin/fvm install
+    # Setting JAVA_HOME is not enough: flutter_tools resolves the JDK as
+    # jdk-dir > Android Studio's bundled JBR > JAVA_HOME > PATH (see
+    # flutter_tools/lib/src/android/java.dart, _findJavaHome). Studio bundles JDK
+    # 25, which Gradle 8.14 and the Kotlin 1.9.20 plugin in Flutter's own Gradle
+    # build choke on ("Error resolving plugin [dev.flutter.flutter-plugin-loader]
+    # > 25.0.2"). jdk-dir is the only setting that outranks the JBR.
+    - /opt/homebrew/bin/fvm flutter config --jdk-dir "$JAVA_HOME"
+    - /opt/homebrew/bin/fvm flutter doctor -v 2>&1 | grep -iE "java (binary|version)" || true
     - /opt/homebrew/bin/fvm flutter --version
     - /opt/homebrew/bin/fvm flutter pub get
     - curl --silent "https://gitlab.com/gitlab-org/incubation-engineering/mobile-devops/download-secure-files/-/raw/main/installer" | bash
