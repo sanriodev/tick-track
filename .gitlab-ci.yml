@@ -20,10 +20,51 @@ variables:
   before_script:
     - export ANDROID_HOME="$HOME/Library/Android/sdk"
     - export ANDROID_SDK_ROOT="$ANDROID_HOME"
-    # macOS ships only a Java stub; the real JDK comes with Android Studio.
-    - export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
+    # macOS ships only a Java stub. Prefer a standalone JDK: Android Studio's
+    # bundled JBR lives inside an .app bundle, where child-process spawning is
+    # fragile, and its path breaks on every Studio update. Fall back to it only
+    # if no real JDK is installed.
+    - |
+      if /usr/libexec/java_home -v 21 >/dev/null 2>&1; then
+        export JAVA_HOME="$(/usr/libexec/java_home -v 21)"
+      else
+        export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
+      fi
     - export PATH="$JAVA_HOME/bin:$PATH"
-    # /opt/homebrew/bin/fvm reads ./opt/homebrew/bin/fvmrc, so the Flutter version stays in one place — same source
+    # ':app:compileFlutterBuildRelease' makes the Gradle JVM fork the Flutter
+    # CLI. With a 4G daemon plus Kotlin/AAPT workers, that fork hits the memory
+    # and process limits this runner inherits and dies as an unhelpful "A
+    # problem occurred starting process 'command .../bin/flutter''". So keep the
+    # JVM small and skip the daemon, which buys nothing on CI anyway.
+    #
+    # This has to go into GRADLE_USER_HOME rather than GRADLE_OPTS: project
+    # gradle.properties outranks GRADLE_OPTS, so android/gradle.properties would
+    # keep winning. Local builds stay on the repo's own values.
+    - |
+      mkdir -p "$HOME/.gradle"
+      if [ -f "$HOME/.gradle/gradle.properties" ]; then
+        grep -vE '^(# tick-track-ci|org\.gradle\.(jvmargs|daemon|workers\.max)=)' \
+          "$HOME/.gradle/gradle.properties" > "$HOME/.gradle/gradle.properties.tmp" || true
+        mv "$HOME/.gradle/gradle.properties.tmp" "$HOME/.gradle/gradle.properties"
+      fi
+      cat >> "$HOME/.gradle/gradle.properties" <<'PROPS'
+      # tick-track-ci
+      org.gradle.jvmargs=-Xmx2G -XX:MaxMetaspaceSize=1G -XX:+HeapDumpOnOutOfMemoryError
+      org.gradle.daemon=false
+      org.gradle.workers.max=2
+      PROPS
+    # Raise what we are allowed to raise; a runner started by launchd inherits
+    # far tighter limits than a login shell.
+    - ulimit -n 4096 || true
+    - ulimit -u 2048 || true
+    # Diagnostics. If a build dies at process start again, these lines identify
+    # which resource ran out — re-run the failing build with
+    # `fvm flutter build apk --verbose` to get Gradle's real IOException/errno.
+    - echo "JAVA_HOME=$JAVA_HOME"
+    - java -version
+    - echo "RAM $(($(sysctl -n hw.memsize) / 1024 / 1024 / 1024))GB, limits:"
+    - ulimit -a
+    # /opt/homebrew/bin/fvm reads ./.fvmrc, so the Flutter version stays in one place — same source
     # of truth that ios/ci_scripts/ci_post_clone.sh uses for Xcode Cloud.
     - /opt/homebrew/bin/fvm install
     - /opt/homebrew/bin/fvm flutter --version
