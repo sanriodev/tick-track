@@ -23,11 +23,11 @@ variables:
     # macOS ships only a Java stub; the real JDK comes with Android Studio.
     - export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
     - export PATH="$JAVA_HOME/bin:$PATH"
-    # fvm reads .fvmrc, so the Flutter version stays in one place — same source
+    # /opt/homebrew/bin/fvm reads ./opt/homebrew/bin/fvmrc, so the Flutter version stays in one place — same source
     # of truth that ios/ci_scripts/ci_post_clone.sh uses for Xcode Cloud.
-    - fvm install
-    - fvm flutter --version
-    - fvm flutter pub get
+    - /opt/homebrew/bin/fvm install
+    - /opt/homebrew/bin/fvm flutter --version
+    - /opt/homebrew/bin/fvm flutter pub get
     - curl --silent "https://gitlab.com/gitlab-org/incubation-engineering/mobile-devops/download-secure-files/-/raw/main/installer" | bash
   after_script:
     - mkdir -p $CI_PROJECT_DIR/output
@@ -43,8 +43,8 @@ android_feature:
     - tags
   when: manual
   script:
-    - fvm flutter build apk --no-tree-shake-icons --build-name=dev --build-number=$CI_PIPELINE_IID
-    - fvm flutter build appbundle --no-tree-shake-icons --build-name=dev --build-number=$CI_PIPELINE_IID
+    - /opt/homebrew/bin/fvm flutter build apk --no-tree-shake-icons --build-name=dev --build-number=$CI_PIPELINE_IID
+    - /opt/homebrew/bin/fvm flutter build appbundle --no-tree-shake-icons --build-name=dev --build-number=$CI_PIPELINE_IID
 
 android_development:
   <<: *android_build_template
@@ -52,8 +52,8 @@ android_development:
   only:
     - dev
   script:
-    - fvm flutter build apk --no-tree-shake-icons --build-name=dev --build-number=$CI_PIPELINE_IID
-    - fvm flutter build appbundle --no-tree-shake-icons --build-name=dev --build-number=$CI_PIPELINE_IID
+    - /opt/homebrew/bin/fvm flutter build apk --no-tree-shake-icons --build-name=dev --build-number=$CI_PIPELINE_IID
+    - /opt/homebrew/bin/fvm flutter build appbundle --no-tree-shake-icons --build-name=dev --build-number=$CI_PIPELINE_IID
 
 android_release:
   <<: *android_build_template
@@ -61,8 +61,8 @@ android_release:
   only:
     - main
   script:
-    - fvm flutter build apk --no-tree-shake-icons --build-name=release --build-number=$CI_PIPELINE_IID
-    - fvm flutter build appbundle --no-tree-shake-icons --build-name=release --build-number=$CI_PIPELINE_IID
+    - /opt/homebrew/bin/fvm flutter build apk --no-tree-shake-icons --build-name=release --build-number=$CI_PIPELINE_IID
+    - /opt/homebrew/bin/fvm flutter build appbundle --no-tree-shake-icons --build-name=release --build-number=$CI_PIPELINE_IID
 
 android_appstore:
   <<: *android_build_template
@@ -73,12 +73,12 @@ android_appstore:
     - glab auth login --hostname $CI_SERVER_HOST --job-token $CI_JOB_TOKEN
     # Strip a leading "v" so the Play Store version name stays clean (v1.6.0 -> 1.6.0).
     - VERSION="${CI_COMMIT_TAG#v}"
-    - fvm flutter build apk --no-tree-shake-icons --build-name=$VERSION --build-number=$CI_PIPELINE_IID
-    - fvm flutter build appbundle --no-tree-shake-icons --build-name=$VERSION --build-number=$CI_PIPELINE_IID
+    - /opt/homebrew/bin/fvm flutter build apk --no-tree-shake-icons --build-name=$VERSION --build-number=$CI_PIPELINE_IID
+    - /opt/homebrew/bin/fvm flutter build appbundle --no-tree-shake-icons --build-name=$VERSION --build-number=$CI_PIPELINE_IID
     # Upload the bundle to the Play Store internal track.
     - export SUPPLY_JSON_KEY="$CI_PROJECT_DIR/play-store-service-account.json"
     - export AAB_PATH="$CI_PROJECT_DIR/build/app/outputs/bundle/release/app-release.aab"
-    - cd android && fastlane internal && cd ..
+    - cd android && /opt/homebrew/bin/fastlane internal && cd ..
     - |
       glab release create "$CI_COMMIT_TAG" \
         --notes "$CI_COMMIT_TAG" \
@@ -107,4 +107,4 @@ play_production:
     - curl --silent "https://gitlab.com/gitlab-org/incubation-engineering/mobile-devops/download-secure-files/-/raw/main/installer" | bash
   script:
     - export SUPPLY_JSON_KEY="$CI_PROJECT_DIR/play-store-service-account.json"
-    - cd android && fastlane promote_production
+    - cd android && /opt/homebrew/bin/fastlane promote_production
