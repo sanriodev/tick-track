@@ -16,7 +16,12 @@ variables:
 
 .android_build:
   # Provides the Android SDK, cmdline-tools and JDK 17 (required by AGP 8.11).
-  image: ghcr.io/cirruslabs/android-sdk:35
+  #
+  # Pinned to the amd64 digest of :35 on purpose. Flutter ships gen_snapshot
+  # (the Android AOT compiler) for x86_64 hosts only — there is no linux-arm64
+  # build — so release builds fail on an ARM runner. On the Apple Silicon host
+  # this image runs through Rosetta, which Docker Desktop must have enabled.
+  image: ghcr.io/cirruslabs/android-sdk:35@sha256:54e4ef10f19c211052851736dfb783ee26935a089b06bb1f9019a311cdc38af0
   stage: build
   cache:
     - key:
