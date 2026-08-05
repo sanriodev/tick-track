@@ -46,13 +46,16 @@ variables:
 
 android_feature_manual:
   extends: .android_build
-  stage: build
-  except:
-    - dev
-    - main
-    - tags
-  when:
-    - manual
+  rules:
+    # Everything except dev, main and tags — on demand only.
+    - if: $CI_COMMIT_TAG
+      when: never
+    - if: $CI_COMMIT_BRANCH == "dev"
+      when: never
+    - if: $CI_COMMIT_BRANCH == "main"
+      when: never
+    - when: manual
+      allow_failure: true
   script:
     - flutter build apk --no-tree-shake-icons --build-name=dev --build-number=$CI_PIPELINE_IID
     - flutter build appbundle --no-tree-shake-icons --build-name=dev --build-number=$CI_PIPELINE_IID
