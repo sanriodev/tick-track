@@ -1,212 +1,110 @@
 default:
-  tags: [docker-internal]
+  tags:
+    - ios-build-server
 
 stages:
-  - prepare
   - build
-  - deploy
+  - release
 
 variables:
-  # FLUTTER_VERSION and ANDROID_CI_IMAGE are not set here on purpose: the
-  # ci_image job derives them from .fvmrc and passes them on as a dotenv
-  # artifact, so .fvmrc stays the single source of truth for every job.
-  #
   # GitLab Secure Files (key.properties, upload keystore, Play service account)
   # are downloaded into the project root before every build.
   SECURE_FILES_DOWNLOAD_PATH: '.'
-  # Flutter ships with the image; the pipeline only verifies the version.
-  FLUTTER_HOME: '/opt/flutter'
-  GRADLE_USER_HOME: '$CI_PROJECT_DIR/.gradle'
-  PUB_CACHE: '$CI_PROJECT_DIR/.pub-cache'
 
-ci_image:
-  # Derives the Flutter version from .fvmrc, makes sure a matching toolchain
-  # image exists in the registry, and hands both on to every following job.
-  #
-  # Uses the Docker runner's mounted socket, so build and push happen on the
-  # host daemon — same as the other repos, no docker-in-docker needed.
-  stage: prepare
-  image: docker:cli
-  artifacts:
-    reports:
-      dotenv: ci_image.env
-  script:
-    - FLUTTER_VERSION=$(sed -n 's/.*"flutter"[^"]*"\([^"]*\)".*/\1/p' .fvmrc)
-    - |
-      if [ -z "$FLUTTER_VERSION" ]; then
-        echo "error: could not read Flutter version from .fvmrc" >&2
-        exit 1
-      fi
-    # The Dockerfile hash is part of the tag, so editing the image definition
-    # produces a new tag and actually triggers a rebuild — a plain version tag
-    # would keep matching the stale image that is already on the daemon.
-    - DOCKERFILE_HASH=$(sha256sum ci_scripts/Dockerfile.android | cut -c1-8)
-    - ANDROID_CI_IMAGE="$CI_REGISTRY_IMAGE/android-ci:$FLUTTER_VERSION-$DOCKERFILE_HASH"
-    # Hand both down to the build and deploy jobs, including their image:.
-    - printf 'FLUTTER_VERSION=%s\nANDROID_CI_IMAGE=%s\n' "$FLUTTER_VERSION" "$ANDROID_CI_IMAGE" > ci_image.env
-    - cat ci_image.env
-    - echo "$CI_TOKEN" | docker login "$CI_REGISTRY" -u "$CI_USER" --password-stdin
-    - |
-      # The job containers run on this very daemon, so a locally present image
-      # is all the build jobs need — check here, not in the registry.
-      if docker image inspect "$ANDROID_CI_IMAGE" > /dev/null 2>&1; then
-        echo "$ANDROID_CI_IMAGE already present on the host daemon — nothing to do"
-        exit 0
-      fi
-      echo "No image for Flutter $FLUTTER_VERSION yet — building it once."
-      echo "This runs under Rosetta and will take a while; later pipelines reuse it."
-      # Suppress the attestation manifest list when the CLI supports it: the
-      # registry has no use for it and not every version digests it cleanly.
-      PROVENANCE=""
-      if docker build --help 2>&1 | grep -q -- "--provenance"; then
-        PROVENANCE="--provenance=false"
-      fi
-      docker build $PROVENANCE --platform linux/amd64 \
-        --build-arg FLUTTER_VERSION="$FLUTTER_VERSION" \
-        -t "$ANDROID_CI_IMAGE" \
-        -f ci_scripts/Dockerfile.android .
-    - |
-      # Pushing is a nice-to-have, not a requirement: the image already sits on
-      # the daemon that runs the job containers. It only buys portability to a
-      # second runner, so a failing push must not fail the pipeline.
-      #
-      # Multi-GB blobs regularly hit a proxy timeout (HTTP 499); layers that
-      # made it through stay in the registry, so retries resume rather than
-      # restart.
-      for attempt in 1 2 3; do
-        if docker push "$ANDROID_CI_IMAGE"; then
-          echo "Pushed $ANDROID_CI_IMAGE"
-          exit 0
-        fi
-        echo "Push attempt $attempt failed — retrying in 15s"
-        sleep 15
-      done
-      echo "warning: could not push $ANDROID_CI_IMAGE — continuing with the local image" >&2
-
-.android_build:
-  image:
-    name: $ANDROID_CI_IMAGE
-    # ci_image builds onto this same daemon, so the image is already here even
-    # when the registry push did not go through.
-    pull_policy: if-not-present
-  stage: build
-  # Pulls FLUTTER_VERSION and ANDROID_CI_IMAGE in via ci_image's dotenv report.
-  needs: [ci_image]
-  cache:
-    - key: "gradle-$CI_COMMIT_REF_SLUG"
-      paths:
-        - .gradle/
-        - .pub-cache/
+.android_build_template: &android_build_template
   artifacts:
     name: Packages
     paths:
-      - output/
+      - $CI_PROJECT_DIR/output
     expire_in: 1 week
   before_script:
-    # Installs the Flutter version pinned in .fvmrc — same source of truth as
-    # ios/ci_scripts/ci_post_clone.sh uses for Xcode Cloud.
-    - ./ci_scripts/install_flutter_linux.sh
-    - export PATH="$FLUTTER_HOME/bin:$PATH"
+    - export ANDROID_HOME="$HOME/Library/Android/sdk"
+    - export ANDROID_SDK_ROOT="$ANDROID_HOME"
+    # macOS ships only a Java stub; the real JDK comes with Android Studio.
+    - export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
+    - export PATH="$JAVA_HOME/bin:$PATH"
+    # fvm reads .fvmrc, so the Flutter version stays in one place — same source
+    # of truth that ios/ci_scripts/ci_post_clone.sh uses for Xcode Cloud.
+    - fvm install
+    - fvm flutter --version
+    - fvm flutter pub get
     - curl --silent "https://gitlab.com/gitlab-org/incubation-engineering/mobile-devops/download-secure-files/-/raw/main/installer" | bash
-    - flutter pub get
   after_script:
-    - mkdir -p output
-    - cp build/app/outputs/apk/release/app-release.apk output/ 2>/dev/null || true
-    - cp build/app/outputs/bundle/release/app-release.aab output/ 2>/dev/null || true
+    - mkdir -p $CI_PROJECT_DIR/output
+    - cp $CI_PROJECT_DIR/build/app/outputs/apk/release/app-release.apk $CI_PROJECT_DIR/output/ 2>/dev/null || true
+    - cp $CI_PROJECT_DIR/build/app/outputs/bundle/release/app-release.aab $CI_PROJECT_DIR/output/ 2>/dev/null || true
 
-android_feature_manual:
-  extends: .android_build
-  rules:
-    # Everything except dev, main and tags — on demand only.
-    - if: $CI_COMMIT_TAG
-      when: never
-    - if: $CI_COMMIT_BRANCH == "dev"
-      when: never
-    - if: $CI_COMMIT_BRANCH == "main"
-      when: never
-    - when: manual
-      allow_failure: true
+android_feature:
+  <<: *android_build_template
+  stage: build
+  except:
+    - dev
+    - main
+    - tags
+  when: manual
   script:
-    - flutter build apk --no-tree-shake-icons --build-name=dev --build-number=$CI_PIPELINE_IID
-    - flutter build appbundle --no-tree-shake-icons --build-name=dev --build-number=$CI_PIPELINE_IID
+    - fvm flutter build apk --no-tree-shake-icons --build-name=dev --build-number=$CI_PIPELINE_IID
+    - fvm flutter build appbundle --no-tree-shake-icons --build-name=dev --build-number=$CI_PIPELINE_IID
 
 android_development:
-  extends: .android_build
-  rules:
-    - if: $CI_COMMIT_BRANCH == "dev"
+  <<: *android_build_template
+  stage: build
+  only:
+    - dev
   script:
-    - flutter build apk --no-tree-shake-icons --build-name=dev --build-number=$CI_PIPELINE_IID
-    - flutter build appbundle --no-tree-shake-icons --build-name=dev --build-number=$CI_PIPELINE_IID
+    - fvm flutter build apk --no-tree-shake-icons --build-name=dev --build-number=$CI_PIPELINE_IID
+    - fvm flutter build appbundle --no-tree-shake-icons --build-name=dev --build-number=$CI_PIPELINE_IID
 
 android_release:
-  extends: .android_build
-  rules:
-    - if: $CI_COMMIT_BRANCH == "main"
+  <<: *android_build_template
+  stage: build
+  only:
+    - main
   script:
-    - flutter build apk --no-tree-shake-icons --build-name=release --build-number=$CI_PIPELINE_IID
-    - flutter build appbundle --no-tree-shake-icons --build-name=release --build-number=$CI_PIPELINE_IID
+    - fvm flutter build apk --no-tree-shake-icons --build-name=release --build-number=$CI_PIPELINE_IID
+    - fvm flutter build appbundle --no-tree-shake-icons --build-name=release --build-number=$CI_PIPELINE_IID
 
-android_tag:
-  extends: .android_build
-  rules:
-    - if: $CI_COMMIT_TAG
+android_appstore:
+  <<: *android_build_template
+  stage: release
+  only:
+    - tags
   script:
+    - glab auth login --hostname $CI_SERVER_HOST --job-token $CI_JOB_TOKEN
     # Strip a leading "v" so the Play Store version name stays clean (v1.6.0 -> 1.6.0).
     - VERSION="${CI_COMMIT_TAG#v}"
-    - flutter build apk --no-tree-shake-icons --build-name=$VERSION --build-number=$CI_PIPELINE_IID
-    - flutter build appbundle --no-tree-shake-icons --build-name=$VERSION --build-number=$CI_PIPELINE_IID
-
-play_internal:
-  # Same image as the build jobs — fastlane is baked in, no gem install per run.
-  image:
-    name: $ANDROID_CI_IMAGE
-    pull_policy: if-not-present
-  stage: deploy
-  rules:
-    - if: $CI_COMMIT_TAG
-  # ci_image supplies the image name, android_tag the bundle to upload.
-  needs: [ci_image, android_tag]
-  variables:
-    AAB_PATH: '$CI_PROJECT_DIR/output/app-release.aab'
-    SUPPLY_JSON_KEY: '$CI_PROJECT_DIR/play-store-service-account.json'
-  before_script:
-    - curl --silent "https://gitlab.com/gitlab-org/incubation-engineering/mobile-devops/download-secure-files/-/raw/main/installer" | bash
-  script:
-    - cd android && fastlane internal
+    - fvm flutter build apk --no-tree-shake-icons --build-name=$VERSION --build-number=$CI_PIPELINE_IID
+    - fvm flutter build appbundle --no-tree-shake-icons --build-name=$VERSION --build-number=$CI_PIPELINE_IID
+    # Upload the bundle to the Play Store internal track.
+    - export SUPPLY_JSON_KEY="$CI_PROJECT_DIR/play-store-service-account.json"
+    - export AAB_PATH="$CI_PROJECT_DIR/build/app/outputs/bundle/release/app-release.aab"
+    - cd android && fastlane internal && cd ..
+    - |
+      glab release create "$CI_COMMIT_TAG" \
+        --notes "$CI_COMMIT_TAG" \
+        --ref "$CI_COMMIT_SHA" \
+        --assets-links='[
+          {
+            "name": "APK",
+            "url": "'"$CI_JOB_URL"'/artifacts/file/output/app-release.apk",
+            "link_type": "other"
+          },
+          {
+            "name": "AAB",
+            "url": "'"$CI_JOB_URL"'/artifacts/file/output/app-release.aab",
+            "link_type": "other"
+          }
+        ]'
 
 play_production:
-  image:
-    name: $ANDROID_CI_IMAGE
-    pull_policy: if-not-present
-  stage: deploy
-  rules:
-    - if: $CI_COMMIT_TAG
-      when: manual
-  allow_failure: true
-  # ci_image again for the image name — dotenv is not passed on transitively.
-  needs: [ci_image, play_internal]
-  variables:
-    SUPPLY_JSON_KEY: '$CI_PROJECT_DIR/play-store-service-account.json'
+  stage: release
+  only:
+    - tags
+  when: manual
+  needs:
+    - android_appstore
   before_script:
     - curl --silent "https://gitlab.com/gitlab-org/incubation-engineering/mobile-devops/download-secure-files/-/raw/main/installer" | bash
   script:
+    - export SUPPLY_JSON_KEY="$CI_PROJECT_DIR/play-store-service-account.json"
     - cd android && fastlane promote_production
-
-gitlab_release:
-  image: registry.gitlab.com/gitlab-org/release-cli:latest
-  stage: deploy
-  rules:
-    - if: $CI_COMMIT_TAG
-  needs: [android_tag]
-  script:
-    - echo "Creating GitLab release for $CI_COMMIT_TAG"
-  release:
-    tag_name: $CI_COMMIT_TAG
-    description: $CI_COMMIT_TAG
-    ref: $CI_COMMIT_SHA
-    assets:
-      links:
-        - name: APK
-          url: '$CI_PROJECT_URL/-/jobs/artifacts/$CI_COMMIT_TAG/raw/output/app-release.apk?job=android_tag'
-        - name: AAB
-          url: '$CI_PROJECT_URL/-/jobs/artifacts/$CI_COMMIT_TAG/raw/output/app-release.aab?job=android_tag'
