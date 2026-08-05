@@ -2,32 +2,65 @@ default:
   tags: [docker-internal]
 
 stages:
+  - prepare
   - build
   - deploy
 
 variables:
+  # FLUTTER_VERSION and ANDROID_CI_IMAGE are not set here on purpose: the
+  # ci_image job derives them from .fvmrc and passes them on as a dotenv
+  # artifact, so .fvmrc stays the single source of truth for every job.
+  #
   # GitLab Secure Files (key.properties, upload keystore, Play service account)
   # are downloaded into the project root before every build.
   SECURE_FILES_DOWNLOAD_PATH: '.'
-  # Keep toolchains inside the project dir so they can be cached.
-  FLUTTER_HOME: '$CI_PROJECT_DIR/.flutter'
+  # Flutter ships with the image; the pipeline only verifies the version.
+  FLUTTER_HOME: '/opt/flutter'
   GRADLE_USER_HOME: '$CI_PROJECT_DIR/.gradle'
   PUB_CACHE: '$CI_PROJECT_DIR/.pub-cache'
 
-.android_build:
-  # Provides the Android SDK, cmdline-tools and JDK 17 (required by AGP 8.11).
+ci_image:
+  # Derives the Flutter version from .fvmrc, makes sure a matching toolchain
+  # image exists in the registry, and hands both on to every following job.
   #
-  # Pinned to the amd64 digest of :35 on purpose. Flutter ships gen_snapshot
-  # (the Android AOT compiler) for x86_64 hosts only — there is no linux-arm64
-  # build — so release builds fail on an ARM runner. On the Apple Silicon host
-  # this image runs through Rosetta, which Docker Desktop must have enabled.
-  image: ghcr.io/cirruslabs/android-sdk:35@sha256:54e4ef10f19c211052851736dfb783ee26935a089b06bb1f9019a311cdc38af0
+  # Runs on the macOS shell runner because it can talk to the Docker daemon
+  # directly — no docker-in-docker, no privileged container needed.
+  stage: prepare
+  tags: [ios-build-server]
+  artifacts:
+    reports:
+      dotenv: ci_image.env
+  script:
+    - FLUTTER_VERSION=$(sed -n 's/.*"flutter"[^"]*"\([^"]*\)".*/\1/p' .fvmrc)
+    - |
+      if [ -z "$FLUTTER_VERSION" ]; then
+        echo "error: could not read Flutter version from .fvmrc" >&2
+        exit 1
+      fi
+    - ANDROID_CI_IMAGE="$CI_REGISTRY_IMAGE/android-ci:$FLUTTER_VERSION"
+    # Hand both down to the build and deploy jobs, including their image:.
+    - printf 'FLUTTER_VERSION=%s\nANDROID_CI_IMAGE=%s\n' "$FLUTTER_VERSION" "$ANDROID_CI_IMAGE" > ci_image.env
+    - cat ci_image.env
+    - echo "$CI_TOKEN" | docker login "$CI_REGISTRY" -u "$CI_USER" --password-stdin
+    - |
+      if docker manifest inspect "$ANDROID_CI_IMAGE" > /dev/null 2>&1; then
+        echo "$ANDROID_CI_IMAGE already in the registry — using it as-is"
+        exit 0
+      fi
+      echo "No image for Flutter $FLUTTER_VERSION yet — building it once."
+      echo "This runs under Rosetta and will take a while; later pipelines reuse it."
+      docker build --platform linux/amd64 \
+        --build-arg FLUTTER_VERSION="$FLUTTER_VERSION" \
+        -t "$ANDROID_CI_IMAGE" \
+        -f ci_scripts/Dockerfile.android .
+      docker push "$ANDROID_CI_IMAGE"
+
+.android_build:
+  image: $ANDROID_CI_IMAGE
   stage: build
+  # Pulls FLUTTER_VERSION and ANDROID_CI_IMAGE in via ci_image's dotenv report.
+  needs: [ci_image]
   cache:
-    - key:
-        files: [.fvmrc]
-      paths:
-        - .flutter/
     - key: "gradle-$CI_COMMIT_REF_SLUG"
       paths:
         - .gradle/
@@ -92,49 +125,36 @@ android_tag:
     - flutter build appbundle --no-tree-shake-icons --build-name=$VERSION --build-number=$CI_PIPELINE_IID
 
 play_internal:
-  image: ruby:3.3
+  # Same image as the build jobs — fastlane is baked in, no gem install per run.
+  image: $ANDROID_CI_IMAGE
   stage: deploy
   rules:
     - if: $CI_COMMIT_TAG
-  needs: [android_tag]
+  # ci_image supplies the image name, android_tag the bundle to upload.
+  needs: [ci_image, android_tag]
   variables:
     AAB_PATH: '$CI_PROJECT_DIR/output/app-release.aab'
     SUPPLY_JSON_KEY: '$CI_PROJECT_DIR/play-store-service-account.json'
-  cache:
-    key: 'bundler'
-    paths:
-      - android/vendor/bundle/
   before_script:
-    - apt-get update -qq && apt-get install -y -qq curl
     - curl --silent "https://gitlab.com/gitlab-org/incubation-engineering/mobile-devops/download-secure-files/-/raw/main/installer" | bash
-    - cd android
-    - bundle config set --local path 'vendor/bundle'
-    - bundle install --quiet
   script:
-    - bundle exec fastlane internal
+    - cd android && fastlane internal
 
 play_production:
-  image: ruby:3.3
+  image: $ANDROID_CI_IMAGE
   stage: deploy
   rules:
     - if: $CI_COMMIT_TAG
       when: manual
   allow_failure: true
-  needs: [play_internal]
+  # ci_image again for the image name — dotenv is not passed on transitively.
+  needs: [ci_image, play_internal]
   variables:
     SUPPLY_JSON_KEY: '$CI_PROJECT_DIR/play-store-service-account.json'
-  cache:
-    key: 'bundler'
-    paths:
-      - android/vendor/bundle/
   before_script:
-    - apt-get update -qq && apt-get install -y -qq curl
     - curl --silent "https://gitlab.com/gitlab-org/incubation-engineering/mobile-devops/download-secure-files/-/raw/main/installer" | bash
-    - cd android
-    - bundle config set --local path 'vendor/bundle'
-    - bundle install --quiet
   script:
-    - bundle exec fastlane promote_production
+    - cd android && fastlane promote_production
 
 gitlab_release:
   image: registry.gitlab.com/gitlab-org/release-cli:latest

@@ -18,18 +18,29 @@ if [ -z "$FLUTTER_VERSION" ]; then
   exit 1
 fi
 
-# Keep the SDK inside the project dir so GitLab CI can cache it.
+# Defaults to the location baked into the CI image; falls back to a cacheable
+# path inside the project when running somewhere without a preinstalled SDK.
 FLUTTER_HOME="${FLUTTER_HOME:-$PWD/.flutter}"
 
-# Reuse a cached SDK only if it is exactly the pinned version.
+# The SDK may be owned by a different uid than the job user.
+git config --global --add safe.directory "$FLUTTER_HOME" 2>/dev/null || true
+
+# Reuse an existing SDK only if it is exactly the pinned version.
 if [ -x "$FLUTTER_HOME/bin/flutter" ]; then
-  INSTALLED=$(git -C "$FLUTTER_HOME" describe --tags --exact-match 2>/dev/null || echo "unknown")
-  if [ "$INSTALLED" = "$FLUTTER_VERSION" ]; then
-    echo "Flutter $FLUTTER_VERSION already present at $FLUTTER_HOME"
-  else
-    echo "Cached Flutter is $INSTALLED, need $FLUTTER_VERSION — reinstalling"
-    rm -rf "$FLUTTER_HOME"
+  INSTALLED=$(git -C "$FLUTTER_HOME" describe --tags --exact-match 2>/dev/null || true)
+  if [ -z "$INSTALLED" ]; then
+    # Shallow clones can lack the tag — fall back to what the SDK reports.
+    INSTALLED=$("$FLUTTER_HOME/bin/flutter" --version 2>/dev/null \
+      | sed -n 's/^Flutter \([0-9][^ ]*\).*/\1/p' | head -1)
   fi
+  if [ "$INSTALLED" = "$FLUTTER_VERSION" ]; then
+    echo "Flutter $FLUTTER_VERSION already present at $FLUTTER_HOME — skipping install"
+    export PATH="$FLUTTER_HOME/bin:$PATH"
+    flutter --version
+    exit 0
+  fi
+  echo "Found Flutter ${INSTALLED:-unknown}, need $FLUTTER_VERSION — reinstalling"
+  rm -rf "$FLUTTER_HOME"
 fi
 
 if [ ! -x "$FLUTTER_HOME/bin/flutter" ]; then
