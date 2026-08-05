@@ -1,0 +1,35 @@
+default_platform(:android)
+
+# The AAB is built in a separate CI job and handed over as an artifact.
+AAB_PATH = ENV.fetch(
+  "AAB_PATH",
+  File.expand_path("../../build/app/outputs/bundle/release/app-release.aab", __dir__)
+)
+
+platform :android do
+  desc "Upload the release bundle to the Play Store internal track"
+  lane :internal do
+    upload_to_play_store(
+      track: "internal",
+      aab: AAB_PATH,
+      release_status: "completed",
+      skip_upload_apk: true,
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+    )
+  end
+
+  desc "Promote the newest internal build to production"
+  lane :promote_production do
+    upload_to_play_store(
+      track: "internal",
+      track_promote_to: "production",
+      skip_upload_aab: true,
+      skip_upload_apk: true,
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+    )
+  end
+end

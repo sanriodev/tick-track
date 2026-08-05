@@ -46,3 +46,18 @@ app.*.map.json
 
 # FVM Version Cache
 .fvm/
+
+# Signing credentials — pulled in from GitLab Secure Files during CI.
+# These must never end up in the repository.
+key.properties
+*.jks
+*.keystore
+play-store-service-account.json
+*-service-account.json
+
+# CI toolchain caches
+/.flutter/
+/.gradle/
+/output/
+/android/vendor/
+/android/fastlane/report.xml

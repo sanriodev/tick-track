@@ -1,0 +1,168 @@
+default:
+  tags:
+    - ios-build-server
+
+stages:
+  - build
+  - release
+
+variables:
+  # GitLab Secure Files (key.properties, upload keystore, Play service account)
+  # are downloaded into the project root before every build.
+  SECURE_FILES_DOWNLOAD_PATH: '.'
+
+.android_build_template: &android_build_template
+  artifacts:
+    name: Packages
+    paths:
+      - $CI_PROJECT_DIR/output
+    expire_in: 1 week
+  before_script:
+    - export ANDROID_HOME="$HOME/Library/Android/sdk"
+    - export ANDROID_SDK_ROOT="$ANDROID_HOME"
+    # A standalone JDK 21 (or 17) is required; macOS itself ships only a stub.
+    # Do NOT fall back to Android Studio's bundled JBR: Studio now bundles JDK
+    # 25, which Gradle 8.14 cannot even parse — it fails resolving
+    # dev.flutter.flutter-plugin-loader with a bare "> 25.0.2". Gradle 8.14
+    # supports up to Java 24, and Flutter/AGP want 17 or 21. Fail loudly here
+    # instead of handing a broken toolchain to Gradle.
+    - |
+      unset JAVA_HOME  # never inherit a JAVA_HOME from the runner's own environment
+      for v in 21 17; do
+        if /usr/libexec/java_home -v "$v" >/dev/null 2>&1; then
+          export JAVA_HOME="$(/usr/libexec/java_home -v "$v")"
+          break
+        fi
+      done
+      if [ -z "$JAVA_HOME" ]; then
+        echo "No supported JDK found. Install one on the runner:" >&2
+        echo "  brew install --cask temurin@21" >&2
+        exit 1
+      fi
+    - export PATH="$JAVA_HOME/bin:$PATH"
+    # ':app:compileFlutterBuildRelease' makes the Gradle JVM fork the Flutter
+    # CLI. With a 4G daemon plus Kotlin/AAPT workers, that fork hits the memory
+    # and process limits this runner inherits and dies as an unhelpful "A
+    # problem occurred starting process 'command .../bin/flutter''". So keep the
+    # JVM small and skip the daemon, which buys nothing on CI anyway.
+    #
+    # This has to go into GRADLE_USER_HOME rather than GRADLE_OPTS: project
+    # gradle.properties outranks GRADLE_OPTS, so android/gradle.properties would
+    # keep winning. Local builds stay on the repo's own values.
+    - |
+      mkdir -p "$HOME/.gradle"
+      if [ -f "$HOME/.gradle/gradle.properties" ]; then
+        grep -vE '^(# tick-track-ci|org\.gradle\.(jvmargs|daemon|workers\.max)=)' \
+          "$HOME/.gradle/gradle.properties" > "$HOME/.gradle/gradle.properties.tmp" || true
+        mv "$HOME/.gradle/gradle.properties.tmp" "$HOME/.gradle/gradle.properties"
+      fi
+      cat >> "$HOME/.gradle/gradle.properties" <<'PROPS'
+      # tick-track-ci
+      org.gradle.jvmargs=-Xmx2G -XX:MaxMetaspaceSize=1G -XX:+HeapDumpOnOutOfMemoryError
+      org.gradle.daemon=false
+      org.gradle.workers.max=2
+      PROPS
+    # Raise what we are allowed to raise; a runner started by launchd inherits
+    # far tighter limits than a login shell.
+    - ulimit -n 4096 || true
+    - ulimit -u 2048 || true
+    # Diagnostics. If a build dies at process start again, these lines identify
+    # which resource ran out — re-run the failing build with
+    # `fvm flutter build apk --verbose` to get Gradle's real IOException/errno.
+    - echo "JAVA_HOME=$JAVA_HOME"
+    - java -version
+    - echo "RAM $(($(sysctl -n hw.memsize) / 1024 / 1024 / 1024))GB, limits:"
+    - ulimit -a
+    # /opt/homebrew/bin/fvm reads ./.fvmrc, so the Flutter version stays in one place — same source
+    # of truth that ios/ci_scripts/ci_post_clone.sh uses for Xcode Cloud.
+    - /opt/homebrew/bin/fvm install
+    # Setting JAVA_HOME is not enough: flutter_tools resolves the JDK as
+    # jdk-dir > Android Studio's bundled JBR > JAVA_HOME > PATH (see
+    # flutter_tools/lib/src/android/java.dart, _findJavaHome). Studio bundles JDK
+    # 25, which Gradle 8.14 and the Kotlin 1.9.20 plugin in Flutter's own Gradle
+    # build choke on ("Error resolving plugin [dev.flutter.flutter-plugin-loader]
+    # > 25.0.2"). jdk-dir is the only setting that outranks the JBR.
+    - /opt/homebrew/bin/fvm flutter config --jdk-dir "$JAVA_HOME"
+    - /opt/homebrew/bin/fvm flutter doctor -v 2>&1 | grep -iE "java (binary|version)" || true
+    - /opt/homebrew/bin/fvm flutter --version
+    - /opt/homebrew/bin/fvm flutter pub get
+    - curl --silent "https://gitlab.com/gitlab-org/incubation-engineering/mobile-devops/download-secure-files/-/raw/main/installer" | bash
+  after_script:
+    - mkdir -p $CI_PROJECT_DIR/output
+    - cp $CI_PROJECT_DIR/build/app/outputs/apk/release/app-release.apk $CI_PROJECT_DIR/output/ 2>/dev/null || true
+    - cp $CI_PROJECT_DIR/build/app/outputs/bundle/release/app-release.aab $CI_PROJECT_DIR/output/ 2>/dev/null || true
+
+android_feature:
+  <<: *android_build_template
+  stage: build
+  except:
+    - dev
+    - main
+    - tags
+  when: manual
+  script:
+    - /opt/homebrew/bin/fvm flutter build apk --no-tree-shake-icons --build-name=dev --build-number=$CI_PIPELINE_IID
+    - /opt/homebrew/bin/fvm flutter build appbundle --no-tree-shake-icons --build-name=dev --build-number=$CI_PIPELINE_IID
+
+android_development:
+  <<: *android_build_template
+  stage: build
+  only:
+    - dev
+  script:
+    - /opt/homebrew/bin/fvm flutter build apk --no-tree-shake-icons --build-name=dev --build-number=$CI_PIPELINE_IID
+    - /opt/homebrew/bin/fvm flutter build appbundle --no-tree-shake-icons --build-name=dev --build-number=$CI_PIPELINE_IID
+
+android_release:
+  <<: *android_build_template
+  stage: build
+  only:
+    - main
+  script:
+    - /opt/homebrew/bin/fvm flutter build apk --no-tree-shake-icons --build-name=release --build-number=$CI_PIPELINE_IID
+    - /opt/homebrew/bin/fvm flutter build appbundle --no-tree-shake-icons --build-name=release --build-number=$CI_PIPELINE_IID
+
+android_appstore:
+  <<: *android_build_template
+  stage: release
+  only:
+    - tags
+  script:
+    - glab auth login --hostname $CI_SERVER_HOST --job-token $CI_JOB_TOKEN
+    # Strip a leading "v" so the Play Store version name stays clean (v1.6.0 -> 1.6.0).
+    - VERSION="${CI_COMMIT_TAG#v}"
+    - /opt/homebrew/bin/fvm flutter build apk --no-tree-shake-icons --build-name=$VERSION --build-number=$CI_PIPELINE_IID
+    - /opt/homebrew/bin/fvm flutter build appbundle --no-tree-shake-icons --build-name=$VERSION --build-number=$CI_PIPELINE_IID
+    # Upload the bundle to the Play Store internal track.
+    - export SUPPLY_JSON_KEY="$CI_PROJECT_DIR/play-store-service-account.json"
+    - export AAB_PATH="$CI_PROJECT_DIR/build/app/outputs/bundle/release/app-release.aab"
+    - cd android && /opt/homebrew/bin/fastlane internal && cd ..
+    - |
+      glab release create "$CI_COMMIT_TAG" \
+        --notes "$CI_COMMIT_TAG" \
+        --ref "$CI_COMMIT_SHA" \
+        --assets-links='[
+          {
+            "name": "APK",
+            "url": "'"$CI_JOB_URL"'/artifacts/file/output/app-release.apk",
+            "link_type": "other"
+          },
+          {
+            "name": "AAB",
+            "url": "'"$CI_JOB_URL"'/artifacts/file/output/app-release.aab",
+            "link_type": "other"
+          }
+        ]'
+
+play_production:
+  stage: release
+  only:
+    - tags
+  when: manual
+  needs:
+    - android_appstore
+  before_script:
+    - curl --silent "https://gitlab.com/gitlab-org/incubation-engineering/mobile-devops/download-secure-files/-/raw/main/installer" | bash
+  script:
+    - export SUPPLY_JSON_KEY="$CI_PROJECT_DIR/play-store-service-account.json"
+    - cd android && /opt/homebrew/bin/fastlane promote_production
