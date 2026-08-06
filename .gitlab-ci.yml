@@ -128,7 +128,7 @@ android_appstore:
   only:
     - tags
   script:
-    - glab auth login --hostname $CI_SERVER_HOST --job-token $CI_JOB_TOKEN
+    - /opt/homebrew/bin/glab auth login --hostname $CI_SERVER_HOST --job-token $CI_JOB_TOKEN
     # Strip a leading "v" so the Play Store version name stays clean (v1.6.0 -> 1.6.0).
     - VERSION="${CI_COMMIT_TAG#v}"
     - /opt/homebrew/bin/fvm flutter build apk --no-tree-shake-icons --build-name=$VERSION --build-number=$CI_PIPELINE_IID
@@ -138,7 +138,7 @@ android_appstore:
     - export AAB_PATH="$CI_PROJECT_DIR/build/app/outputs/bundle/release/app-release.aab"
     - cd android && /opt/homebrew/bin/fastlane internal && cd ..
     - |
-      glab release create "$CI_COMMIT_TAG" \
+      /opt/homebrew/bin/glab release create "$CI_COMMIT_TAG" \
         --notes "$CI_COMMIT_TAG" \
         --ref "$CI_COMMIT_SHA" \
         --assets-links='[
