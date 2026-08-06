@@ -4,6 +4,7 @@ import 'package:ticktrack/enum/privacy_mode_enum.dart';
 import 'package:ticktrack/state/avatar_store.dart';
 import 'package:ticktrack/state/group_context.dart';
 import 'package:ticktrack/state/reminder_scheduler.dart';
+import 'package:ticktrack/state/reminder_sync.dart';
 import 'package:blvckleg_dart_core/exception/session_expired.dart';
 import 'package:blvckleg_dart_core/models/auth/login_response_model.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
@@ -54,6 +55,8 @@ Future<void> deleteBoxAndNavigateToLogin(BuildContext context) async {
   AvatarStore().clear();
   // nor be reminded of their events
   await ReminderScheduler().cancelAll();
+  // and the next login has to be allowed to rebuild them right away
+  ReminderSync().reset();
 
   if (context.mounted) {
     navigateToRoute(
@@ -92,6 +95,11 @@ Future<void> navigateAfterAuth(BuildContext context) async {
     if (!GroupContext().hasGroups) {
       target = 'group-onboarding';
     }
+    // The only place reminders are guaranteed to be refreshed on a start: the
+    // pending ones in the OS are from whenever the app last ran and know
+    // nothing of what changed since. Not awaited, it must not delay the first
+    // screen.
+    ReminderSync().sync(force: true);
   } catch (_) {
     // session problems are handled by the home screen itself
   }

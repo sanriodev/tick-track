@@ -11,12 +11,27 @@ import 'package:timezone/timezone.dart' as tz;
 /// the rest, so the horizon is capped well below that.
 const int _maxScheduled = 48;
 
+/// The dates of one calendar together with the group they belong to.
+///
+/// [groupName] is null for the personal calendar. With several groups a bare
+/// "Müllabfuhr" does not say whose bin it is, so the name goes into the
+/// notification.
+class ReminderCalendar {
+  final String? groupName;
+  final List<CalendarOccurrence> occurrences;
+
+  const ReminderCalendar({
+    required this.occurrences,
+    this.groupName,
+  });
+}
+
 /// Schedules the reminders for calendar events on the device.
 ///
 /// Nothing here talks to a server: the OS holds the pending reminders and fires
 /// them even when the app is closed. That also means only events the device has
 /// already downloaded can be reminded about - [reschedule] is therefore called
-/// with whatever the calendar just loaded.
+/// with whatever [ReminderSync] last loaded.
 class ReminderScheduler {
   static final ReminderScheduler _instance =
       ReminderScheduler._privateConstructor();
@@ -143,36 +158,53 @@ class ReminderScheduler {
     return _allowed;
   }
 
-  /// Replaces every pending reminder with the ones derived from [occurrences].
+  /// Replaces every pending reminder with the ones derived from [calendars].
   ///
   /// Rebuilding the whole set instead of diffing is deliberate: an event can be
   /// moved, deleted or have its series changed between two loads, and any
-  /// bookkeeping we kept would be the thing that goes stale.
-  Future<void> reschedule(List<CalendarOccurrence> occurrences) async {
+  /// bookkeeping we kept would be the thing that goes stale. It does mean the
+  /// caller has to pass every calendar the user has, not just the one currently
+  /// on screen - anything missing loses its reminders.
+  Future<void> reschedule(List<ReminderCalendar> calendars) async {
     await init();
     if (!_initialized || !_allowed) {
       return;
     }
 
     final now = DateTime.now();
-    final due = <({DateTime fireAt, CalendarOccurrence occurrence})>[];
-    for (final occurrence in occurrences) {
-      final minutes = occurrence.event.remindMinutesBefore;
-      if (minutes == null) {
-        continue;
-      }
-      final fireAt = occurrence.startAt.subtract(Duration(minutes: minutes));
-      // a reminder for a moment that has passed would fire immediately
-      if (fireAt.isAfter(now)) {
-        due.add((fireAt: fireAt, occurrence: occurrence));
+    final due = <({
+      DateTime fireAt,
+      CalendarOccurrence occurrence,
+      String? groupName
+    })>[];
+    // an event belongs to a single calendar, but a retried load could hand the
+    // same date in twice and it would take a slot below the cap
+    final seen = <int>{};
+    for (final calendar in calendars) {
+      for (final occurrence in calendar.occurrences) {
+        final minutes = occurrence.event.remindMinutesBefore;
+        if (minutes == null) {
+          continue;
+        }
+        final fireAt = occurrence.startAt.subtract(Duration(minutes: minutes));
+        // a reminder for a moment that has passed would fire immediately
+        if (!fireAt.isAfter(now) || !seen.add(_idFor(occurrence))) {
+          continue;
+        }
+        due.add((
+          fireAt: fireAt,
+          occurrence: occurrence,
+          groupName: calendar.groupName,
+        ));
       }
     }
+    // the nearest reminders are the ones worth the limited slots
     due.sort((a, b) => a.fireAt.compareTo(b.fireAt));
 
     try {
       await _plugin.cancelAll();
       for (final entry in due.take(_maxScheduled)) {
-        await _schedule(entry.fireAt, entry.occurrence);
+        await _schedule(entry.fireAt, entry.occurrence, entry.groupName);
       }
     } catch (error) {
       debugPrint('Could not schedule reminders: $error');
@@ -182,13 +214,14 @@ class ReminderScheduler {
   Future<void> _schedule(
     DateTime fireAt,
     CalendarOccurrence occurrence,
+    String? groupName,
   ) async {
     final event = occurrence.event;
     try {
       await _plugin.zonedSchedule(
         _idFor(occurrence),
         event.title,
-        _body(occurrence),
+        _body(occurrence, groupName),
         tz.TZDateTime.from(fireAt, tz.local),
         _details,
         // wall clock time: 07:00 stays 07:00 when the device changes zone
@@ -206,7 +239,7 @@ class ReminderScheduler {
       await _plugin.zonedSchedule(
         _idFor(occurrence),
         event.title,
-        _body(occurrence),
+        _body(occurrence, groupName),
         tz.TZDateTime.from(fireAt, tz.local),
         _details,
         uiLocalNotificationDateInterpretation:
@@ -216,9 +249,9 @@ class ReminderScheduler {
     }
   }
 
-  /// "Heute um 18:00" plus the place, so the notification says what is coming
-  /// without having to open the app.
-  String _body(CalendarOccurrence occurrence) {
+  /// "Heute um 18:00" plus the place and the group, so the notification says
+  /// what is coming and whose calendar it is without having to open the app.
+  String _body(CalendarOccurrence occurrence, String? groupName) {
     final start = occurrence.startAt;
     final now = DateTime.now();
     final isToday = start.year == now.year &&
@@ -232,7 +265,12 @@ class ReminderScheduler {
             : DateFormat("EEEE, d. MMMM 'um' HH:mm").format(start);
 
     final location = occurrence.event.location?.trim() ?? '';
-    return location.isEmpty ? when : '$when · $location';
+    final group = groupName?.trim() ?? '';
+    return [
+      when,
+      if (location.isNotEmpty) location,
+      if (group.isNotEmpty) group,
+    ].join(' · ');
   }
 
   /// Stable per date of an event, so the same occurrence never ends up

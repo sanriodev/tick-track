@@ -5,7 +5,7 @@ import 'package:ticktrack/enum/event_color_enum.dart';
 import 'package:ticktrack/models/calendar/calendar_event_model.dart';
 import 'package:ticktrack/state/avatar_store.dart';
 import 'package:ticktrack/state/group_context.dart';
-import 'package:ticktrack/state/reminder_scheduler.dart';
+import 'package:ticktrack/state/reminder_sync.dart';
 import 'package:ticktrack/util/haptics.dart';
 import 'package:ticktrack/util/helpers.dart';
 import 'package:ticktrack/widgets/app_drawer_widget.dart';
@@ -60,13 +60,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   void _onGroupContextChanged() {
     if (mounted) {
-      _load();
+      // a joined or created group brings a calendar the reminders do not cover
+      // yet, and the switcher is the only place that shows up
+      _load(forceReminderSync: true);
     }
   }
 
   /// A week of slack on either side, so events reaching into the month from
   /// outside still show up in the first and last row of the grid.
-  Future<void> _load() async {
+  Future<void> _load({bool forceReminderSync = false}) async {
     setState(() => _isLoading = true);
     final from = DateTime(_visibleMonth.year, _visibleMonth.month)
         .subtract(const Duration(days: 7));
@@ -88,8 +90,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
       AvatarStore().sync(
         occurrences.map((o) => o.event.user?.id).whereType<int>().toSet(),
       );
-      // the loaded month is the freshest picture of what to remind about
-      ReminderScheduler().reschedule(occurrences);
+      // deliberately not built from what was just loaded: reminders cover every
+      // group and a window of their own, so this only nudges the sync rather
+      // than handing it this month of this group
+      ReminderSync().sync(force: forceReminderSync);
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
       await showBackendError(
@@ -180,7 +184,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
     // the editor may have changed the month we are showing
     if (mounted) {
-      await _load();
+      // the reminder of the edited event has to take effect now, not after the
+      // sync interval has passed
+      await _load(forceReminderSync: true);
     }
   }
 
@@ -224,7 +230,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
     try {
       await Backend().deleteCalendarEvent(event.id);
       Haptics.tap();
-      await _load();
+      // a deleted event must stop reminding immediately
+      await _load(forceReminderSync: true);
     } catch (e) {
       Haptics.warning();
       await showBackendError(
@@ -270,7 +277,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
       // the screen refreshes - with the grid in a Column above the list, a pull
       // on the grid did nothing
       body: RefreshIndicator(
-        onRefresh: _load,
+        // pulling is someone asking for the current truth, reminders included
+        onRefresh: () => _load(forceReminderSync: true),
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
