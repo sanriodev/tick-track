@@ -3,22 +3,11 @@ import 'package:blvckleg_dart_core/models/user/user_model.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-/// The "who is behind this" line at the bottom of a note or task list card.
-///
-/// Creator and last editor are two separate facts: on public content anybody
-/// in the group may edit, so who touched it last is worth knowing. It is only
-/// spelled out when somebody other than the creator saved it - otherwise the
-/// name carries nothing the creator entry does not already say.
 class ContentMetaFooter extends StatelessWidget {
-  /// Who created the note or list.
   final User? author;
 
-  /// Who saved it last. Null on content from before the backend started
-  /// recording it.
   final User? lastModifiedUser;
 
-  /// Text and icon color, so the footer works on a card as well as on the
-  /// darker header strip of a task list.
   final Color? color;
 
   const ContentMetaFooter({
@@ -37,8 +26,6 @@ class ContentMetaFooter extends StatelessWidget {
     final iconColor = color ?? _mutedColor(theme);
 
     final editor = lastModifiedUser;
-    // by id, not by name: renaming an account must not make somebody else's
-    // edit look like the creator's own
     final editedBySomebodyElse = editor != null && editor.id != author?.id;
 
     return Wrap(
@@ -46,15 +33,12 @@ class ContentMetaFooter extends StatelessWidget {
       runSpacing: 4,
       children: [
         _MetaItem(
-          // the picture says who created this faster than the name next to it
           avatar: UserAvatarWidget(
             userId: author?.id,
             username: author?.username,
             radius: 9,
           ),
           icon: PhosphorIconsRegular.user,
-          // spells out what the icon means - two bare icons next to each
-          // other left the reader guessing which name was which
           tooltip: 'Erstellt von',
           label: author?.username ?? 'unbekannt',
           style: style,
@@ -80,11 +64,8 @@ class _MetaItem extends StatelessWidget {
   final IconData icon;
   final String label;
 
-  /// Shown instead of [icon] when the entry stands for a person.
   final Widget? avatar;
 
-  /// What the icon stands for, e.g. "Erstellt von". Doubles as the screen
-  /// reader label so the row is not just two names in a row.
   final String tooltip;
   final TextStyle? style;
   final Color? iconColor;

@@ -22,8 +22,6 @@ class TaskListWidget extends StatefulWidget {
   final void Function()? onDeletePress;
   final void Function(PrivacyMode mode)? onChangePrivacy;
 
-  /// Called after the list's author was blocked from the report dialog, so
-  /// the screen can reload and drop the now hidden content.
   final void Function()? onBlocked;
 
   const TaskListWidget({
@@ -44,9 +42,6 @@ class TaskListWidget extends StatefulWidget {
 
 class _TaskListWidgetState extends State<TaskListWidget>
     with SingleTickerProviderStateMixin {
-  /// Owned here instead of by the `Slidable` so the underlay behind it can
-  /// follow which pane is open. A controller passed in from outside is not
-  /// disposed by `Slidable`, so this state has to do it.
   late final SlidableController _slidableController;
 
   @override
@@ -68,8 +63,6 @@ class _TaskListWidgetState extends State<TaskListWidget>
   bool get _isPinned =>
       PinStore().isPinned(PinStore.taskListKind, widget.taskList.id);
 
-  /// 0 when the list is still empty, so an empty list reads as "nothing done"
-  /// rather than showing a NaN.
   double get _progress =>
       widget.totalTasks == 0 ? 0 : widget.completedTasks / widget.totalTasks;
 
@@ -78,9 +71,6 @@ class _TaskListWidgetState extends State<TaskListWidget>
     await PinStore().toggle(PinStore.taskListKind, widget.taskList.id);
   }
 
-  /// The header strip uses [ThemeData.secondaryHeaderColor] as its background,
-  /// which is a mid grey - so everything on it needs the inverse of the usual
-  /// text color to stay readable in both themes.
   Color _headerForeground(ThemeData theme) =>
       theme.brightness == Brightness.light ? Colors.white : Colors.grey[900]!;
 
@@ -100,9 +90,6 @@ class _TaskListWidgetState extends State<TaskListWidget>
             endColor: Colors.red,
           ),
           Slidable(
-            // stable per list: a UniqueKey would rebuild the state on every
-            // build, an index based match could carry an open pane over to
-            // another list when the overview changes
             key: ValueKey(widget.taskList.id),
             controller: _slidableController,
             startActionPane: ActionPane(
@@ -171,8 +158,6 @@ class _TaskListWidgetState extends State<TaskListWidget>
     );
   }
 
-  /// Closed state of a list. Carries the progress as well, so the overview
-  /// answers "how far along am I" without having to open every section.
   Widget _buildHeader(ThemeData theme, Color headerFg) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(14, 10, 4, 10),
@@ -247,7 +232,6 @@ class _TaskListWidgetState extends State<TaskListWidget>
     );
   }
 
-  /// Expanded state: the numbers behind the progress, and a way into the list.
   Widget _buildContent(ThemeData theme) {
     return InkWell(
       onTap: widget.onTap,
@@ -304,7 +288,6 @@ class _TaskListWidgetState extends State<TaskListWidget>
   }
 }
 
-/// One number of a task list's breakdown, e.g. "4 Offen".
 class _StatChip extends StatelessWidget {
   final Color color;
   final String label;

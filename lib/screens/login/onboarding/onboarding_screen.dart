@@ -16,20 +16,13 @@ enum _OnboardingStep { form, code, success }
 
 const int _codeLength = 5;
 
-/// Handed to the screen when the login found a registered but never confirmed
-/// account: the confirmation mask opens right away and the credentials are
-/// kept so the user is logged in as soon as the code is accepted.
 class PendingConfirmation {
-  /// what was typed on the login screen - the account is signed in with it
-  /// once the confirmation went through
   final String loginName;
 
-  /// set when the user identified themselves by email instead of username
   final String? email;
 
   final String password;
 
-  /// masked address the code went to, e.g. a***e@example.com
   final String maskedEmail;
 
   const PendingConfirmation({
@@ -70,11 +63,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   bool _obscure = true;
   _OnboardingStep _step = _OnboardingStep.form;
 
-  /// address shown on the confirmation mask - the entered one when the user
-  /// registers here, the masked one when the login sent us here
   String _codeTarget = '';
 
-  // null = unknown (empty input or check failed/pending)
   bool? _usernameAvailable;
   bool _checkingUsername = false;
   Timer? _usernameDebounce;
@@ -88,11 +78,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     super.initState();
     final pending = widget.pending;
     if (pending != null) {
-      // resuming an unconfirmed registration: the code is already on its way
       _usernameCtrl.text = pending.loginName;
       if (pending.email != null) _emailCtrl.text = pending.email!;
       _passwordCtrl.text = pending.password;
-      // the real address when we know it, the masked one otherwise
       _codeTarget = pending.email ?? pending.maskedEmail;
       _step = _OnboardingStep.code;
     }
@@ -136,7 +124,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           _checkingUsername = false;
         });
       } catch (_) {
-        // availability is only a hint, the backend decides on submit
         if (!mounted) return;
         setState(() => _checkingUsername = false);
       }
@@ -151,7 +138,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     });
 
     final email = value.trim();
-    // the backend only accepts syntactically valid addresses
     if (!email.contains('@')) return;
 
     _emailDebounce = Timer(const Duration(milliseconds: 500), () async {
@@ -193,7 +179,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  /// Switches to the confirmation mask for [email] with an empty code field.
   void _goToCodeStep(String email) {
     _codeCtrl.clear();
     setState(() {
@@ -258,10 +243,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
   }
 
-  /// Username and email already belong to one and the same account: either it
-  /// is confirmed and the user simply has to log in, or the confirmation was
-  /// never finished and we hand out a fresh code. Returns whether the
-  /// registration was handled here.
   Future<bool> _resumeExistingAccount(
     Availability availability,
     String username,
@@ -275,7 +256,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       return true;
     }
 
-    // registering again reissues the code and takes over the new password
     await Backend().register(username, email, _passwordCtrl.text);
     _goToCodeStep(email);
     _showMessage(
@@ -316,7 +296,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         email: email.isEmpty ? null : email,
         username: _usernameCtrl.text.trim(),
       );
-      // keep the address the user typed, fall back to the masked one
       if (email.isEmpty) setState(() => _codeTarget = target);
       _showMessage('Code wurde erneut gesendet');
     } catch (e) {
@@ -326,8 +305,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
   }
 
-  /// The account is confirmed at this point, so the "Weiter" button logs
-  /// the fresh user in directly with the credentials from the form.
   Future<void> _continueWithLogin() async {
     setState(() => _submitting = true);
     try {
@@ -363,8 +340,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 child: IconButton(
                   icon: const Icon(Icons.arrow_back_rounded),
                   onPressed: () {
-                    // there is no form to go back to when the login sent us
-                    // straight into the confirmation
                     if (_step == _OnboardingStep.code &&
                         widget.pending == null) {
                       setState(() => _step = _OnboardingStep.form);

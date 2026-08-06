@@ -25,7 +25,6 @@ class ActivityScreen extends StatefulWidget {
 
 class _ActivityScreenState extends State<ActivityScreen> {
   bool isLoading = true;
-  // default to the whole feed, users can narrow it down to their own
   String selectedFilterMode = 'any';
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   List<EventlogMessage<dynamic>> ownActivites = [];

@@ -50,8 +50,6 @@ class _TasksScreenState extends State<TasksScreen> {
   }
 
   void _onGroupContextChanged() {
-    // the shown list belongs to the previous group context, go back to the
-    // task list overview of the new context
     if (mounted) {
       navigateToRoute(context, 'task-lists');
     }
@@ -155,9 +153,6 @@ class _TasksScreenState extends State<TasksScreen> {
     }
   }
 
-  /// Whether the logged in user may tick this task off: only a protected or
-  /// private list belonging to somebody else is off limits. Same rule as
-  /// before, just expressed positively.
   bool _canToggle(Task task) {
     final isOwnList = task.taskList?.user?.username ==
         AuthBackend().loggedInUser?.user?.username;
@@ -178,8 +173,6 @@ class _TasksScreenState extends State<TasksScreen> {
         padding: const EdgeInsets.fromLTRB(6, 8, 14, 8),
         child: Row(
           children: [
-            // leading, like every other todo list - the thumb lands on it
-            // without covering the text
             Checkbox(
               value: task.isDone,
               onChanged: enabled
@@ -202,7 +195,6 @@ class _TasksScreenState extends State<TasksScreen> {
                   Text(
                     task.title,
                     style: theme.primaryTextTheme.displaySmall?.copyWith(
-                      // a finished task stays readable but visibly steps back
                       decoration:
                           task.isDone ? TextDecoration.lineThrough : null,
                       color: task.isDone
@@ -234,12 +226,6 @@ class _TasksScreenState extends State<TasksScreen> {
     );
   }
 
-  /// Heading plus entries, or nothing at all for an empty group.
-  ///
-  /// Rendering an empty list is not free: a vertical [ListView] without an
-  /// explicit padding adopts the vertical insets of the ambient MediaQuery, so
-  /// even with zero items it keeps a height - which pushed the heading of the
-  /// group below it down.
   List<Widget> _section(String label, List<Task> tasks) {
     if (tasks.isEmpty) {
       return const [];
@@ -259,7 +245,6 @@ class _TasksScreenState extends State<TasksScreen> {
   ListView getAllListItems(List<Task> tasks) {
     return ListView.builder(
         shrinkWrap: true,
-        // see _section: without this the list inherits the MediaQuery insets
         padding: EdgeInsets.zero,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: tasks.length,
@@ -269,7 +254,6 @@ class _TasksScreenState extends State<TasksScreen> {
             child: Stack(
               clipBehavior: Clip.antiAlias,
               children: [
-                // no start pane on a task, so only the right side is filled
                 const SlidableUnderlay(endColor: Colors.red),
                 Slidable(
                     key: ValueKey(tasks[index].id),
@@ -334,7 +318,6 @@ class _TasksScreenState extends State<TasksScreen> {
               color: Theme.of(context).primaryIconTheme.color,
             ),
           ),
-          //backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           actions: [
             const GroupContextSwitcher(),
             OptionButton(

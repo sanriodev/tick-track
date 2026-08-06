@@ -3,8 +3,6 @@ import 'package:ticktrack/util/haptics.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
-/// Hands a whole note to the platform share sheet as plain text: the title
-/// as the subject, title and content as the body.
 Future<void> shareNote(BuildContext context, Note note) {
   final content = note.content?.trim() ?? '';
   return shareText(
@@ -14,8 +12,6 @@ Future<void> shareNote(BuildContext context, Note note) {
   );
 }
 
-/// Shares an arbitrary piece of text, e.g. just the passage the user
-/// selected inside a note.
 Future<void> shareText(
   BuildContext context,
   String text, {
@@ -30,8 +26,6 @@ Future<void> shareText(
       ShareParams(
         text: text,
         subject: subject,
-        // iPadOS shows the sheet as a popover anchored to a source rect,
-        // everywhere else this is ignored
         sharePositionOrigin: _originRect(context),
       ),
     );

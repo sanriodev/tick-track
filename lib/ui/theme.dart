@@ -1,9 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// Theme extension providing a 5-level activity heatmap color scale
-/// (index 0 = no activity, 1..4 increasing intensity).
-/// Added so widgets like `ActivityGraphWidget` can obtain consistent
-/// colors for light & dark mode without hardcoding color values.
 class ActivityHeatmapColors extends ThemeExtension<ActivityHeatmapColors> {
   final List<Color> levels; // length 5
 
@@ -91,8 +87,6 @@ ThemeData appThemeLight = ThemeData(
   ),
   progressIndicatorTheme: ProgressIndicatorThemeData(
     color: Colors.grey[700],
-    // disc behind the pull-to-refresh arrow. The arrow itself is drawn in
-    // colorScheme.primary, so this has to be a light surface for it to show
     refreshBackgroundColor: Colors.grey[100],
   ),
   iconTheme: IconThemeData(color: Colors.grey[700]),
@@ -117,10 +111,6 @@ ThemeData appThemeLight = ThemeData(
   timePickerTheme: _timePickerTheme(Brightness.light),
 );
 
-/// The pickers ship with a Material 3 look of their own, which arrives in the
-/// seed colour's tints and ignores the greyscale the rest of the app uses.
-/// Both are themed from the same values here so a date and a time picker do not
-/// end up looking like two different apps.
 DatePickerThemeData _datePickerTheme(Brightness brightness) {
   final light = brightness == Brightness.light;
   final surface = light ? Colors.grey[100]! : Colors.grey[850]!;
@@ -224,7 +214,6 @@ ThemeData appThemeDark = ThemeData(
     ),
     progressIndicatorTheme: ProgressIndicatorThemeData(
       color: Colors.grey[400],
-      // see the light theme - dark surface, the arrow is a light grey here
       refreshBackgroundColor: Colors.grey[850],
     ),
     iconTheme: IconThemeData(

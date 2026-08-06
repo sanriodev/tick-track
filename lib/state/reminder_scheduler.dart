@@ -7,15 +7,8 @@ import 'package:intl/intl.dart';
 import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
-/// iOS refuses to keep more than 64 pending notifications and silently drops
-/// the rest, so the horizon is capped well below that.
 const int _maxScheduled = 48;
 
-/// The dates of one calendar together with the group they belong to.
-///
-/// [groupName] is null for the personal calendar. With several groups a bare
-/// "Müllabfuhr" does not say whose bin it is, so the name goes into the
-/// notification.
 class ReminderCalendar {
   final String? groupName;
   final List<CalendarOccurrence> occurrences;
@@ -26,12 +19,18 @@ class ReminderCalendar {
   });
 }
 
-/// Schedules the reminders for calendar events on the device.
-///
-/// Nothing here talks to a server: the OS holds the pending reminders and fires
-/// them even when the app is closed. That also means only events the device has
-/// already downloaded can be reminded about - [reschedule] is therefore called
-/// with whatever [ReminderSync] last loaded.
+class _DueReminder {
+  final DateTime fireAt;
+  final CalendarOccurrence occurrence;
+  final String? groupName;
+
+  const _DueReminder({
+    required this.fireAt,
+    required this.occurrence,
+    this.groupName,
+  });
+}
+
 class ReminderScheduler {
   static final ReminderScheduler _instance =
       ReminderScheduler._privateConstructor();
@@ -43,12 +42,8 @@ class ReminderScheduler {
 
   bool _initialized = false;
 
-  /// Set once the OS granted the right to post notifications. Without it
-  /// scheduling is pointless, so [reschedule] turns into a no-op.
   bool _allowed = false;
 
-  /// Whether the OS lets us schedule to the minute. Android 12+ can refuse,
-  /// in which case reminders are still delivered, just batched by the system.
   bool _exactAllowed = true;
 
   static const AndroidNotificationDetails _androidDetails =
@@ -65,24 +60,18 @@ class ReminderScheduler {
     iOS: DarwinNotificationDetails(),
   );
 
-  /// Prepares the plugin and the time zone database. Safe to call more than
-  /// once; failures are swallowed because a broken scheduler must never stop
-  /// the app from starting.
   Future<void> init() async {
     if (_initialized) {
       return;
     }
     try {
       tz_data.initializeTimeZones();
-      // the device zone, so a reminder set for 07:00 stays 07:00 across a
-      // daylight saving change instead of drifting by an hour
-      tz.setLocalLocation(tz.getLocation(await FlutterTimezone.getLocalTimezone()));
+      tz.setLocalLocation(
+          tz.getLocation(await FlutterTimezone.getLocalTimezone()));
 
       await _plugin.initialize(
         const InitializationSettings(
           android: AndroidInitializationSettings('@mipmap/ic_launcher'),
-          // asked for separately in requestPermission, so the first launch is
-          // not interrupted by a system dialog
           iOS: DarwinInitializationSettings(
             requestAlertPermission: false,
             requestBadgePermission: false,
@@ -97,11 +86,6 @@ class ReminderScheduler {
     }
   }
 
-  /// Reads back what the OS currently allows.
-  ///
-  /// Needed on every start: the granted permission lives in the system, not in
-  /// this object, and without asking again a restarted app would think it is
-  /// not allowed to schedule anything.
   Future<void> _refreshPermissionState() async {
     try {
       final android = _plugin.resolvePlatformSpecificImplementation<
@@ -121,11 +105,6 @@ class ReminderScheduler {
     }
   }
 
-  /// Asks the OS for permission, once. Returns whether reminders can be posted.
-  ///
-  /// Called the first time a user actually sets a reminder rather than on
-  /// startup - a permission dialog makes more sense next to the switch that
-  /// triggered it.
   Future<bool> requestPermission() async {
     await init();
     if (!_initialized) {
@@ -137,8 +116,10 @@ class ReminderScheduler {
           AndroidFlutterLocalNotificationsPlugin>();
       if (android != null) {
         _allowed = await android.requestNotificationsPermission() ?? false;
-        // separate from the notification permission and refusable on its own
-        _exactAllowed = await android.requestExactAlarmsPermission() ?? false;
+        _exactAllowed = await android.canScheduleExactNotifications() ?? false;
+        if (!_exactAllowed) {
+          _exactAllowed = await android.requestExactAlarmsPermission() ?? false;
+        }
       }
 
       final ios = _plugin.resolvePlatformSpecificImplementation<
@@ -158,27 +139,20 @@ class ReminderScheduler {
     return _allowed;
   }
 
-  /// Replaces every pending reminder with the ones derived from [calendars].
-  ///
-  /// Rebuilding the whole set instead of diffing is deliberate: an event can be
-  /// moved, deleted or have its series changed between two loads, and any
-  /// bookkeeping we kept would be the thing that goes stale. It does mean the
-  /// caller has to pass every calendar the user has, not just the one currently
-  /// on screen - anything missing loses its reminders.
   Future<void> reschedule(List<ReminderCalendar> calendars) async {
     await init();
-    if (!_initialized || !_allowed) {
+    if (!_initialized) {
+      debugPrint('Reminders not scheduled, the scheduler is not initialized');
       return;
+    }
+    await _refreshPermissionState();
+    if (!_allowed) {
+      debugPrint('Notifications are not allowed, scheduling the reminders '
+          'anyway so they work once they are');
     }
 
     final now = DateTime.now();
-    final due = <({
-      DateTime fireAt,
-      CalendarOccurrence occurrence,
-      String? groupName
-    })>[];
-    // an event belongs to a single calendar, but a retried load could hand the
-    // same date in twice and it would take a slot below the cap
+    final due = <_DueReminder>[];
     final seen = <int>{};
     for (final calendar in calendars) {
       for (final occurrence in calendar.occurrences) {
@@ -187,28 +161,61 @@ class ReminderScheduler {
           continue;
         }
         final fireAt = occurrence.startAt.subtract(Duration(minutes: minutes));
-        // a reminder for a moment that has passed would fire immediately
         if (!fireAt.isAfter(now) || !seen.add(_idFor(occurrence))) {
           continue;
         }
-        due.add((
+        due.add(_DueReminder(
           fireAt: fireAt,
           occurrence: occurrence,
           groupName: calendar.groupName,
         ));
       }
     }
-    // the nearest reminders are the ones worth the limited slots
-    due.sort((a, b) => a.fireAt.compareTo(b.fireAt));
 
+    final scheduled = _pickSlots(due);
     try {
       await _plugin.cancelAll();
-      for (final entry in due.take(_maxScheduled)) {
-        await _schedule(entry.fireAt, entry.occurrence, entry.groupName);
-      }
     } catch (error) {
-      debugPrint('Could not schedule reminders: $error');
+      debugPrint('Could not clear the pending reminders: $error');
     }
+    for (final entry in scheduled) {
+      await _schedule(entry.fireAt, entry.occurrence, entry.groupName);
+    }
+    debugPrint('Reminders: ${scheduled.length} of ${due.length} upcoming '
+        'scheduled across ${calendars.length} calendars '
+        '(exact: $_exactAllowed, allowed: $_allowed)');
+  }
+
+  List<_DueReminder> _pickSlots(List<_DueReminder> due) {
+    final byEvent = <int, List<_DueReminder>>{};
+    for (final entry in due) {
+      byEvent.putIfAbsent(entry.occurrence.event.id, () => []).add(entry);
+    }
+    for (final dates in byEvent.values) {
+      dates.sort((a, b) => a.fireAt.compareTo(b.fireAt));
+    }
+    final events = byEvent.values.toList()
+      ..sort((a, b) => a.first.fireAt.compareTo(b.first.fireAt));
+
+    final picked = <_DueReminder>[];
+    for (var round = 0; picked.length < _maxScheduled; round++) {
+      var addedInRound = false;
+      for (final dates in events) {
+        if (round >= dates.length) {
+          continue;
+        }
+        picked.add(dates[round]);
+        addedInRound = true;
+        if (picked.length >= _maxScheduled) {
+          break;
+        }
+      }
+      if (!addedInRound) {
+        break;
+      }
+    }
+    picked.sort((a, b) => a.fireAt.compareTo(b.fireAt));
+    return picked;
   }
 
   Future<void> _schedule(
@@ -224,7 +231,6 @@ class ReminderScheduler {
         _body(occurrence, groupName),
         tz.TZDateTime.from(fireAt, tz.local),
         _details,
-        // wall clock time: 07:00 stays 07:00 when the device changes zone
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.wallClockTime,
         androidScheduleMode: _exactAllowed
@@ -232,25 +238,27 @@ class ReminderScheduler {
             : AndroidScheduleMode.inexactAllowWhileIdle,
       );
     } on PlatformException catch (error) {
-      // Android can withdraw the exact alarm permission at any time; the
-      // inexact variant always works, so a reminder is late rather than lost
       debugPrint('Falling back to an inexact reminder: ${error.message}');
       _exactAllowed = false;
-      await _plugin.zonedSchedule(
-        _idFor(occurrence),
-        event.title,
-        _body(occurrence, groupName),
-        tz.TZDateTime.from(fireAt, tz.local),
-        _details,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.wallClockTime,
-        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-      );
+      try {
+        await _plugin.zonedSchedule(
+          _idFor(occurrence),
+          event.title,
+          _body(occurrence, groupName),
+          tz.TZDateTime.from(fireAt, tz.local),
+          _details,
+          uiLocalNotificationDateInterpretation:
+              UILocalNotificationDateInterpretation.wallClockTime,
+          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        );
+      } catch (retryError) {
+        debugPrint('No reminder for ${event.title}: $retryError');
+      }
+    } catch (error) {
+      debugPrint('No reminder for ${event.title}: $error');
     }
   }
 
-  /// "Heute um 18:00" plus the place and the group, so the notification says
-  /// what is coming and whose calendar it is without having to open the app.
   String _body(CalendarOccurrence occurrence, String? groupName) {
     final start = occurrence.startAt;
     final now = DateTime.now();
@@ -273,16 +281,12 @@ class ReminderScheduler {
     ].join(' · ');
   }
 
-  /// Stable per date of an event, so the same occurrence never ends up
-  /// scheduled twice. Kept inside the 32 bit range the platforms expect.
   int _idFor(CalendarOccurrence occurrence) {
     final key = '${occurrence.event.id}@'
         '${occurrence.startAt.toUtc().toIso8601String()}';
     return key.hashCode & 0x7fffffff;
   }
 
-  /// Drops everything pending, used on logout so the next account on this
-  /// device is not reminded of the previous one's events.
   Future<void> cancelAll() async {
     await init();
     if (!_initialized) {

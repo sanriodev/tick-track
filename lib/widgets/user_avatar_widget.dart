@@ -1,22 +1,13 @@
 import 'package:ticktrack/state/avatar_store.dart';
 import 'package:flutter/material.dart';
 
-/// A user's profile picture, falling back to their initials.
-///
-/// Reads from the [AvatarStore] cache and asks it to catch up in the
-/// background, so a member list costs one request instead of one future per
-/// row. Rebuilds itself once the picture arrives.
 class UserAvatarWidget extends StatefulWidget {
-  /// Null renders the placeholder without asking the backend, for content whose
-  /// author no longer exists.
   final int? userId;
 
-  /// Used for the initials and as the screen reader label.
   final String? username;
 
   final double radius;
 
-  /// Ring around the picture, used to mark the group owner.
   final Color? borderColor;
 
   const UserAvatarWidget({
@@ -59,8 +50,6 @@ class _UserAvatarWidgetState extends State<UserAvatarWidget> {
     }
   }
 
-  /// The store deduplicates, so a whole list asking at once still results in a
-  /// single call.
   void _requestSync() {
     final userId = widget.userId;
     if (userId == null) {
@@ -74,7 +63,6 @@ class _UserAvatarWidgetState extends State<UserAvatarWidget> {
     if (name.isEmpty) {
       return '?';
     }
-    // by rune, so a name starting with an emoji does not get cut in half
     return String.fromCharCode(name.runes.first).toUpperCase();
   }
 
@@ -88,13 +76,11 @@ class _UserAvatarWidgetState extends State<UserAvatarWidget> {
     final avatar = CircleAvatar(
       radius: widget.radius,
       backgroundColor: theme.canvasColor,
-      // MemoryImage rather than Image.memory so CircleAvatar clips it
       backgroundImage: bytes != null ? MemoryImage(bytes) : null,
       child: bytes == null
           ? Text(
               _initials,
               style: theme.primaryTextTheme.bodySmall?.copyWith(
-                // scales along, so one widget works at radius 9 and at 32
                 fontSize: widget.radius * 0.8,
                 fontWeight: FontWeight.w600,
               ),

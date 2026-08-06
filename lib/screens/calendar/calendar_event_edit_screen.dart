@@ -18,11 +18,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-/// Wide enough for the longest date label ("Endet am") so none of them wraps.
 const double _labelWidth = 84;
 
-/// Offsets offered for a reminder, null meaning none. Fixed choices instead of
-/// a free number: these cover what people actually pick, and each one is a tap.
 const List<int?> _reminderOffsets = [null, 0, 5, 15, 30, 60, 120, 1440, 2880];
 
 String _reminderLabel(int? minutes) {
@@ -37,11 +34,6 @@ String _reminderLabel(int? minutes) {
   };
 }
 
-/// Creates or edits an event.
-///
-/// Saving is explicit rather than autosaved like the note editor: dates and
-/// repetition only make sense together, and writing half a changed series on
-/// every keystroke would produce events nobody asked for.
 class CalendarEventEditScreen extends StatefulWidget {
   const CalendarEventEditScreen({super.key});
 
@@ -68,13 +60,10 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
   int? _remindMinutesBefore;
   PrivacyMode _privacyMode = PrivacyMode.private;
 
-  /// Tells "never had a colour" from "the user just removed it".
   bool _hadColor = false;
 
-  /// Same for the reminder.
   bool _hadReminder = false;
 
-  /// Tells "never had an end date" from "the user just cleared it".
   bool _hadRecurrenceEnd = false;
 
   bool get _isNew => _event == null;
@@ -82,8 +71,6 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
   bool get _isOwnEvent =>
       _event?.user?.username == AuthBackend().loggedInUser?.user?.username;
 
-  /// Same rule the backend enforces: the owner always, group members only on
-  /// public events.
   bool get _isEditable =>
       _isNew ||
       _isOwnEvent ||
@@ -114,7 +101,6 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
         );
         Navigator.of(context).pop();
       });
-      // initialized for the frame before the pop lands
       _startAt = DateTime.now();
       _endAt = _startAt;
       return;
@@ -128,7 +114,6 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
     }
   }
 
-  /// Next full hour, one hour long - two taps less in the common case.
   void _prefillNew(DateTime day) {
     final now = DateTime.now();
     final hour =
@@ -137,7 +122,6 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
             : 9;
     _startAt = DateTime(day.year, day.month, day.day, hour);
     _endAt = _startAt.add(const Duration(hours: 1));
-    // in a group the point of an event is that the others see it
     _privacyMode = GroupContext().activeGroup != null
         ? PrivacyMode.protected
         : PrivacyMode.private;
@@ -161,8 +145,6 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
     _privacyMode = event.privacyMode;
   }
 
-  // ------------------------------------------------------------------ pickers
-
   Future<void> _pickDate({required bool isStart}) async {
     final current = isStart ? _startAt : _endAt;
     final picked = await showDatePicker(
@@ -183,7 +165,6 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
         current.minute,
       );
       if (isStart) {
-        // moving the start drags the end along, keeping the duration
         final duration = _endAt.difference(_startAt);
         _startAt = updated;
         _endAt = _startAt.add(duration);
@@ -234,8 +215,6 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
     }
   }
 
-  // -------------------------------------------------------------------- save
-
   Future<void> _save() async {
     final title = _titleController.text.trim();
     if (title.isEmpty) {
@@ -256,7 +235,6 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
     setState(() => _busy = true);
     final description = _descriptionController.text.trim();
     final location = _locationController.text.trim();
-    // the backend rejects a series end without a repetition
     final seriesEnd = _recurrence.repeats ? _recurrenceEndDate : null;
 
     try {
@@ -291,7 +269,6 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
           clearColor: _color == null && _hadColor,
           remindMinutesBefore: _remindMinutesBefore,
           clearReminder: _remindMinutesBefore == null && _hadReminder,
-          // only the owner may move the privacy mode
           privacyMode: _isOwnEvent ? _privacyMode : null,
         ));
       }
@@ -309,8 +286,6 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
       );
     }
   }
-
-  // ------------------------------------------------------------------- build
 
   @override
   Widget build(BuildContext context) {
@@ -428,8 +403,6 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
               setState(() {
                 _allDay = value;
                 if (value) {
-                  // stretch over the whole day, so it still covers the day it
-                  // was placed on once the time is hidden
                   _startAt =
                       DateTime(_startAt.year, _startAt.month, _startAt.day);
                   _endAt =
@@ -461,8 +434,6 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
             child: OutlinedButton(
               onPressed: readOnly ? null : () => _pickDate(isStart: isStart),
               child: Text(
-                // numeric on purpose: "Fr., 31.07.2026" always fits next to
-                // the time button, a spelled out month does not
                 DateFormat('EE, dd.MM.y').format(value),
                 style: theme.primaryTextTheme.titleSmall,
               ),
@@ -486,9 +457,6 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
     );
   }
 
-  /// Label inside the field: "Wiederholung" does not fit the narrow label column
-  /// the date rows use, and the text fields on this screen are labelled that way
-  /// anyway.
   Widget _buildRecurrenceRow(ThemeData theme, bool readOnly) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -559,8 +527,6 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
     );
   }
 
-  /// Swatches rather than a dropdown: a colour is recognised by looking at it,
-  /// and eight of them fit in the space a dropdown would take anyway.
   Widget _buildColorRow(ThemeData theme, bool readOnly) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -609,8 +575,6 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
               color: swatchColor ?? Colors.transparent,
               shape: BoxShape.circle,
               border: Border.all(
-                // the selected swatch gets a ring in the text colour, which
-                // stays visible on every one of the eight fills
                 color: isSelected
                     ? (theme.primaryTextTheme.bodySmall?.color ??
                         theme.primaryColor)
@@ -618,7 +582,6 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
                 width: isSelected ? 2.5 : 1.5,
               ),
             ),
-            // the "no colour" swatch is an empty circle with a slash
             child: value == null
                 ? Icon(
                     Icons.block,
@@ -662,8 +625,6 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
     );
   }
 
-  /// Asks for the notification permission the moment a reminder is picked -
-  /// a system dialog makes sense right here and nowhere else.
   Future<void> _onReminderChanged(int? value) async {
     Haptics.tick();
     setState(() => _remindMinutesBefore = value);
@@ -675,8 +636,6 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
     if (allowed || !mounted) {
       return;
     }
-    // the setting is still saved: the user may allow it later, and then the
-    // reminder works without them having to edit the event again
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text(
@@ -689,7 +648,6 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
   }
 
   Widget _buildPrivacyRow(ThemeData theme, bool readOnly) {
-    // matching the backend: only the owner may change who sees an event
     final canChange = !readOnly && (_isNew || _isOwnEvent);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -701,7 +659,6 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
         decoration: InputDecoration(
           labelText: 'Sichtbarkeit',
           labelStyle: theme.primaryTextTheme.bodySmall,
-          // "Geschützt" alone is open to interpretation
           helperText: _privacyMode.description,
           helperStyle: theme.primaryTextTheme.displayMedium,
           helperMaxLines: 2,

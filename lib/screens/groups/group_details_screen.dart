@@ -18,9 +18,6 @@ import 'package:flutter/services.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
-/// Overview of the active group: members, owner, invite code and everything
-/// one can do with the group. Follows the active group context, so switching
-/// the group in the app bar reloads the whole page.
 class GroupDetailsScreen extends StatefulWidget {
   const GroupDetailsScreen({super.key});
 
@@ -75,7 +72,6 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
     }
 
     try {
-      // the group list comes without members, the detail endpoint has them
       final group = await Backend().getGroup(activeGroup.id);
       final ownUser = _ownUser ?? await AuthBackend().getOwnUser();
       final blocked = await Backend().getBlockedUsers();
@@ -86,7 +82,6 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
         _blocked = blocked;
         _isLoading = false;
       });
-      // one call for the whole list instead of one per member tile
       AvatarStore().sync(group.members.map((member) => member.id));
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
@@ -94,7 +89,6 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
     }
   }
 
-  /// Runs a group action and reloads both the context and this page.
   Future<void> _run(
     Future<void> Function() action,
     String errorMessage,
@@ -273,8 +267,6 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
     }
   }
 
-  /// Blocks a member. Available to every member for any other member.
-  /// Blocking is a private setting - no reason, no notification.
   Future<void> _blockMember(User member) async {
     final theme = Theme.of(context);
 
@@ -332,8 +324,6 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
     }
   }
 
-  /// Unblocks a member from the member list (where we hold a User, not a
-  /// BlockedUser).
   Future<void> _unblockMember(User member) async {
     await _run(
       () => Backend().unblockUser(member.id),
@@ -686,8 +676,6 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
     final isSelf = member.id == _ownUser?.id;
     final isGroupOwner = member.id == group.ownerId;
     final isBlocked = _blocked.any((b) => b.id == member.id);
-    // the owner manages everyone but themselves; blocking is open to every
-    // member for any other member
     final canManage = _isOwner && !isSelf;
     final showMenu = !isSelf;
 
@@ -695,7 +683,6 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
       leading: UserAvatarWidget(
         userId: member.id,
         username: member.username,
-        // the ring saves repeating the owner's name below the member count
         borderColor: isGroupOwner ? theme.primaryColor : null,
       ),
       title: Row(

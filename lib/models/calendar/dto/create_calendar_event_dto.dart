@@ -36,7 +36,6 @@ class CreateCalendarEventDto {
       'title': title,
       if (description != null) 'description': description,
       if (location != null) 'location': location,
-      // UTC on the wire, the backend stores and compares in UTC
       'startAt': startAt.toUtc().toIso8601String(),
       if (endAt != null) 'endAt': endAt!.toUtc().toIso8601String(),
       'allDay': allDay,

@@ -11,9 +11,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-/// Shown after login when the user is not a member of any group yet.
-/// Explains the group concept in a small carousel and forces the user to
-/// either join a group via join code or create a new one.
 class GroupOnboardingScreen extends StatefulWidget {
   const GroupOnboardingScreen({super.key});
 

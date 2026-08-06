@@ -57,7 +57,6 @@ class _TaskListScreenState extends State<TaskListScreen> {
     }
   }
 
-  /// Pinning does not touch the backend, the list only has to regroup.
   void _onPinsChanged() {
     if (mounted) {
       setState(() {});
@@ -83,8 +82,6 @@ class _TaskListScreenState extends State<TaskListScreen> {
               element.user!.username !=
               AuthBackend().loggedInUser?.user?.username)
           .toList();
-      // res is the full, unfiltered list for the active context, so stale
-      // pins of deleted lists can safely be dropped here
       await PinStore()
           .pruneMissing(PinStore.taskListKind, res.map((list) => list.id));
       setState(() {
@@ -170,12 +167,6 @@ class _TaskListScreenState extends State<TaskListScreen> {
     }
   }
 
-  /// Heading plus entries, or nothing at all for an empty group.
-  ///
-  /// Rendering an empty list is not free: a vertical [ListView] without an
-  /// explicit padding adopts the vertical insets of the ambient MediaQuery, so
-  /// even with zero items it keeps a height - which pushed the heading of the
-  /// group below it down.
   List<Widget> _section(String label, List<TaskList> taskLists) {
     if (taskLists.isEmpty) {
       return const [];
@@ -195,7 +186,6 @@ class _TaskListScreenState extends State<TaskListScreen> {
   ListView getAllListItems(List<TaskList> taskLists) {
     return ListView.builder(
         shrinkWrap: true,
-        // see _section: without this the list inherits the MediaQuery insets
         padding: EdgeInsets.zero,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: taskLists.length,
@@ -204,8 +194,6 @@ class _TaskListScreenState extends State<TaskListScreen> {
               onTap: () async {
                 await navigateToRoute(context, 'tasks',
                     extra: taskLists[index], backEnabled: true);
-                // tasks may have been added, ticked off or deleted in there,
-                // so the counters and the progress bar are stale
                 if (mounted) {
                   await getTaskLists();
                 }
@@ -295,8 +283,6 @@ class _TaskListScreenState extends State<TaskListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // pinned lists are lifted into their own section on top, no matter
-    // whether they are the user's own or shared with them
     final own = PinStore().partition(
       PinStore.taskListKind,
       ownTaskLists,
@@ -358,7 +344,6 @@ class _TaskListScreenState extends State<TaskListScreen> {
               child: isLoading
                   ? Container()
                   : !hasAnyList
-                      // same icon the bottom navigation uses for this screen
                       ? const EmptyStateWidget(
                           icon: PhosphorIconsRegular.list,
                           title: 'Noch keine Aufgabenlisten',

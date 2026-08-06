@@ -1,5 +1,3 @@
-/// Mirrors the backend's EventRecurrence, a string enum there - so the wire
-/// format is the lower case name, not the index.
 enum EventRecurrence {
   none,
   daily,

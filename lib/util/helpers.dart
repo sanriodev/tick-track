@@ -15,12 +15,6 @@ import 'package:http/http.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-/// Navigates to [routeName].
-///
-/// With [backEnabled] the target is pushed on top of the current screen and
-/// the returned future completes once it is popped again - callers await it to
-/// reload content the target may have changed. Without it the stack is
-/// replaced and the future completes right away.
 Future<T?> navigateToRoute<T>(
   BuildContext context,
   String routeName, {
@@ -51,11 +45,8 @@ Future<void> deleteBoxAndNavigateToLogin(BuildContext context) async {
   final AuthBackend authBackend = AuthBackend();
   authBackend.loggedInUser = null;
   GroupContext().clear();
-  // the next account on this device must not see the previous one's pictures
   AvatarStore().clear();
-  // nor be reminded of their events
   await ReminderScheduler().cancelAll();
-  // and the next login has to be allowed to rebuild them right away
   ReminderSync().reset();
 
   if (context.mounted) {
@@ -66,13 +57,6 @@ Future<void> deleteBoxAndNavigateToLogin(BuildContext context) async {
   }
 }
 
-/// Writes a fresh username into the cached session after the account was
-/// renamed.
-///
-/// Ownership all over the app is decided by comparing a content's author
-/// against `AuthBackend().loggedInUser?.user?.username`. That cached copy
-/// would otherwise keep the old name until the next login, and the user would
-/// look like a stranger on their own notes and lists.
 Future<void> applyRenamedUsername(String username) async {
   final session = AuthBackend().loggedInUser;
   final user = session?.user;
@@ -85,9 +69,6 @@ Future<void> applyRenamedUsername(String username) async {
   await loginBox.put('auth', session);
 }
 
-/// Loads the group context after a successful login and decides where to
-/// go: users without any group are forced into the group onboarding,
-/// everyone else lands on the home screen.
 Future<void> navigateAfterAuth(BuildContext context) async {
   String target = 'home';
   try {
@@ -95,21 +76,13 @@ Future<void> navigateAfterAuth(BuildContext context) async {
     if (!GroupContext().hasGroups) {
       target = 'group-onboarding';
     }
-    // The only place reminders are guaranteed to be refreshed on a start: the
-    // pending ones in the OS are from whenever the app last ran and know
-    // nothing of what changed since. Not awaited, it must not delay the first
-    // screen.
     ReminderSync().sync(force: true);
-  } catch (_) {
-    // session problems are handled by the home screen itself
-  }
+  } catch (_) {}
   if (context.mounted) {
     navigateToRoute(context, target);
   }
 }
 
-/// Shows a backend failure as a snack bar. An expired session ends the
-/// session and sends the user back to the login instead.
 Future<void> showBackendError(
   BuildContext context,
   Object e,
@@ -121,9 +94,7 @@ Future<void> showBackendError(
     );
     try {
       await AuthBackend().postLogout();
-    } catch (_) {
-      // the session is gone either way, just clear it locally
-    }
+    } catch (_) {}
     if (context.mounted) {
       await deleteBoxAndNavigateToLogin(context);
     }

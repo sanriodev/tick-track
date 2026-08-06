@@ -6,6 +6,13 @@
     <!-- a reminder that fires "somewhere in the next 15 minutes" is not a
          reminder; exact alarms need this from Android 12 on -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+    <!-- From Android 14 on SCHEDULE_EXACT_ALARM is no longer granted on
+         install, and without an exact alarm the OS batches a reminder into the
+         next maintenance window - in doze that can be hours after the event.
+         USE_EXACT_ALARM is granted on install and is meant for exactly this
+         kind of calendar reminder, so no trip to the system settings is needed.
+         Play needs the "exact alarm" declaration in the console for it. -->
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
     <!-- lets pending reminders survive a reboot -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 

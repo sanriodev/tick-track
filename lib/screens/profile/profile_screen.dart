@@ -18,9 +18,6 @@ import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
-/// Everything that belongs to the own account in one place: the name, the
-/// address it was registered with, the password and how visible the own
-/// activity is. Used to be spread over single entries in the app drawer.
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -58,8 +55,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // ---------------------------------------------------------------- username
-
   Future<void> _showChangeUsernameDialog() async {
     final current = _ownUser?.username;
     if (current == null) return;
@@ -78,8 +73,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() => _busy = true);
     try {
       final stored = await Backend().changeOwnUsername(username);
-      // the cached session still holds the old name, and ownership of notes
-      // and lists is decided by comparing against it
       await applyRenamedUsername(stored);
       Haptics.tap();
       if (mounted) {
@@ -99,8 +92,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (mounted) setState(() => _busy = false);
     }
   }
-
-  // ------------------------------------------------------------------ avatar
 
   Future<void> _showAvatarSheet() async {
     final theme = Theme.of(context);
@@ -168,8 +159,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  /// The picker downscales on the device already: otherwise a 12 MP photo goes
-  /// over the wire in full, only for the backend to shrink it to 512px.
   Future<void> _pickAndUpload(ImageSource source) async {
     XFile? picked;
     try {
@@ -193,7 +182,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
       return;
     }
-    // the user backed out of the picker
     if (picked == null) {
       return;
     }
@@ -245,8 +233,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (mounted) setState(() => _busy = false);
     }
   }
-
-  // ---------------------------------------------------------------- password
 
   Future<void> _showChangePasswordDialog() async {
     final theme = Theme.of(context);
@@ -343,8 +329,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // ----------------------------------------------------------------- privacy
-
   Future<void> _setActivityPrivacy(bool public) async {
     setState(() => _busy = true);
     try {
@@ -362,10 +346,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // ------------------------------------------------------------------ delete
-
-  /// Two-step confirmation: the account and everything in it is gone for
-  /// good, so a single mistap must not be enough.
   Future<void> _showDeleteAccountDialog() async {
     final theme = Theme.of(context);
     final confirmed = await showDialog<bool>(
@@ -423,11 +403,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SnackBar(content: Text('Dein Account wurde gelöscht.')),
         );
       }
-      // the account is gone, so there is no session left to log out of
       await deleteBoxAndNavigateToLogin(context);
     } catch (e) {
-      // an expired session means the account is still there - the user has to
-      // sign in again before they can delete it
       await showBackendError(
         context,
         e,
@@ -435,8 +412,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
     }
   }
-
-  // ------------------------------------------------------------------- build
 
   @override
   Widget build(BuildContext context) {
@@ -457,8 +432,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
         actions: [
-          // no group switcher here: the profile is about the account itself,
-          // nothing on this screen depends on the active group
           OptionButton(
             onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
           ),
@@ -533,8 +506,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  /// The badge is what makes the avatar readable as a control - a bare circle
-  /// with initials looks like decoration and nobody would try tapping it.
   Widget _buildAvatar(ThemeData theme, int? userId, String? username) {
     return Semantics(
       button: true,
@@ -557,7 +528,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 decoration: BoxDecoration(
                   color: theme.primaryColor,
                   shape: BoxShape.circle,
-                  // keeps the badge visible on a picture of any color
                   border: Border.all(color: theme.cardColor, width: 2),
                 ),
                 child: PhosphorIcon(
@@ -605,10 +575,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-              // display only: the address identifies the account and is what
-              // the confirmation mail went to. TextFormField because it owns
-              // its controller - a controller built here would leak on every
-              // rebuild
               child: TextFormField(
                 enabled: false,
                 initialValue: user?.email ?? 'unbekannt',
@@ -747,8 +713,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-/// Rename dialog with the same availability dry run the registration uses, so
-/// a taken name is called out before the user submits.
 class _UsernameDialog extends StatefulWidget {
   final String currentUsername;
 
@@ -762,7 +726,6 @@ class _UsernameDialogState extends State<_UsernameDialog> {
   late final TextEditingController _controller;
   Timer? _debounce;
 
-  /// null = unknown: empty, unchanged, still typing or the check failed
   bool? _available;
   bool _checking = false;
 
@@ -792,7 +755,6 @@ class _UsernameDialogState extends State<_UsernameDialog> {
     });
 
     final username = value.trim();
-    // the own name is of course "taken" - checking it would only ever say no
     if (username.isEmpty || username == widget.currentUsername) {
       return;
     }
@@ -809,7 +771,6 @@ class _UsernameDialogState extends State<_UsernameDialog> {
           _checking = false;
         });
       } catch (_) {
-        // availability is only a hint, the backend decides on submit
         if (!mounted) return;
         setState(() => _checking = false);
       }

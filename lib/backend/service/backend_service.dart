@@ -343,8 +343,6 @@ class Backend extends ABackend {
     }
   }
 
-  /// Hands the group over to another member. Owner only, the new owner has
-  /// to be a member already.
   Future<Group> transferGroupOwnership(int groupId, int newOwnerId) async {
     final body = json.encode({'userId': newOwnerId.toString()});
     final res = await patch(body, 'v1/group/$groupId/owner');
@@ -358,8 +356,6 @@ class Backend extends ABackend {
     }
   }
 
-  /// Removes a member from the group. Owner only. Everything that member
-  /// authored inside this group is deleted with them.
   Future<Group> removeGroupMember(int groupId, int userId) async {
     final res = await delete('v1/group/$groupId/members/$userId');
 
@@ -372,9 +368,6 @@ class Backend extends ABackend {
     }
   }
 
-  /// Reports a piece of content (note, task or task list) as objectionable.
-  /// The backend stores a snapshot and notifies the developer.
-  /// [entityType] is one of 'note', 'task', 'task_list'.
   Future<void> reportContent(
     String entityType,
     int entityId, {
@@ -394,8 +387,6 @@ class Backend extends ABackend {
     }
   }
 
-  /// Blocks a user. Their content and activity disappear from the own feed
-  /// instantly. Purely a personal setting - no reason, no notification.
   Future<void> blockUser(int userId) async {
     final body = json.encode({'userId': userId.toString()});
     final res = await post(body, 'v1/block/');
@@ -407,7 +398,6 @@ class Backend extends ABackend {
     }
   }
 
-  /// Removes a block, the user becomes visible again.
   Future<void> unblockUser(int userId) async {
     final res = await delete('v1/block/$userId');
 
@@ -418,7 +408,6 @@ class Backend extends ABackend {
     }
   }
 
-  /// The users the logged in user has blocked.
   Future<List<BlockedUser>> getBlockedUsers() async {
     final res = await get('v1/block/');
 
@@ -433,8 +422,6 @@ class Backend extends ABackend {
     }
   }
 
-  /// Leaves the group. Returns the updated group or null if the group was
-  /// deleted because the last member left.
   Future<Group?> leaveGroup(int id) async {
     final res = await post('', 'v1/group/$id/leave');
 
@@ -464,9 +451,6 @@ class Backend extends ABackend {
     }
   }
 
-  /// Confirms the registration with the emailed code. The account is
-  /// addressed by email when it is known and by username otherwise (coming
-  /// from the login screen).
   Future<void> confirmRegistration(String code,
       {String? email, String? username}) async {
     final body = json.encode({
@@ -483,8 +467,6 @@ class Backend extends ABackend {
     }
   }
 
-  /// Issues a fresh confirmation code for a registered but never confirmed
-  /// account. Returns the masked email the code was sent to.
   Future<String> resendConfirmationCode({
     String? email,
     String? username,
@@ -504,9 +486,6 @@ class Backend extends ABackend {
     }
   }
 
-  /// Irreversibly deletes the logged in account with everything attached to
-  /// it. Takes no arguments on purpose - the backend always deletes the
-  /// account from the bearer token.
   Future<void> deleteOwnAccount() async {
     final res = await delete('v1/account/');
 
@@ -536,8 +515,6 @@ class Backend extends ABackend {
     }
   }
 
-  /// Changes the password of the logged in user. Uses the backend's own
-  /// change-password endpoint (the user id is taken from the bearer token).
   Future<void> changeOwnPassword(String password) async {
     final body = json.encode({'password': password});
     final res = await post(body, 'v1/auth/change-password');
@@ -549,10 +526,6 @@ class Backend extends ABackend {
     }
   }
 
-  /// All dates in [from] .. [to], repetitions already resolved by the backend.
-  ///
-  /// Without a [groupId] this returns the personal calendar. The range is
-  /// inclusive on both ends and may not span more than 400 days.
   Future<List<CalendarOccurrence>> getCalendarEvents({
     int? groupId,
     required DateTime from,
@@ -606,7 +579,6 @@ class Backend extends ABackend {
     }
   }
 
-  /// Deletes an event with all its dates. Owner only.
   Future<CalendarEvent> deleteCalendarEvent(int id) async {
     final res = await delete('v1/calendar-event/$id');
 
@@ -619,12 +591,6 @@ class Backend extends ABackend {
     }
   }
 
-  /// Sets the profile picture of the logged in account and returns the version
-  /// the backend stored, which is what the avatar cache keys off.
-  ///
-  /// The image goes over as base64 inside the JSON body rather than as a
-  /// multipart upload: the shared HTTP client of the core package only knows
-  /// how to send bodies, and it is the client that attaches the bearer token.
   Future<AvatarMeta> setOwnAvatar(String imageBase64) async {
     final body = json.encode({'imageBase64': imageBase64});
     final res = await put(body, 'v1/avatar/');
@@ -638,8 +604,6 @@ class Backend extends ABackend {
     }
   }
 
-  /// Removes the profile picture of the logged in account. Succeeds even if
-  /// there was none.
   Future<void> deleteOwnAvatar() async {
     final res = await delete('v1/avatar/');
 
@@ -650,8 +614,6 @@ class Backend extends ABackend {
     }
   }
 
-  /// The profile picture of a user, or null if they have none. Only available
-  /// for the own account and for members of a shared group.
   Future<Avatar?> getAvatar(int userId) async {
     final res = await get('v1/avatar/$userId');
 
@@ -660,15 +622,12 @@ class Backend extends ABackend {
           as Map<String, dynamic>;
       return Avatar.fromJson(jsonData);
     }
-    // no picture set is the normal case, not a failure worth an exception
     if (res.statusCode == 404) {
       return null;
     }
     throw res;
   }
 
-  /// Which of [userIds] have a profile picture and which version it is, in one
-  /// request. Users without one are absent from the result.
   Future<List<AvatarMeta>> getAvatarMeta(Iterable<int> userIds) async {
     if (userIds.isEmpty) {
       return [];
@@ -686,8 +645,6 @@ class Backend extends ABackend {
     }
   }
 
-  /// Registration dry run. At least one of [username] / [email] has to be
-  /// given, both together also report whether they belong to the same account.
   Future<Availability> checkAvailability({
     String? username,
     String? email,

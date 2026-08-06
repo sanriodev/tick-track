@@ -4,17 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-/// A GitHub/GitLab-like activity history feed widget.
-///
-/// Displays a chronological timeline of user activities grouped by date,
-/// with icons representing the action type and entity.
 class ActivityHistoryWidget extends StatelessWidget {
   final List<EventlogMessage<dynamic>> activities;
   final int? maxItems; // optional limit on displayed items
 
-  /// Set to false to get the bare timeline, for embedding into a card that
-  /// already exists - the home screen preview does that so both places render
-  /// through this widget instead of keeping two copies of the same list.
   final bool wrapInCard;
 
   const ActivityHistoryWidget({
@@ -24,7 +17,6 @@ class ActivityHistoryWidget extends StatelessWidget {
     this.wrapInCard = true,
   });
 
-  /// Keeps the card optional without duplicating either branch of [build].
   Widget _wrap(Widget child, EdgeInsets padding) {
     final padded = Padding(padding: padding, child: child);
     if (!wrapInCard) {
@@ -35,16 +27,13 @@ class ActivityHistoryWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Sort activities by date descending (most recent first)
     final sorted = List<EventlogMessage<dynamic>>.from(activities)
       ..sort((a, b) => b.date.compareTo(a.date));
 
-    // Take only maxItems if specified
     final displayed = maxItems != null && maxItems! > 0
         ? sorted.take(maxItems!).toList()
         : sorted;
 
-    // Group by month/year for section headers
     final grouped = _groupByMonth(displayed);
 
     if (displayed.isEmpty) {
@@ -79,7 +68,6 @@ class ActivityHistoryWidget extends StatelessWidget {
     );
   }
 
-  /// Groups activities by "Month YYYY" strings
   Map<String, List<EventlogMessage<dynamic>>> _groupByMonth(
       List<EventlogMessage<dynamic>> activities) {
     final map = <String, List<EventlogMessage<dynamic>>>{};
@@ -126,13 +114,10 @@ class _ActivityItem extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Timeline column with icon and vertical line
           SizedBox(
             width: 40,
             child: Column(
               children: [
-                // the person as the picture, what they did as a badge on it -
-                // in a shared feed the person is what you scan for first
                 SizedBox(
                   width: 32,
                   height: 32,
@@ -184,7 +169,6 @@ class _ActivityItem extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          // Content
           Expanded(
             child: Padding(
               padding: const EdgeInsets.only(bottom: 16, top: 4),
@@ -216,7 +200,6 @@ class _ActivityItem extends StatelessWidget {
   }
 
   PhosphorIconData _iconForActivity(EventlogMessage<dynamic> activity) {
-    // Map entity types to icons
     return switch (activity.entityType.toLowerCase()) {
       'note' => PhosphorIconsRegular.note,
       'task' => PhosphorIconsRegular.checkSquare,
@@ -234,7 +217,6 @@ class _ActivityItem extends StatelessWidget {
     final groupSentence = activity.groupActivityText;
     if (groupSentence != null) return groupSentence;
 
-    // Map entity types to German nouns
     final entityName = switch (activity.entityType.toLowerCase()) {
       'note' => 'Notiz',
       'task' => 'Aufgabe',
@@ -243,7 +225,6 @@ class _ActivityItem extends StatelessWidget {
       _ => activity.entityType,
     };
 
-    // Map action types to German verbs
     final actionVerb = switch (activity.actionType.toLowerCase()) {
       '1' => 'erstellt',
       '2' => 'aktualisiert',
