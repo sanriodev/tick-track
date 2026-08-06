@@ -94,7 +94,6 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _getActivities() async {
     try {
       final backend = Backend();
-      // show the whole feed in the preview, same default as the activity screen
       final res = await backend.getActivity(
         'any',
         groupId: GroupContext().activeGroup?.id,
@@ -107,8 +106,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  /// Two weeks, not the backend's 90 day default - a date two months out is not
-  /// "coming up".
   Future<void> _getUpcomingEvents() async {
     try {
       final now = DateTime.now();

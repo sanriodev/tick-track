@@ -99,8 +99,6 @@ class _AppDrawerState extends State<AppDrawer> {
               ),
             ),
             const Divider(),
-            // everything about the own account lives in the profile screen -
-            // name, email, password and activity visibility
             ListTile(
               onTap: () {
                 Navigator.of(context).pop();

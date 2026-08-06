@@ -26,7 +26,6 @@ class _SplashScreenState extends State<SplashScreen>
       duration: const Duration(seconds: 2),
     );
 
-    // Fade animation for the center logo
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _controller,
@@ -34,7 +33,6 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     );
 
-    // Animation for top figure sliding in from the left
     _topFigureAnimation = Tween<Offset>(
       begin: const Offset(-1.0, 0.0),
       end: Offset.zero,
@@ -45,7 +43,6 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     );
 
-    // Animation for bottom figure sliding in from the right
     _bottomFigureAnimation = Tween<Offset>(
       begin: const Offset(1.0, 0.0),
       end: Offset.zero,
@@ -117,47 +114,6 @@ class _SplashScreenState extends State<SplashScreen>
                     ),
             ),
           ),
-          // Positioned(
-          //   bottom: 50,
-          //   left: 45,
-          //   child: Theme.of(context).brightness == Brightness.light
-          //       ? SvgPicture.asset(
-          //           height: 50,
-          //           'assets/icons/tirol.svg',
-          //         )
-          //       : SvgPicture.asset(
-          //           height: 50,
-          //           'assets/icons/tirol_dark.svg',
-          //         ),
-          // ),
-          // Positioned.fill(
-          //   bottom: 60,
-          //   child: Align(
-          //     alignment: Alignment.bottomCenter,
-          //     child: Theme.of(context).brightness == Brightness.light
-          //         ? SvgPicture.asset(
-          //             height: 30,
-          //             'assets/icons/atm.svg',
-          //           )
-          //         : SvgPicture.asset(
-          //             height: 30,
-          //             'assets/icons/atm_dark.svg',
-          //           ),
-          //   ),
-          // ),
-          // Positioned(
-          //   bottom: 50,
-          //   right: 45,
-          //   child: Theme.of(context).brightness == Brightness.light
-          //       ? SvgPicture.asset(
-          //           height: 50,
-          //           'assets/icons/uws.svg',
-          //         )
-          //       : SvgPicture.asset(
-          //           height: 50,
-          //           'assets/icons/uws_dark.svg',
-          //         ),
-          // ),
           FadeTransition(
             opacity: _fadeAnimation,
             child: Center(

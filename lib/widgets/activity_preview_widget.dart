@@ -3,12 +3,6 @@ import 'package:ticktrack/widgets/activity/activity_history_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-/// The activity teaser on the home screen.
-///
-/// Only the card around it belongs to this widget - the entries themselves come
-/// from [ActivityHistoryWidget], the same list the activity screen shows. It
-/// used to render its own copy, which drifted: no profile pictures, different
-/// colors, and every unknown entity type ended up as "Element".
 class ActivityPreviewWidget extends StatelessWidget {
   const ActivityPreviewWidget({
     super.key,

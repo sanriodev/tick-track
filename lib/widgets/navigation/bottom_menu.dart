@@ -87,11 +87,6 @@ const List<BottomMenuNavigationItem> _pages = [
     label: 'Kalender',
     materialRoute: 'calendar',
   ),
-  // BottomMenuNavigationItem(
-  //   icon: PhosphorIcon(PhosphorIconsRegular.clock),
-  //   label: 'Timer',
-  //   materialRoute: 'timer',
-  // ),
   BottomMenuNavigationItem(
     icon: PhosphorIcon(PhosphorIconsRegular.pulse),
     label: 'Aktivität',

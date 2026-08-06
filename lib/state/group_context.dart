@@ -4,9 +4,6 @@ import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 
-/// Holds the group context of the logged in user. All content (notes,
-/// task lists, activity) is created and loaded for the active group.
-/// Screens listen to this notifier and reload when the context changes.
 class GroupContext extends ChangeNotifier {
   static final GroupContext _instance = GroupContext._privateConstructor();
   factory GroupContext() => _instance;
@@ -23,8 +20,6 @@ class GroupContext extends ChangeNotifier {
   String get _storageKey =>
       'activeGroupId:${AuthBackend().loggedInUser?.user?.username ?? ''}';
 
-  /// Reloads the groups from the backend and restores or corrects the
-  /// active group selection.
   Future<void> refresh() async {
     _groups = await Backend().getMyGroups();
 
@@ -62,8 +57,6 @@ class GroupContext extends ChangeNotifier {
     }
   }
 
-  /// Resets the in-memory state on logout. The persisted selection is kept
-  /// so it can be restored on the next login of the same user.
   void clear() {
     _groups = [];
     _activeGroup = null;

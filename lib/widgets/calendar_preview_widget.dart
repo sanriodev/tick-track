@@ -3,8 +3,6 @@ import 'package:ticktrack/models/calendar/calendar_event_model.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-/// The next few dates on the home screen. Shows what is coming up rather than a
-/// count - "heute 18:00 Müll" says something, "4 Kalenderevents" does not.
 class CalendarPreviewWidget extends StatelessWidget {
   const CalendarPreviewWidget({
     super.key,
@@ -13,13 +11,10 @@ class CalendarPreviewWidget extends StatelessWidget {
     required this.onPressed,
   });
 
-  /// Upcoming dates, expected to be sorted ascending.
   final List<CalendarOccurrence> occurrences;
   final bool isLoading;
   final VoidCallback onPressed;
 
-  /// "Heute" / "Morgen" / weekday - a bare date makes the reader work out
-  /// whether it is soon.
   String _dayLabel(DateTime day) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);

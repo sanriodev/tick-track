@@ -18,8 +18,6 @@ class NoteWidget extends StatefulWidget {
   final void Function()? onDeletePress;
   final void Function(PrivacyMode mode)? onChangePrivacy;
 
-  /// Called after the note's author was blocked from the report dialog, so
-  /// the list can reload and drop the now hidden content.
   final void Function()? onBlocked;
 
   const NoteWidget({
@@ -37,9 +35,6 @@ class NoteWidget extends StatefulWidget {
 
 class _NoteWidgetState extends State<NoteWidget>
     with SingleTickerProviderStateMixin {
-  /// Owned here instead of by the `Slidable` so the underlay behind it can
-  /// follow which pane is open. A controller passed in from outside is not
-  /// disposed by `Slidable`, so this state has to do it.
   late final SlidableController _slidableController;
 
   @override
@@ -69,28 +64,21 @@ class _NoteWidgetState extends State<NoteWidget>
     final theme = Theme.of(context);
     final preview = widget.note.content?.trim() ?? '';
 
-    // tighter vertically than horizontally so the cards read as one list
-    // instead of as widely spaced separate blocks
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Stack(
         clipBehavior: Clip.antiAlias,
         children: [
-          // pin sits at the outer left, share directly next to the card
           SlidableUnderlay(
             controller: _slidableController,
             startColor: theme.canvasColor,
             endColor: Colors.red,
           ),
           Slidable(
-            // stable per note: a UniqueKey would rebuild the state on every
-            // build, an index based match could carry an open pane over to
-            // another note when the list changes
             key: ValueKey(widget.note.id),
             controller: _slidableController,
             startActionPane: ActionPane(
               motion: BehindMotion(),
-              // two actions at the same width the end pane's single one has
               extentRatio: 0.6,
               children: [
                 SlidableAction(
@@ -105,8 +93,6 @@ class _NoteWidgetState extends State<NoteWidget>
                       : PhosphorIconsRegular.pushPin,
                   label: _isPinned ? 'Loslösen' : 'Anpinnen',
                 ),
-                // sits between the pin and the card, so square on both
-                // sides - which is the default radius
                 SlidableAction(
                   onPressed: (_) => shareNote(context, widget.note),
                   backgroundColor: theme.canvasColor,
@@ -152,7 +138,6 @@ class _NoteWidgetState extends State<NoteWidget>
             ),
             child: Card(
               margin: EdgeInsets.zero,
-              // clipped so the ink ripple of the tap stays inside the corners
               clipBehavior: Clip.antiAlias,
               child: InkWell(
                 onTap: widget.onTap,
@@ -162,8 +147,6 @@ class _NoteWidgetState extends State<NoteWidget>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
-                        // top aligned: the controls belong next to the title,
-                        // not floating in the middle of a grown card
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
@@ -201,8 +184,6 @@ class _NoteWidgetState extends State<NoteWidget>
                           padding: const EdgeInsets.only(right: 8, top: 2),
                           child: Text(
                             preview,
-                            // let the text engine cut the preview instead of
-                            // slicing the string at a fixed length
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: theme.primaryTextTheme.titleSmall?.copyWith(

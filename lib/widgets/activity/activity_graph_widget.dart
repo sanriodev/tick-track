@@ -3,10 +3,6 @@ import 'package:ticktrack/ui/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-/// A GitHub-like contribution heatmap for a list of activities.
-///
-/// - Columns are weeks (latest on the right), rows are days (Sun..Sat).
-/// - Colors are sourced from the theme via ActivityHeatmapColors.
 class ActivityGraphWidget extends StatelessWidget {
   final List<EventlogMessage<dynamic>> activities;
   final int weeks; // number of week columns to render
@@ -56,14 +52,11 @@ class ActivityGraphWidget extends StatelessWidget {
         padding: padding,
         child: LayoutBuilder(
           builder: (context, constraints) {
-            // Compute dynamic cell size so the entire grid spans available width (no weekday labels).
-            // Total width formula: weeks*x + (weeks-1)*cellSpacing
             final availableWidth = constraints.maxWidth;
             final dynamicCellSize =
                 (availableWidth - (weeks - 1) * cellSpacing) / weeks;
             final resolvedCellSize = dynamicCellSize.clamp(6, 32).toDouble();
 
-            // Try to pick up card radius from theme; fallback to 12
             double cardRadius = 12;
             final shape = Theme.of(context).cardTheme.shape;
             if (shape is RoundedRectangleBorder) {
@@ -170,12 +163,6 @@ class ActivityGraphWidget extends StatelessWidget {
 
   static int _bucketForCount(int count, int maxCount) {
     if (count <= 0) return 0;
-    // Fixed thresholds: every 5 activities = 1 level
-    // 0 -> level 0 (empty)
-    // 1-5 -> level 1
-    // 6-10 -> level 2
-    // 11-15 -> level 3
-    // 16+ -> level 4
     if (count <= 5) return 1;
     if (count <= 10) return 2;
     if (count <= 15) return 3;
@@ -194,7 +181,6 @@ class ActivityGraphWidget extends StatelessWidget {
   }
 
   static DateTime _endOfWeek(DateTime date) {
-    // Use Sunday as first row like GitHub. Find the Saturday of the current week.
     final weekday =
         date.weekday % 7; // Sunday -> 0, Monday -> 1, ... Saturday -> 6
     final daysToSaturday = 6 - weekday;
@@ -203,5 +189,3 @@ class ActivityGraphWidget extends StatelessWidget {
     return end;
   }
 }
-
-// Day labels and color legend are removed as requested; heatmap spans full card width.

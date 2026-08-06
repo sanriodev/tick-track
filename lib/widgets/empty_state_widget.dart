@@ -1,16 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-/// Shown instead of an empty list. Explains what the screen would hold and
-/// points at the way to create the first entry, so a fresh account never
-/// looks broken.
 class EmptyStateWidget extends StatelessWidget {
   final IconData icon;
   final String title;
   final String message;
 
-  /// Set to false inside a sliver: the surrounding CustomScrollView already
-  /// scrolls, and a nested scrollable would swallow the pull to refresh.
   final bool scrollable;
 
   const EmptyStateWidget({
@@ -29,8 +24,6 @@ class EmptyStateWidget extends StatelessWidget {
       return _buildContent(theme);
     }
 
-    // stays scrollable and fills the viewport so it sits centered and
-    // pull to refresh keeps working on an otherwise empty screen
     return LayoutBuilder(
       builder: (context, constraints) => SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),

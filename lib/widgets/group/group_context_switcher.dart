@@ -4,8 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-/// App bar field to switch the active group context. Only visible when the
-/// logged in user is a member of more than one group.
 class GroupContextSwitcher extends StatelessWidget {
   const GroupContextSwitcher({super.key});
 

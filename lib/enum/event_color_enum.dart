@@ -1,10 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// The colour an event can be marked with.
-///
-/// Names rather than stored colour values, so each one can be rendered with a
-/// shade that suits the active theme: the app is otherwise greyscale, and a
-/// tone that reads well on the light background is far too dark on the dark one.
 enum EventColor {
   blue,
   teal,
@@ -17,7 +12,6 @@ enum EventColor {
 
   String toJson() => name;
 
-  /// Unknown or missing values become null - an event simply has no colour then.
   static EventColor? fromJson(dynamic json) {
     if (json is String) {
       for (final value in EventColor.values) {
@@ -40,7 +34,6 @@ enum EventColor {
         EventColor.pink => 'Pink',
       };
 
-  /// Darker on light backgrounds, lighter on dark ones.
   Color resolve(Brightness brightness) {
     final light = brightness == Brightness.light;
     return switch (this) {
@@ -64,8 +57,6 @@ enum EventColor {
   }
 }
 
-/// The colour to paint an event with, falling back to the theme's own accent
-/// for events nobody coloured.
 Color eventColorOf(BuildContext context, EventColor? color) =>
     color?.resolve(Theme.of(context).brightness) ??
     Theme.of(context).primaryColor;

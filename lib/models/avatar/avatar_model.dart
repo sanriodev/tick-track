@@ -1,7 +1,3 @@
-/// Which version of a profile picture the backend has for a user.
-///
-/// Without the image itself: a member list asks for many users at once and only
-/// downloads what does not match the cached [updatedAt].
 class AvatarMeta {
   final int userId;
   final DateTime updatedAt;
@@ -19,7 +15,6 @@ class AvatarMeta {
   }
 }
 
-/// A profile picture, still base64 encoded as it came in.
 class Avatar extends AvatarMeta {
   final String mimeType;
   final String imageBase64;

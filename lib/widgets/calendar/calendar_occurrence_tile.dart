@@ -10,17 +10,11 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-/// One date of an event in the day list.
-///
-/// Shows the time of *this* date, not the stored one - for a repetition those
-/// differ, and the date on screen is the one that matters.
 class CalendarOccurrenceTile extends StatefulWidget {
   final CalendarOccurrence occurrence;
   final void Function()? onTap;
   final void Function()? onDelete;
 
-  /// Called after the author was blocked from the report dialog, so the calendar
-  /// can reload and drop the now hidden event.
   final void Function()? onBlocked;
 
   const CalendarOccurrenceTile({
@@ -56,7 +50,6 @@ class _CalendarOccurrenceTileState extends State<CalendarOccurrenceTile>
   bool get _isOwnEvent =>
       _event.user?.username == AuthBackend().loggedInUser?.user?.username;
 
-  /// "18:00 - 20:00", "Ganztägig", or a range with dates when it spans days.
   String get _timeLabel {
     if (_event.allDay) {
       if (!widget.occurrence.spansDays) {
@@ -69,7 +62,6 @@ class _CalendarOccurrenceTileState extends State<CalendarOccurrenceTile>
 
     final time = DateFormat('HH:mm');
     final start = time.format(widget.occurrence.startAt);
-    // "18:00 - 18:00" is noise for an event without a duration
     if (widget.occurrence.endAt == widget.occurrence.startAt) {
       return start;
     }
@@ -144,7 +136,6 @@ class _CalendarOccurrenceTileState extends State<CalendarOccurrenceTile>
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // spine, so a dense day is scannable by block
                       Container(
                         width: 4,
                         height: 42,
@@ -170,6 +161,19 @@ class _CalendarOccurrenceTileState extends State<CalendarOccurrenceTile>
                                         ?.copyWith(fontWeight: FontWeight.w600),
                                   ),
                                 ),
+                                if (_event.remindMinutesBefore != null)
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 6),
+                                    child: Tooltip(
+                                      message: 'Erinnerung aktiv',
+                                      child: PhosphorIcon(
+                                        PhosphorIconsRegular.bell,
+                                        size: 15,
+                                        color: theme.primaryIconTheme.color
+                                            ?.withValues(alpha: 0.8),
+                                      ),
+                                    ),
+                                  ),
                                 if (_event.recurrence.repeats)
                                   Tooltip(
                                     message: _event.recurrence.label,

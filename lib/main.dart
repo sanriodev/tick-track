@@ -1,4 +1,5 @@
 import 'package:ticktrack/screens/home/main_app_screen.dart';
+import 'package:ticktrack/state/reminder_scheduler.dart';
 import 'package:blvckleg_dart_core/util/util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -14,9 +15,10 @@ void main() async {
   await Hive.openBox('pins');
   await Hive.openBox('avatars');
 
-  // without this intl only knows en_US and month names come out as "July"
   initializeDateFormatting('de_DE');
   Intl.defaultLocale = 'de_DE';
+
+  await ReminderScheduler().init();
 
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 

@@ -1,4 +1,5 @@
 import 'package:ticktrack/routes/routes.dart';
+import 'package:ticktrack/state/reminder_sync.dart';
 import 'package:ticktrack/ui/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -18,6 +19,7 @@ class MainAppScreen extends StatefulWidget {
 class _MainAppScreenState extends State<MainAppScreen> {
   ThemeMode? currentTheme;
   late final GoRouter _router;
+  late final AppLifecycleListener _lifecycleListener;
 
   void changeTheme(ThemeMode themeMode) {
     final themeBox = Hive.box('theme');
@@ -51,6 +53,15 @@ class _MainAppScreenState extends State<MainAppScreen> {
     super.initState();
     currentTheme = _getThemeMode();
     _router = createRouter();
+    _lifecycleListener = AppLifecycleListener(
+      onResume: () => ReminderSync().sync(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _lifecycleListener.dispose();
+    super.dispose();
   }
 
   @override
@@ -61,8 +72,6 @@ class _MainAppScreenState extends State<MainAppScreen> {
       themeMode: currentTheme,
       theme: appThemeLight,
       darkTheme: appThemeDark,
-      // pinned rather than following the system: every string is German, so an
-      // English device would show German labels in an English date picker
       locale: const Locale('de', 'DE'),
       supportedLocales: const [Locale('de', 'DE')],
       localizationsDelegates: const [

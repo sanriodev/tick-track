@@ -18,7 +18,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-/// How long typing has to pause before the note is written to the backend.
 const Duration _autosaveDelay = Duration(milliseconds: 900);
 
 enum _SaveState { idle, unsaved, saving, saved, failed }
@@ -37,12 +36,9 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _initialized = false;
 
-  /// Pending autosave, restarted on every keystroke.
   Timer? _autosaveTimer;
   _SaveState _saveState = _SaveState.idle;
 
-  /// The content that is known to be stored in the backend. Everything else
-  /// is derived from it, so a save can be skipped when nothing changed.
   String _savedContent = '';
 
   bool get _hasUnsavedChanges => _commentController.text != _savedContent;
@@ -67,8 +63,6 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
   }
 
   void _onGroupContextChanged() {
-    // the shown note belongs to the previous group context, go back to the
-    // notes overview of the new context
     if (mounted) {
       navigateToRoute(context, 'notes');
     }
@@ -84,7 +78,6 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
         _initialized = true;
         _loadNote();
       } else {
-        // Gracefully handle missing payload
         WidgetsBinding.instance.addPostFrameCallback((_) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Fehlender Parameter für Notiz.')),
@@ -114,16 +107,11 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
     }
   }
 
-  /// Restarts the autosave countdown. Called on every keystroke, so the
-  /// backend only sees a request once the user pauses.
   void _onContentChanged(String value) {
     note?.content = value;
     _autosaveTimer?.cancel();
 
-    // back to the stored version, e.g. the user undid their edit
     final next = _hasUnsavedChanges ? _SaveState.unsaved : _SaveState.idle;
-    // only the status line depends on this, so skip the rebuild while the
-    // user keeps typing in an already unsaved note
     if (next != _saveState) {
       setState(() => _saveState = next);
     }
@@ -133,8 +121,6 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
     }
   }
 
-  /// Writes the note if anything changed. Unlike a reload-after-save this
-  /// keeps the cursor and selection intact while typing continues.
   Future<void> _saveNote({bool force = false}) async {
     _autosaveTimer?.cancel();
 
@@ -158,7 +144,6 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
       }
       setState(() {
         _savedContent = content;
-        // the user kept typing while the request was in flight
         _saveState = _hasUnsavedChanges ? _SaveState.unsaved : _SaveState.saved;
       });
       if (_saveState == _SaveState.unsaved) {
@@ -176,7 +161,6 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
     }
   }
 
-  /// Saves outstanding changes before the screen goes away.
   Future<void> _saveAndLeave() async {
     await _saveNote();
     if (mounted) {
@@ -184,8 +168,6 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
     }
   }
 
-  /// Extends the native text selection menu with a share entry, so a
-  /// selected passage can be shared the same way the whole note can.
   Widget _buildContextMenu(BuildContext context, EditableTextState state) {
     final items = state.contextMenuButtonItems;
     final selection = _commentController.selection;
@@ -213,8 +195,6 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
     );
   }
 
-  /// Small status line next to the title: tells the user their text is safe
-  /// without them having to press anything.
   Widget? _buildSaveIndicator() {
     final style = Theme.of(context).primaryTextTheme.displayMedium;
 
@@ -237,7 +217,6 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
     final indicator = _buildSaveIndicator();
 
     return PopScope(
-      // let the pop through, but flush pending edits on the way out
       onPopInvokedWithResult: (didPop, _) {
         if (didPop && _hasUnsavedChanges) {
           _saveNote();
@@ -307,8 +286,6 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
             textAlignVertical: TextAlignVertical.top,
             expands: true,
             maxLines: null,
-            // a note is prose: full multiline keyboard with a return key,
-            // sentence capitalisation and the usual assists
             keyboardType: TextInputType.multiline,
             textCapitalization: TextCapitalization.sentences,
             textInputAction: TextInputAction.newline,

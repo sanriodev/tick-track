@@ -9,6 +9,7 @@ import 'package:ticktrack/models/calendar/dto/create_calendar_event_dto.dart';
 import 'package:ticktrack/models/calendar/dto/update_calendar_event_dto.dart';
 import 'package:ticktrack/screens/calendar/calendar_screen.dart';
 import 'package:ticktrack/state/group_context.dart';
+import 'package:ticktrack/state/reminder_scheduler.dart';
 import 'package:ticktrack/util/haptics.dart';
 import 'package:ticktrack/util/helpers.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
@@ -17,14 +18,22 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-/// Wide enough for the longest date label ("Endet am") so none of them wraps.
 const double _labelWidth = 84;
 
-/// Creates or edits an event.
-///
-/// Saving is explicit rather than autosaved like the note editor: dates and
-/// repetition only make sense together, and writing half a changed series on
-/// every keystroke would produce events nobody asked for.
+const List<int?> _reminderOffsets = [null, 0, 5, 15, 30, 60, 120, 1440, 2880];
+
+String _reminderLabel(int? minutes) {
+  return switch (minutes) {
+    null => 'Keine Erinnerung',
+    0 => 'Zum Beginn',
+    60 => '1 Stunde vorher',
+    120 => '2 Stunden vorher',
+    1440 => '1 Tag vorher',
+    2880 => '2 Tage vorher',
+    _ => '$minutes Minuten vorher',
+  };
+}
+
 class CalendarEventEditScreen extends StatefulWidget {
   const CalendarEventEditScreen({super.key});
 
@@ -48,12 +57,13 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
   EventRecurrence _recurrence = EventRecurrence.none;
   DateTime? _recurrenceEndDate;
   EventColor? _color;
+  int? _remindMinutesBefore;
   PrivacyMode _privacyMode = PrivacyMode.private;
 
-  /// Tells "never had a colour" from "the user just removed it".
   bool _hadColor = false;
 
-  /// Tells "never had an end date" from "the user just cleared it".
+  bool _hadReminder = false;
+
   bool _hadRecurrenceEnd = false;
 
   bool get _isNew => _event == null;
@@ -61,8 +71,6 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
   bool get _isOwnEvent =>
       _event?.user?.username == AuthBackend().loggedInUser?.user?.username;
 
-  /// Same rule the backend enforces: the owner always, group members only on
-  /// public events.
   bool get _isEditable =>
       _isNew ||
       _isOwnEvent ||
@@ -93,7 +101,6 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
         );
         Navigator.of(context).pop();
       });
-      // initialized for the frame before the pop lands
       _startAt = DateTime.now();
       _endAt = _startAt;
       return;
@@ -107,7 +114,6 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
     }
   }
 
-  /// Next full hour, one hour long - two taps less in the common case.
   void _prefillNew(DateTime day) {
     final now = DateTime.now();
     final hour =
@@ -116,7 +122,6 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
             : 9;
     _startAt = DateTime(day.year, day.month, day.day, hour);
     _endAt = _startAt.add(const Duration(hours: 1));
-    // in a group the point of an event is that the others see it
     _privacyMode = GroupContext().activeGroup != null
         ? PrivacyMode.protected
         : PrivacyMode.private;
@@ -135,10 +140,10 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
     _hadRecurrenceEnd = event.recurrenceEndDate != null;
     _color = event.color;
     _hadColor = event.color != null;
+    _remindMinutesBefore = event.remindMinutesBefore;
+    _hadReminder = event.remindMinutesBefore != null;
     _privacyMode = event.privacyMode;
   }
-
-  // ------------------------------------------------------------------ pickers
 
   Future<void> _pickDate({required bool isStart}) async {
     final current = isStart ? _startAt : _endAt;
@@ -160,7 +165,6 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
         current.minute,
       );
       if (isStart) {
-        // moving the start drags the end along, keeping the duration
         final duration = _endAt.difference(_startAt);
         _startAt = updated;
         _endAt = _startAt.add(duration);
@@ -211,8 +215,6 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
     }
   }
 
-  // -------------------------------------------------------------------- save
-
   Future<void> _save() async {
     final title = _titleController.text.trim();
     if (title.isEmpty) {
@@ -233,7 +235,6 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
     setState(() => _busy = true);
     final description = _descriptionController.text.trim();
     final location = _locationController.text.trim();
-    // the backend rejects a series end without a repetition
     final seriesEnd = _recurrence.repeats ? _recurrenceEndDate : null;
 
     try {
@@ -248,6 +249,7 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
           recurrence: _recurrence,
           recurrenceEndDate: seriesEnd,
           color: _color,
+          remindMinutesBefore: _remindMinutesBefore,
           privacyMode: _privacyMode,
           groupId: GroupContext().activeGroup?.id,
         ));
@@ -265,7 +267,8 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
           clearRecurrenceEndDate: seriesEnd == null && _hadRecurrenceEnd,
           color: _color,
           clearColor: _color == null && _hadColor,
-          // only the owner may move the privacy mode
+          remindMinutesBefore: _remindMinutesBefore,
+          clearReminder: _remindMinutesBefore == null && _hadReminder,
           privacyMode: _isOwnEvent ? _privacyMode : null,
         ));
       }
@@ -283,8 +286,6 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
       );
     }
   }
-
-  // ------------------------------------------------------------------- build
 
   @override
   Widget build(BuildContext context) {
@@ -348,6 +349,7 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
             const SizedBox(height: 8),
             _buildRecurrenceRow(theme, readOnly),
             if (_recurrence.repeats) _buildRecurrenceEndRow(theme, readOnly),
+            _buildReminderRow(theme, readOnly),
             _buildColorRow(theme, readOnly),
             if (GroupContext().activeGroup != null)
               _buildPrivacyRow(theme, readOnly),
@@ -401,8 +403,6 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
               setState(() {
                 _allDay = value;
                 if (value) {
-                  // stretch over the whole day, so it still covers the day it
-                  // was placed on once the time is hidden
                   _startAt =
                       DateTime(_startAt.year, _startAt.month, _startAt.day);
                   _endAt =
@@ -434,8 +434,6 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
             child: OutlinedButton(
               onPressed: readOnly ? null : () => _pickDate(isStart: isStart),
               child: Text(
-                // numeric on purpose: "Fr., 31.07.2026" always fits next to
-                // the time button, a spelled out month does not
                 DateFormat('EE, dd.MM.y').format(value),
                 style: theme.primaryTextTheme.titleSmall,
               ),
@@ -459,9 +457,6 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
     );
   }
 
-  /// Label inside the field: "Wiederholung" does not fit the narrow label column
-  /// the date rows use, and the text fields on this screen are labelled that way
-  /// anyway.
   Widget _buildRecurrenceRow(ThemeData theme, bool readOnly) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -532,8 +527,6 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
     );
   }
 
-  /// Swatches rather than a dropdown: a colour is recognised by looking at it,
-  /// and eight of them fit in the space a dropdown would take anyway.
   Widget _buildColorRow(ThemeData theme, bool readOnly) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -582,8 +575,6 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
               color: swatchColor ?? Colors.transparent,
               shape: BoxShape.circle,
               border: Border.all(
-                // the selected swatch gets a ring in the text colour, which
-                // stays visible on every one of the eight fills
                 color: isSelected
                     ? (theme.primaryTextTheme.bodySmall?.color ??
                         theme.primaryColor)
@@ -591,7 +582,6 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
                 width: isSelected ? 2.5 : 1.5,
               ),
             ),
-            // the "no colour" swatch is an empty circle with a slash
             child: value == null
                 ? Icon(
                     Icons.block,
@@ -606,8 +596,58 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
     );
   }
 
+  Widget _buildReminderRow(ThemeData theme, bool readOnly) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: DropdownButtonFormField<int?>(
+        initialValue: _remindMinutesBefore,
+        isExpanded: true,
+        dropdownColor: theme.cardColor,
+        style: theme.primaryTextTheme.titleSmall,
+        decoration: InputDecoration(
+          labelText: 'Erinnerung',
+          labelStyle: theme.primaryTextTheme.bodySmall,
+          helperText: 'Erinnerungen laufen nur auf diesem Gerät',
+          helperStyle: theme.primaryTextTheme.displayMedium,
+        ),
+        items: [
+          for (final value in _reminderOffsets)
+            DropdownMenuItem(
+              value: value,
+              child: Text(
+                _reminderLabel(value),
+                style: theme.primaryTextTheme.titleSmall,
+              ),
+            ),
+        ],
+        onChanged: readOnly ? null : _onReminderChanged,
+      ),
+    );
+  }
+
+  Future<void> _onReminderChanged(int? value) async {
+    Haptics.tick();
+    setState(() => _remindMinutesBefore = value);
+    if (value == null) {
+      return;
+    }
+
+    final allowed = await ReminderScheduler().requestPermission();
+    if (allowed || !mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Benachrichtigungen sind nicht erlaubt. Die Erinnerung wird '
+          'gespeichert, greift aber erst, wenn du sie in den '
+          'Systemeinstellungen zulässt.',
+        ),
+      ),
+    );
+  }
+
   Widget _buildPrivacyRow(ThemeData theme, bool readOnly) {
-    // matching the backend: only the owner may change who sees an event
     final canChange = !readOnly && (_isNew || _isOwnEvent);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -619,7 +659,6 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
         decoration: InputDecoration(
           labelText: 'Sichtbarkeit',
           labelStyle: theme.primaryTextTheme.bodySmall,
-          // "Geschützt" alone is open to interpretation
           helperText: _privacyMode.description,
           helperStyle: theme.primaryTextTheme.displayMedium,
           helperMaxLines: 2,

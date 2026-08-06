@@ -60,6 +60,11 @@ dependencies:
   pinput: ^6.0.2
   share_plus: ^12.0.2
   image_picker: ^1.1.2
+  # reminders are scheduled by the device, no push service involved
+  flutter_local_notifications: ^18.0.1
+  # scheduling needs a zoned timestamp, otherwise a reminder drifts with DST
+  timezone: ^0.9.4
+  flutter_timezone: ^3.0.1
 
 dev_dependencies:
   flutter_test:

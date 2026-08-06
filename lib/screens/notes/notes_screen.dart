@@ -56,7 +56,6 @@ class _NotesScreenState extends State<NotesScreen> {
     }
   }
 
-  /// Pinning does not touch the backend, the list only has to regroup.
   void _onPinsChanged() {
     if (mounted) {
       setState(() {});
@@ -82,8 +81,6 @@ class _NotesScreenState extends State<NotesScreen> {
               element.user!.username !=
               AuthBackend().loggedInUser?.user?.username)
           .toList();
-      // res is the full, unfiltered list for the active context, so stale
-      // pins of deleted notes can safely be dropped here
       await PinStore()
           .pruneMissing(PinStore.noteKind, res.map((note) => note.id));
       setState(() {
@@ -175,12 +172,6 @@ class _NotesScreenState extends State<NotesScreen> {
     }
   }
 
-  /// Heading plus entries, or nothing at all for an empty group.
-  ///
-  /// Rendering an empty list is not free: a vertical [ListView] without an
-  /// explicit padding adopts the vertical insets of the ambient MediaQuery, so
-  /// even with zero items it keeps a height - which pushed the heading of the
-  /// group below it down.
   List<Widget> _section(String label, List<Note> notes) {
     if (notes.isEmpty) {
       return const [];
@@ -200,7 +191,6 @@ class _NotesScreenState extends State<NotesScreen> {
   ListView getAllListItems(List<Note> notes) {
     return ListView.builder(
         shrinkWrap: true,
-        // see _section: without this the list inherits the MediaQuery insets
         padding: EdgeInsets.zero,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: notes.length,
@@ -209,8 +199,6 @@ class _NotesScreenState extends State<NotesScreen> {
             onTap: () async {
               await navigateToRoute(context, 'notes-edit',
                   extra: notes[index].id, backEnabled: true);
-              // the editor saves on the way out, so title and content preview
-              // in this list are stale as soon as we are back
               if (mounted) {
                 await getNotes();
               }
@@ -301,8 +289,6 @@ class _NotesScreenState extends State<NotesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // pinned notes are lifted into their own section on top, no matter
-    // whether they are the user's own or shared with them
     final own = PinStore().partition(
       PinStore.noteKind,
       ownNotes,

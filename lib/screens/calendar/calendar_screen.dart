@@ -5,6 +5,7 @@ import 'package:ticktrack/enum/event_color_enum.dart';
 import 'package:ticktrack/models/calendar/calendar_event_model.dart';
 import 'package:ticktrack/state/avatar_store.dart';
 import 'package:ticktrack/state/group_context.dart';
+import 'package:ticktrack/state/reminder_sync.dart';
 import 'package:ticktrack/util/haptics.dart';
 import 'package:ticktrack/util/helpers.dart';
 import 'package:ticktrack/widgets/app_drawer_widget.dart';
@@ -20,10 +21,6 @@ import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
-/// The shared calendar: a month at a glance plus the dates of the selected day.
-///
-/// Loads a whole month at a time - the grid has to mark every day that carries
-/// something anyway, so the day list comes for free.
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
 
@@ -34,7 +31,6 @@ class CalendarScreen extends StatefulWidget {
 class _CalendarScreenState extends State<CalendarScreen> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  /// First day of the month shown in the grid.
   late DateTime _visibleMonth;
   late DateTime _selectedDay;
 
@@ -59,13 +55,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   void _onGroupContextChanged() {
     if (mounted) {
-      _load();
+      _load(forceReminderSync: true);
     }
   }
 
-  /// A week of slack on either side, so events reaching into the month from
-  /// outside still show up in the first and last row of the grid.
-  Future<void> _load() async {
+  Future<void> _load({bool forceReminderSync = false}) async {
     setState(() => _isLoading = true);
     final from = DateTime(_visibleMonth.year, _visibleMonth.month)
         .subtract(const Duration(days: 7));
@@ -83,10 +77,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
         _byDay = _bucketByDay(occurrences);
         _isLoading = false;
       });
-      // the tiles show who created an event, fetch those pictures in one go
       AvatarStore().sync(
         occurrences.map((o) => o.event.user?.id).whereType<int>().toSet(),
       );
+      ReminderSync().sync(force: forceReminderSync);
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
       await showBackendError(
@@ -94,8 +88,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
     }
   }
 
-  /// Lists a multi day event on every day it covers, so it does not vanish from
-  /// the days between its start and end.
   Map<DateTime, List<CalendarOccurrence>> _bucketByDay(
     List<CalendarOccurrence> occurrences,
   ) {
@@ -107,7 +99,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
         occurrence.endAt.month,
         occurrence.endAt.day,
       );
-      // guards against a pathological range instead of looping forever
       var guard = 0;
       while (!day.isAfter(lastDay) && guard < 400) {
         map.putIfAbsent(day, () => []).add(occurrence);
@@ -116,7 +107,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
       }
     }
     for (final entry in map.entries) {
-      // all day events first, the rest chronologically
       entry.value.sort((a, b) {
         if (a.event.allDay != b.event.allDay) {
           return a.event.allDay ? -1 : 1;
@@ -127,7 +117,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
     return map;
   }
 
-  /// The grid only needs the colours, in the order the day list shows them.
   Map<DateTime, List<EventColor?>> _colorsByDay() {
     return _byDay.map(
       (day, occurrences) => MapEntry(
@@ -141,7 +130,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
     Haptics.tick();
     setState(() {
       _visibleMonth = DateTime(_visibleMonth.year, _visibleMonth.month + delta);
-      // keeps the day number if the new month has it, else the first
       final daysInMonth =
           DateTime(_visibleMonth.year, _visibleMonth.month + 1, 0).day;
       _selectedDay = DateTime(
@@ -175,9 +163,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
       extra: CalendarEditorArgs(event: event, day: _selectedDay),
       backEnabled: true,
     );
-    // the editor may have changed the month we are showing
     if (mounted) {
-      await _load();
+      await _load(forceReminderSync: true);
     }
   }
 
@@ -221,7 +208,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     try {
       await Backend().deleteCalendarEvent(event.id);
       Haptics.tap();
-      await _load();
+      await _load(forceReminderSync: true);
     } catch (e) {
       Haptics.warning();
       await showBackendError(
@@ -263,11 +250,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
         tooltip: 'Neues Kalenderevent',
         child: const Icon(Icons.add),
       ),
-      // one scrollable for grid and day list together, so pulling anywhere on
-      // the screen refreshes - with the grid in a Column above the list, a pull
-      // on the grid did nothing
       body: RefreshIndicator(
-        onRefresh: _load,
+        onRefresh: () => _load(forceReminderSync: true),
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
@@ -334,7 +318,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
         ),
       ),
       SliverPadding(
-        // room for the floating action button below the last tile
         padding: const EdgeInsets.fromLTRB(12, 0, 12, 88),
         sliver: SliverList.builder(
           itemCount: selected.length,
@@ -353,7 +336,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 }
 
-/// The event to edit, or the day a new one should default to.
 class CalendarEditorArgs {
   final CalendarEvent? event;
   final DateTime day;

@@ -20,19 +20,16 @@ class _SkeletonCardState extends State<SkeletonCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Image Placeholder
             Container(
                 width: double.infinity,
                 height: 15.0,
                 color: Theme.of(context).primaryColor),
             const SizedBox(height: 12.0),
-            // Title Placeholder
             Container(
                 width: double.infinity,
                 height: 30.0,
                 color: Theme.of(context).primaryColor),
             const SizedBox(height: 28.0),
-            // Description Placeholder
             Container(
                 width: double.infinity,
                 height: 15.0,

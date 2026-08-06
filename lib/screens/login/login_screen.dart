@@ -74,7 +74,6 @@ class _LoginScreenState extends State<LoginScreen> {
           SnackBar(content: Text('Login failed: ${message}')),
         );
       } else {
-        // Show error using innerContext which now has a ScaffoldMessenger ancestor.
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Login failed: ${e}')),
         );
@@ -83,14 +82,10 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  /// A registration that was never confirmed has no roles yet, so logging in
-  /// would just fail with a permission error. Check up front and send those
-  /// users back into the confirmation with a fresh code instead.
   Future<bool> _handleUnconfirmedAccount(
     String loginName,
     String password,
   ) async {
-    // the field accepts both, the backend has to be told which one it got
     final email = loginName.contains('@') ? loginName : null;
     final username = email == null ? loginName : null;
 
@@ -127,7 +122,6 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       return true;
     } catch (_) {
-      // the check is only a shortcut, let the login itself report problems
       return false;
     }
   }
