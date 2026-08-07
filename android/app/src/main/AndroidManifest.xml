@@ -1,6 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Reminders for calendar events. They are scheduled on the device, so no
-         internet or push permission is involved. -->
+    <!-- Talking to the API. The debug and profile manifests declare this for the
+         Flutter tool, so leaving it out here breaks release builds only: every
+         host lookup fails before a single request goes out. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!-- Reminders for calendar events are scheduled on the device, so no push
+         permission is involved. -->
     <!-- runtime permission from Android 13 on, asked for before the first one -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <!-- a reminder that fires "somewhere in the next 15 minutes" is not a
