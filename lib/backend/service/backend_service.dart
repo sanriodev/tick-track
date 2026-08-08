@@ -11,6 +11,7 @@ import 'package:ticktrack/models/calendar/dto/create_calendar_event_dto.dart';
 import 'package:ticktrack/models/calendar/dto/update_calendar_event_dto.dart';
 import 'package:ticktrack/models/group/group_api_model.dart';
 import 'package:ticktrack/models/note/note_api_model.dart';
+import 'package:ticktrack/models/note/note_attachment_model.dart';
 import 'package:ticktrack/models/task/dto/create_task_dto.dart';
 import 'package:ticktrack/models/task/task_api_model.dart';
 import 'package:ticktrack/models/tasklist/dto/update_task_list_dto.dart';
@@ -518,6 +519,60 @@ class Backend extends ABackend {
   Future<void> changeOwnPassword(String password) async {
     final body = json.encode({'password': password});
     final res = await post(body, 'v1/auth/change-password');
+
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      return;
+    } else {
+      throw res;
+    }
+  }
+
+  Future<NoteAttachment> createNoteAttachment(
+    int noteId,
+    String imageBase64,
+  ) async {
+    final body = json.encode({'noteId': noteId, 'imageBase64': imageBase64});
+    final res = await post(body, 'v1/note-attachment/');
+
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      final jsonData = await json.decode(utf8.decode(res.bodyBytes))['data']
+          as Map<String, dynamic>;
+      return NoteAttachment.fromJson(jsonData);
+    } else {
+      throw res;
+    }
+  }
+
+  Future<List<NoteAttachment>> getNoteAttachments(int noteId) async {
+    final res = await get('v1/note-attachment/?noteId=$noteId');
+
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      final jsonData = await json.decode(utf8.decode(res.bodyBytes))['data']
+          as List<dynamic>;
+      return jsonData
+          .map((e) => NoteAttachment.fromJson(e as Map<String, dynamic>))
+          .toList();
+    } else {
+      throw res;
+    }
+  }
+
+  Future<NoteAttachmentData?> getNoteAttachment(int attachmentId) async {
+    final res = await get('v1/note-attachment/$attachmentId');
+
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      final jsonData = await json.decode(utf8.decode(res.bodyBytes))['data']
+          as Map<String, dynamic>;
+      return NoteAttachmentData.fromJson(jsonData);
+    }
+    if (res.statusCode == 404) {
+      return null;
+    }
+    throw res;
+  }
+
+  Future<void> deleteNoteAttachment(int attachmentId) async {
+    final res = await delete('v1/note-attachment/$attachmentId');
 
     if (res.statusCode == 200 || res.statusCode == 201) {
       return;

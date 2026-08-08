@@ -1,8 +1,15 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'dart:async';
+import 'dart:convert';
 
+import 'package:image_picker/image_picker.dart';
 import 'package:ticktrack/backend/service/backend_service.dart';
+import 'package:ticktrack/state/note_attachment_store.dart';
+import 'package:ticktrack/util/markdown_editing.dart';
+import 'package:ticktrack/util/markdown_helper.dart';
+import 'package:ticktrack/widgets/note/markdown_toolbar.dart';
+import 'package:ticktrack/widgets/note/note_markdown_view.dart';
 import 'package:ticktrack/enum/privacy_mode_enum.dart';
 import 'package:ticktrack/models/note/note_api_model.dart';
 import 'package:ticktrack/models/note/dto/update_note_dto.dart';
@@ -22,6 +29,8 @@ const Duration _autosaveDelay = Duration(milliseconds: 900);
 
 enum _SaveState { idle, unsaved, saving, saved, failed }
 
+enum _EditorMode { write, preview }
+
 class NotesEditScreen extends StatefulWidget {
   const NotesEditScreen({super.key});
 
@@ -39,6 +48,10 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
   Timer? _autosaveTimer;
   _SaveState _saveState = _SaveState.idle;
 
+  _EditorMode _mode = _EditorMode.preview;
+  bool _uploadingImage = false;
+  String _lastKnownText = '';
+
   String _savedContent = '';
 
   bool get _hasUnsavedChanges => _commentController.text != _savedContent;
@@ -52,14 +65,24 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
   void initState() {
     super.initState();
     GroupContext().addListener(_onGroupContextChanged);
+    _commentController.addListener(_onControllerChanged);
   }
 
   @override
   void dispose() {
     _autosaveTimer?.cancel();
     GroupContext().removeListener(_onGroupContextChanged);
+    _commentController.removeListener(_onControllerChanged);
     _commentController.dispose();
     super.dispose();
+  }
+
+  void _onControllerChanged() {
+    if (_commentController.text == _lastKnownText) {
+      return;
+    }
+    _lastKnownText = _commentController.text;
+    _onContentChanged(_commentController.text);
   }
 
   void _onGroupContextChanged() {
@@ -95,9 +118,11 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
       setState(() {
         note = loaded;
         _savedContent = loaded.content ?? '';
+        _lastKnownText = _savedContent;
         _commentController.text = _savedContent;
         _saveState = _SaveState.idle;
       });
+      await NoteAttachmentStore().loadForNote(id);
     } catch (e) {
       if (e is SessionExpiredException) {
         await showBackendError(context, e, 'Bitte melde dich erneut an.');
@@ -166,6 +191,116 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
     if (mounted) {
       Navigator.of(context).pop();
     }
+  }
+
+  Future<void> _insertImage() async {
+    final source = await _askImageSource();
+    if (source == null) {
+      return;
+    }
+
+    final picked = await _pickImage(source);
+    if (picked == null) {
+      return;
+    }
+
+    setState(() => _uploadingImage = true);
+    try {
+      final bytes = await picked.readAsBytes();
+      final attachment = await Backend().createNoteAttachment(
+        id,
+        base64Encode(bytes),
+      );
+      NoteAttachmentStore().rememberUpload(attachment, bytes);
+      insertBlockAtCursor(_commentController, attachment.markdownReference);
+      Haptics.tap();
+      await _saveNote(force: true);
+    } catch (e) {
+      Haptics.warning();
+      await showBackendError(context, e, 'Bild konnte nicht hochgeladen werden');
+    } finally {
+      if (mounted) {
+        setState(() => _uploadingImage = false);
+      }
+    }
+  }
+
+  Future<ImageSource?> _askImageSource() {
+    final theme = Theme.of(context);
+
+    return showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: theme.cardColor,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: PhosphorIcon(
+                PhosphorIconsRegular.camera,
+                color: theme.primaryIconTheme.color,
+              ),
+              title: Text('Foto aufnehmen',
+                  style: theme.primaryTextTheme.titleSmall),
+              onTap: () =>
+                  Navigator.of(sheetContext).pop(ImageSource.camera),
+            ),
+            ListTile(
+              leading: PhosphorIcon(
+                PhosphorIconsRegular.image,
+                color: theme.primaryIconTheme.color,
+              ),
+              title: Text('Aus Galerie wählen',
+                  style: theme.primaryTextTheme.titleSmall),
+              onTap: () =>
+                  Navigator.of(sheetContext).pop(ImageSource.gallery),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<XFile?> _pickImage(ImageSource source) async {
+    try {
+      return await ImagePicker().pickImage(
+        source: source,
+        maxWidth: 2000,
+        maxHeight: 2000,
+        imageQuality: 85,
+      );
+    } catch (e) {
+      Haptics.warning();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Kein Zugriff auf Kamera oder Fotos. '
+              'Du kannst das in den Systemeinstellungen erlauben.',
+            ),
+          ),
+        );
+      }
+      return null;
+    }
+  }
+
+  Future<void> _insertLink() async {
+    final link = await showDialog<_LinkInput>(
+      context: context,
+      builder: (dialogContext) => const _LinkDialog(),
+    );
+    if (link == null) {
+      return;
+    }
+    insertLink(_commentController, label: link.label, url: link.url);
+  }
+
+  void _toggleMode(_EditorMode mode) {
+    Haptics.tick();
+    FocusScope.of(context).unfocus();
+    setState(() => _mode = mode);
   }
 
   Widget _buildContextMenu(BuildContext context, EditableTextState state) {
@@ -280,35 +415,220 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
         endDrawer: AppDrawer(),
         body: Container(
           color: Theme.of(context).cardColor,
-          child: TextField(
-            controller: _commentController,
-            enabled: _isEditable,
-            textAlignVertical: TextAlignVertical.top,
-            expands: true,
-            maxLines: null,
-            keyboardType: TextInputType.multiline,
-            textCapitalization: TextCapitalization.sentences,
-            textInputAction: TextInputAction.newline,
-            contextMenuBuilder: _buildContextMenu,
-            cursorColor: Theme.of(context).primaryColor,
-            scrollPadding: const EdgeInsets.all(24),
-            style: Theme.of(context).primaryTextTheme.titleSmall,
-            onChanged: _onContentChanged,
-            decoration: InputDecoration(
-              hintText: 'Notiz...',
-              hintStyle: Theme.of(context).primaryTextTheme.titleSmall,
-              contentPadding: const EdgeInsets.all(16.0),
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              disabledBorder: InputBorder.none,
-              errorBorder: InputBorder.none,
-              focusedErrorBorder: InputBorder.none,
-              filled: false,
-            ),
+          child: Column(
+            children: [
+              _buildModeSwitch(),
+              if (_uploadingImage)
+                const LinearProgressIndicator(minHeight: 2)
+              else
+                const Divider(height: 1),
+              Expanded(child: _buildContent()),
+              if (_mode == _EditorMode.write && _isEditable) _buildToolbar(),
+            ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildModeSwitch() {
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: SegmentedButton<_EditorMode>(
+        segments: const [
+          ButtonSegment(
+            value: _EditorMode.preview,
+            label: Text('Rich Text'),
+            icon: PhosphorIcon(PhosphorIconsRegular.eye, size: 16),
+          ),
+          ButtonSegment(
+            value: _EditorMode.write,
+            label: Text('Markdown'),
+            icon: PhosphorIcon(PhosphorIconsRegular.pencilSimple, size: 16),
+          ),
+        ],
+        selected: {_mode},
+        showSelectedIcon: false,
+        expandedInsets: EdgeInsets.zero,
+        style: ButtonStyle(
+          textStyle: WidgetStatePropertyAll(
+            theme.primaryTextTheme.displayMedium,
+          ),
+          visualDensity: VisualDensity.compact,
+        ),
+        onSelectionChanged: (selection) => _toggleMode(selection.first),
+      ),
+    );
+  }
+
+  Widget _buildContent() {
+    if (_mode == _EditorMode.preview) {
+      return _buildPreview();
+    }
+    return _buildEditor();
+  }
+
+  Widget _buildPreview() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: NoteMarkdownView(
+        markdown: _commentController.text,
+        onToggleTask: _isEditable ? _toggleTask : null,
+      ),
+    );
+  }
+
+  void _toggleTask(int taskIndex) {
+    Haptics.tick();
+    _replaceContent(toggleTaskAt(_commentController.text, taskIndex));
+  }
+
+  void _replaceContent(String content) {
+    final previousOffset = _commentController.selection.baseOffset;
+    _commentController.value = TextEditingValue(
+      text: content,
+      selection: TextSelection.collapsed(
+        offset: previousOffset.clamp(0, content.length),
+      ),
+    );
+  }
+
+  Widget _buildEditor() {
+    return TextField(
+      controller: _commentController,
+      enabled: _isEditable,
+      textAlignVertical: TextAlignVertical.top,
+      expands: true,
+      maxLines: null,
+      keyboardType: TextInputType.multiline,
+      smartDashesType: SmartDashesType.disabled,
+      smartQuotesType: SmartQuotesType.disabled,
+      textInputAction: TextInputAction.newline,
+      contextMenuBuilder: _buildContextMenu,
+      cursorColor: Theme.of(context).primaryColor,
+      scrollPadding: const EdgeInsets.all(24),
+      style: Theme.of(context).primaryTextTheme.titleSmall,
+      decoration: InputDecoration(
+        hintText: 'Notiz in Markdown...',
+        hintStyle: Theme.of(context).primaryTextTheme.titleSmall,
+        contentPadding: const EdgeInsets.all(16.0),
+        border: InputBorder.none,
+        enabledBorder: InputBorder.none,
+        focusedBorder: InputBorder.none,
+        disabledBorder: InputBorder.none,
+        errorBorder: InputBorder.none,
+        focusedErrorBorder: InputBorder.none,
+        filled: false,
+      ),
+    );
+  }
+
+  Widget _buildToolbar() {
+    return SafeArea(
+      top: false,
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
+        ),
+        child: MarkdownToolbar(
+          controller: _commentController,
+          enabled: !_uploadingImage,
+          onInsertImage: _insertImage,
+          onInsertLink: _insertLink,
+        ),
+      ),
+    );
+  }
+}
+
+class _LinkInput {
+  final String label;
+  final String url;
+
+  const _LinkInput({required this.label, required this.url});
+}
+
+class _LinkDialog extends StatefulWidget {
+  const _LinkDialog();
+
+  @override
+  State<_LinkDialog> createState() => _LinkDialogState();
+}
+
+class _LinkDialogState extends State<_LinkDialog> {
+  final TextEditingController _labelController = TextEditingController();
+  final TextEditingController _urlController = TextEditingController();
+
+  @override
+  void dispose() {
+    _labelController.dispose();
+    _urlController.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final url = _urlController.text.trim();
+    if (url.isEmpty) {
+      return;
+    }
+    final label = _labelController.text.trim();
+    Navigator.of(context).pop(
+      _LinkInput(label: label.isEmpty ? url : label, url: url),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return AlertDialog(
+      title: Text('Link einfügen', style: theme.primaryTextTheme.bodySmall),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _labelController,
+            style: theme.primaryTextTheme.bodySmall,
+            decoration: InputDecoration(
+              labelText: 'Text (optional)',
+              labelStyle: theme.primaryTextTheme.bodySmall,
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _urlController,
+            autofocus: true,
+            keyboardType: TextInputType.url,
+            style: theme.primaryTextTheme.bodySmall,
+            decoration: InputDecoration(
+              labelText: 'Adresse',
+              hintText: 'https://',
+              labelStyle: theme.primaryTextTheme.bodySmall,
+            ),
+          ),
+        ],
+      ),
+      actionsAlignment: MainAxisAlignment.spaceEvenly,
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child:
+              Text('Abbrechen', style: theme.primaryTextTheme.titleSmall),
+        ),
+        ElevatedButton(
+          onPressed: _submit,
+          child: Text(
+            'Einfügen',
+            style: theme.primaryTextTheme.titleSmall?.copyWith(
+              color: theme.brightness == Brightness.light
+                  ? Colors.white
+                  : Colors.grey[900],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
