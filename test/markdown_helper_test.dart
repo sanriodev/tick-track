@@ -2,6 +2,68 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:ticktrack/util/markdown_helper.dart';
 
 void main() {
+  group('toggleTaskAt', () {
+    const liste = '- [ ] Milch\n- [ ] Brot\n- [x] Butter';
+
+    test('hakt die richtige Aufgabe ab', () {
+      expect(
+        toggleTaskAt(liste, 1),
+        '- [ ] Milch\n- [x] Brot\n- [x] Butter',
+      );
+    });
+
+    test('entfernt den Haken wieder', () {
+      expect(
+        toggleTaskAt(liste, 2),
+        '- [ ] Milch\n- [ ] Brot\n- [ ] Butter',
+      );
+    });
+
+    test('zählt nur Aufgaben, nicht andere Zeilen', () {
+      const gemischt = '# Titel\n\n- normal\n- [ ] eins\n\nText\n\n- [ ] zwei';
+
+      expect(
+        toggleTaskAt(gemischt, 1),
+        '# Titel\n\n- normal\n- [ ] eins\n\nText\n\n- [x] zwei',
+      );
+    });
+
+    test('versteht eingerückte und nummerierte Aufgaben', () {
+      const verschachtelt = '- [ ] oben\n  - [ ] eingerückt\n1. [ ] nummeriert';
+
+      expect(
+        toggleTaskAt(verschachtelt, 1),
+        '- [ ] oben\n  - [x] eingerückt\n1. [ ] nummeriert',
+      );
+      expect(
+        toggleTaskAt(verschachtelt, 2),
+        '- [ ] oben\n  - [ ] eingerückt\n1. [x] nummeriert',
+      );
+    });
+
+    test('akzeptiert ein großes X als abgehakt', () {
+      expect(toggleTaskAt('- [X] fertig', 0), '- [ ] fertig');
+    });
+
+    test('lässt den Text unberührt bei unbekanntem Index', () {
+      expect(toggleTaskAt(liste, 9), liste);
+    });
+
+    test('lässt Text ohne Aufgaben unberührt', () {
+      expect(toggleTaskAt('nur Text', 0), 'nur Text');
+    });
+  });
+
+  group('countTasks', () {
+    test('zählt alle Aufgabenzeilen', () {
+      expect(countTasks('- [ ] a\n- [x] b\n- normal\ntext'), 2);
+    });
+
+    test('ist null ohne Aufgaben', () {
+      expect(countTasks('# Titel\nText'), 0);
+    });
+  });
+
   group('attachmentIdFromUri', () {
     test('erkennt eine Anhang-Referenz', () {
       expect(attachmentIdFromUri('tt-attachment:12'), 12);

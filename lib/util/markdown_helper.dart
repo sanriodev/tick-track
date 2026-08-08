@@ -16,6 +16,41 @@ final RegExp _trailingSpacesPattern = RegExp(r'[ \t]+$', multiLine: true);
 final RegExp _repeatedSpacesPattern = RegExp(r'[ \t]{2,}');
 final RegExp _blankLinesPattern = RegExp(r'\n[ \t]*(?:\n[ \t]*)+');
 
+final RegExp _taskLinePattern =
+    RegExp(r'^(\s*(?:[-*+]|\d+\.)\s+\[)([ xX])(\])');
+
+int countTasks(String markdown) {
+  return markdown
+      .split('\n')
+      .where((line) => _taskLinePattern.hasMatch(line))
+      .length;
+}
+
+String toggleTaskAt(String markdown, int taskIndex) {
+  final lines = markdown.split('\n');
+  var seenTasks = 0;
+
+  for (var index = 0; index < lines.length; index++) {
+    final match = _taskLinePattern.firstMatch(lines[index]);
+    if (match == null) {
+      continue;
+    }
+    if (seenTasks == taskIndex) {
+      lines[index] = _flipTaskState(lines[index], match);
+      break;
+    }
+    seenTasks++;
+  }
+
+  return lines.join('\n');
+}
+
+String _flipTaskState(String line, RegExpMatch match) {
+  final statePosition = match.group(1)!.length;
+  final isChecked = match.group(2)!.toLowerCase() == 'x';
+  return line.replaceRange(statePosition, statePosition + 1, isChecked ? ' ' : 'x');
+}
+
 int? attachmentIdFromUri(String uri) {
   final match = _attachmentUriPattern.firstMatch(uri.trim());
   if (match == null) {

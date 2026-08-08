@@ -6,8 +6,13 @@ import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 
 class NoteMarkdownView extends StatelessWidget {
   final String markdown;
+  final void Function(int taskIndex)? onToggleTask;
 
-  const NoteMarkdownView({super.key, required this.markdown});
+  const NoteMarkdownView({
+    super.key,
+    required this.markdown,
+    this.onToggleTask,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -17,10 +22,38 @@ class NoteMarkdownView extends StatelessWidget {
 
     return MarkdownBody(
       data: markdown,
-      selectable: true,
+      // a tap has to reach the checkbox, and selection swallows it
+      selectable: onToggleTask == null,
       styleSheet: _buildStyleSheet(Theme.of(context)),
       imageBuilder: _buildImage,
+      checkboxBuilder: _createCheckboxBuilder(context),
       onTapLink: _openLink,
+    );
+  }
+
+  MarkdownCheckboxBuilder _createCheckboxBuilder(BuildContext context) {
+    var renderedTasks = 0;
+    return (checked) {
+      final taskIndex = renderedTasks++;
+      return _buildCheckbox(context, checked, taskIndex);
+    };
+  }
+
+  Widget _buildCheckbox(BuildContext context, bool checked, int taskIndex) {
+    final theme = Theme.of(context);
+    final toggle = onToggleTask;
+
+    return InkWell(
+      onTap: toggle == null ? null : () => toggle(taskIndex),
+      borderRadius: BorderRadius.circular(4),
+      child: Padding(
+        padding: const EdgeInsets.only(right: 6),
+        child: Icon(
+          checked ? Icons.check_box : Icons.check_box_outline_blank,
+          size: 20,
+          color: checked ? theme.primaryColor : theme.dividerColor,
+        ),
+      ),
     );
   }
 

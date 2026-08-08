@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:ticktrack/backend/service/backend_service.dart';
 import 'package:ticktrack/state/note_attachment_store.dart';
 import 'package:ticktrack/util/markdown_editing.dart';
+import 'package:ticktrack/util/markdown_helper.dart';
 import 'package:ticktrack/widgets/note/markdown_toolbar.dart';
 import 'package:ticktrack/widgets/note/note_markdown_view.dart';
 import 'package:ticktrack/enum/privacy_mode_enum.dart';
@@ -472,7 +473,25 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
   Widget _buildPreview() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
-      child: NoteMarkdownView(markdown: _commentController.text),
+      child: NoteMarkdownView(
+        markdown: _commentController.text,
+        onToggleTask: _isEditable ? _toggleTask : null,
+      ),
+    );
+  }
+
+  void _toggleTask(int taskIndex) {
+    Haptics.tick();
+    _replaceContent(toggleTaskAt(_commentController.text, taskIndex));
+  }
+
+  void _replaceContent(String content) {
+    final previousOffset = _commentController.selection.baseOffset;
+    _commentController.value = TextEditingValue(
+      text: content,
+      selection: TextSelection.collapsed(
+        offset: previousOffset.clamp(0, content.length),
+      ),
     );
   }
 
