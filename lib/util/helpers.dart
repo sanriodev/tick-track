@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:ticktrack/enum/privacy_mode_enum.dart';
 import 'package:ticktrack/state/avatar_store.dart';
 import 'package:ticktrack/state/group_context.dart';
+import 'package:ticktrack/state/note_attachment_store.dart';
 import 'package:ticktrack/state/reminder_scheduler.dart';
 import 'package:ticktrack/state/reminder_sync.dart';
 import 'package:blvckleg_dart_core/exception/session_expired.dart';
@@ -46,6 +47,7 @@ Future<void> deleteBoxAndNavigateToLogin(BuildContext context) async {
   authBackend.loggedInUser = null;
   GroupContext().clear();
   AvatarStore().clear();
+  NoteAttachmentStore().clear();
   await ReminderScheduler().cancelAll();
   ReminderSync().reset();
 

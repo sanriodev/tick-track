@@ -2,6 +2,7 @@ import 'package:ticktrack/enum/privacy_mode_enum.dart';
 import 'package:ticktrack/models/note/note_api_model.dart';
 import 'package:ticktrack/state/pin_store.dart';
 import 'package:ticktrack/util/haptics.dart';
+import 'package:ticktrack/util/markdown_helper.dart';
 import 'package:ticktrack/util/report_helper.dart';
 import 'package:ticktrack/util/share_helper.dart';
 import 'package:ticktrack/widgets/content_meta_footer.dart';
@@ -62,7 +63,7 @@ class _NoteWidgetState extends State<NoteWidget>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final preview = widget.note.content?.trim() ?? '';
+    final preview = markdownToPlainText(widget.note.content ?? '');
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),

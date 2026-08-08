@@ -65,6 +65,7 @@ dependencies:
   # scheduling needs a zoned timestamp, otherwise a reminder drifts with DST
   timezone: ^0.9.4
   flutter_timezone: ^3.0.1
+  flutter_markdown_plus: ^1.0.12
 
 dev_dependencies:
   flutter_test:
