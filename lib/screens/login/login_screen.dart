@@ -178,7 +178,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'Welcome back.',
+                        'Willkommen zurück.',
                         style: theme.primaryTextTheme.displayLarge?.copyWith(
                               fontWeight: FontWeight.w700,
                             ) ??
@@ -200,7 +200,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ],
                         decoration: InputDecoration(
                           labelText: 'Username',
-                          hintText: 'your username',
+                          hintText: 'Benutzername',
                           labelStyle: theme.primaryTextTheme.bodySmall,
                           hintStyle: theme.primaryTextTheme.bodySmall,
                           prefixIcon:
@@ -212,7 +212,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         validator: (v) => (v == null || v.trim().isEmpty)
-                            ? 'Please enter your username'
+                            ? 'Bitte Benutzernamen eingeben'
                             : null,
                         onFieldSubmitted: (_) => _passwordFocus.requestFocus(),
                       ),
@@ -227,8 +227,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         autocorrect: false,
                         style: theme.primaryTextTheme.bodySmall,
                         decoration: InputDecoration(
-                          labelText: 'Password',
-                          hintText: 'your password',
+                          labelText: 'Passwort',
+                          hintText: 'dein Passwort',
                           labelStyle: theme.primaryTextTheme.bodySmall,
                           hintStyle: theme.primaryTextTheme.bodySmall,
                           prefixIcon: const Icon(Icons.lock_outline, size: 20),
@@ -277,7 +277,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         validator: (v) => (v == null || v.isEmpty)
-                            ? 'Please enter your password'
+                            ? 'Bitte Passwort eingeben'
                             : null,
                         onFieldSubmitted: (_) => _submit(),
                       ),
@@ -319,7 +319,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       Theme.of(context).primaryIconTheme.color,
                                 ),
                           label: Text(
-                            'Sign in',
+                            'Anmelden',
                             style: Theme.of(context)
                                 .primaryTextTheme
                                 .displayLarge
