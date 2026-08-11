@@ -1,15 +1,56 @@
+import 'package:ticktrack/models/calendar/calendar_event_model.dart';
 import 'package:ticktrack/models/note/note_api_model.dart';
+import 'package:ticktrack/util/calendar_export_helper.dart';
 import 'package:ticktrack/util/haptics.dart';
+import 'package:ticktrack/util/note_export_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:share_plus/share_plus.dart';
 
-Future<void> shareNote(BuildContext context, Note note) {
-  final content = note.content?.trim() ?? '';
-  return shareText(
-    context,
-    content.isEmpty ? note.title : '${note.title}\n\n$content',
-    subject: note.title,
-  );
+Future<void> shareNote(BuildContext context, Note note) async {
+  final origin = _originRect(context);
+
+  try {
+    final files = await exportNoteAsMarkdown(note);
+    await SharePlus.instance.share(
+      ShareParams(
+        files: files,
+        subject: note.title,
+        sharePositionOrigin: origin,
+      ),
+    );
+    Haptics.tap();
+  } catch (e) {
+    if (context.mounted) {
+      _showFailure(context, e);
+    }
+  }
+}
+
+Future<void> shareCalendar(
+  BuildContext context, {
+  required List<CalendarEvent> events,
+  required String calendarName,
+}) async {
+  final origin = _originRect(context);
+
+  try {
+    final file = await exportCalendarAsIcs(
+      events: events,
+      calendarName: calendarName,
+    );
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [file],
+        subject: calendarName,
+        sharePositionOrigin: origin,
+      ),
+    );
+    Haptics.tap();
+  } catch (e) {
+    if (context.mounted) {
+      _showFailure(context, e);
+    }
+  }
 }
 
 Future<void> shareText(
@@ -32,11 +73,15 @@ Future<void> shareText(
     Haptics.tap();
   } catch (e) {
     if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Teilen fehlgeschlagen: $e')),
-      );
+      _showFailure(context, e);
     }
   }
+}
+
+void _showFailure(BuildContext context, Object error) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text('Teilen fehlgeschlagen: $error')),
+  );
 }
 
 Rect? _originRect(BuildContext context) {

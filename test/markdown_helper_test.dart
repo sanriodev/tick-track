@@ -121,6 +121,47 @@ void main() {
     });
   });
 
+  group('rewriteAttachmentReferences', () {
+    test('ersetzt die Referenz durch den Dateinamen', () {
+      const markdown = 'oben\n![](tt-attachment:1)\nunten';
+
+      final result = rewriteAttachmentReferences(markdown, {1: 'anhang-1.png'});
+
+      expect(result, 'oben\n![](anhang-1.png)\nunten');
+    });
+
+    test('behält den Alternativtext', () {
+      final result = rewriteAttachmentReferences(
+        '![Küche](tt-attachment:3)',
+        {3: 'anhang-3.jpg'},
+      );
+
+      expect(result, '![Küche](anhang-3.jpg)');
+    });
+
+    test('verwechselt keine Ids mit gleichem Anfang', () {
+      const markdown = '![](tt-attachment:5)\n![](tt-attachment:50)';
+
+      final result = rewriteAttachmentReferences(markdown, {5: 'fünf.png'});
+
+      expect(result, '![](fünf.png)\n![](tt-attachment:50)');
+    });
+
+    test('lässt unbekannte Anhänge unberührt', () {
+      const markdown = '![](tt-attachment:9)';
+
+      expect(rewriteAttachmentReferences(markdown, {1: 'anhang-1.png'}),
+          markdown);
+    });
+
+    test('lässt externe Bilder unberührt', () {
+      const markdown = '![](https://example.com/a.png)';
+
+      expect(rewriteAttachmentReferences(markdown, {1: 'anhang-1.png'}),
+          markdown);
+    });
+  });
+
   group('markdownToPlainText', () {
     test('entfernt Überschriften-Markierungen', () {
       expect(markdownToPlainText('## Einkauf'), 'Einkauf');

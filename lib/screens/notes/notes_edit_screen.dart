@@ -217,7 +217,8 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
       await _saveNote(force: true);
     } catch (e) {
       Haptics.warning();
-      await showBackendError(context, e, 'Bild konnte nicht hochgeladen werden');
+      await showBackendError(
+          context, e, 'Bild konnte nicht hochgeladen werden');
     } finally {
       if (mounted) {
         setState(() => _uploadingImage = false);
@@ -242,8 +243,7 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
               ),
               title: Text('Foto aufnehmen',
                   style: theme.primaryTextTheme.titleSmall),
-              onTap: () =>
-                  Navigator.of(sheetContext).pop(ImageSource.camera),
+              onTap: () => Navigator.of(sheetContext).pop(ImageSource.camera),
             ),
             ListTile(
               leading: PhosphorIcon(
@@ -252,8 +252,7 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
               ),
               title: Text('Aus Galerie wählen',
                   style: theme.primaryTextTheme.titleSmall),
-              onTap: () =>
-                  Navigator.of(sheetContext).pop(ImageSource.gallery),
+              onTap: () => Navigator.of(sheetContext).pop(ImageSource.gallery),
             ),
             const SizedBox(height: 8),
           ],
@@ -530,7 +529,8 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
       top: false,
       child: Container(
         decoration: BoxDecoration(
-          border: Border(top: BorderSide(color: Theme.of(context).dividerColor)),
+          border:
+              Border(top: BorderSide(color: Theme.of(context).dividerColor)),
         ),
         child: MarkdownToolbar(
           controller: _commentController,
@@ -614,8 +614,7 @@ class _LinkDialogState extends State<_LinkDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child:
-              Text('Abbrechen', style: theme.primaryTextTheme.titleSmall),
+          child: Text('Abbrechen', style: theme.primaryTextTheme.titleSmall),
         ),
         ElevatedButton(
           onPressed: _submit,

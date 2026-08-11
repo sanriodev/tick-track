@@ -80,6 +80,26 @@ String? _uriOf(String imageMarkdown) {
   return imageMarkdown.substring(start + 1, end);
 }
 
+String rewriteAttachmentReferences(
+  String markdown,
+  Map<int, String> uriByAttachmentId,
+) {
+  return markdown.replaceAllMapped(_imagePattern, (match) {
+    final image = match.group(0)!;
+    final uri = _uriOf(image);
+    final attachmentId = uri == null ? null : attachmentIdFromUri(uri);
+    final replacement = uriByAttachmentId[attachmentId];
+    if (replacement == null) {
+      return image;
+    }
+    return image.replaceRange(
+      image.lastIndexOf('(') + 1,
+      image.lastIndexOf(')'),
+      replacement,
+    );
+  });
+}
+
 String removeAttachmentReference(String markdown, int attachmentId) {
   return markdown
       .replaceAll(
