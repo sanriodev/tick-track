@@ -16,7 +16,6 @@ import 'package:ticktrack/widgets/navigation/bottom_menu.dart';
 import 'package:ticktrack/widgets/notes_preview_widget.dart';
 import 'package:ticktrack/widgets/option_button.dart';
 import 'package:ticktrack/widgets/to_do_list_widget.dart';
-import 'package:blvckleg_dart_core/exception/session_expired.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:flutter/material.dart';
 
@@ -139,17 +138,8 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         isLoading = false;
       });
-      if (e is SessionExpiredException) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Bitte melde dich erneut an.')),
-        );
-
-        try {
-          await AuthBackend().postLogout();
-          await deleteBoxAndNavigateToLogin(context);
-        } catch (e) {
-          await deleteBoxAndNavigateToLogin(context);
-        }
+      if (mounted) {
+        await showBackendError(context, e, 'Laden fehlgeschlagen');
       }
     }
   }

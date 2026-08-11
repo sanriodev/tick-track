@@ -11,8 +11,6 @@ import 'package:ticktrack/widgets/group/group_context_switcher.dart';
 import 'package:ticktrack/widgets/navigation/bottom_menu.dart';
 import 'package:ticktrack/widgets/option_button.dart';
 import 'package:ticktrack/widgets/skeleton/skeleton_card.dart';
-import 'package:blvckleg_dart_core/exception/session_expired.dart';
-import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:flutter/material.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
@@ -78,17 +76,8 @@ class _ActivityScreenState extends State<ActivityScreen> {
       setState(() {
         isLoading = false;
       });
-      if (e is SessionExpiredException) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Bitte melde dich erneut an.')),
-        );
-
-        try {
-          await AuthBackend().postLogout();
-          await deleteBoxAndNavigateToLogin(context);
-        } catch (e) {
-          await deleteBoxAndNavigateToLogin(context);
-        }
+      if (mounted) {
+        await showBackendError(context, e, 'Laden fehlgeschlagen');
       }
     }
   }

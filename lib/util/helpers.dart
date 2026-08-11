@@ -6,6 +6,7 @@ import 'package:ticktrack/state/group_context.dart';
 import 'package:ticktrack/state/note_attachment_store.dart';
 import 'package:ticktrack/state/reminder_scheduler.dart';
 import 'package:ticktrack/state/reminder_sync.dart';
+import 'package:blvckleg_dart_core/exception/backend_unavailable.dart';
 import 'package:blvckleg_dart_core/exception/session_expired.dart';
 import 'package:blvckleg_dart_core/models/auth/login_response_model.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
@@ -91,29 +92,62 @@ Future<void> showBackendError(
   String fallbackMessage,
 ) async {
   if (e is SessionExpiredException) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Bitte melde dich erneut an.')),
-    );
-    try {
-      await AuthBackend().postLogout();
-    } catch (_) {}
-    if (context.mounted) {
-      await deleteBoxAndNavigateToLogin(context);
-    }
+    await _signOutAfterExpiredSession(context);
     return;
   }
 
-  String message = '$e';
-  if (e is Response) {
-    final jsonData = json.decode(utf8.decode(e.bodyBytes));
-    final dynamic raw = (jsonData as Map<String, dynamic>)['message'];
-    message = raw is List ? raw.join(', ') : '${raw ?? e}';
-  }
-  if (context.mounted) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$fallbackMessage: $message')),
+  if (_isBackendUnavailable(e)) {
+    _showSnackBar(
+      context,
+      'TickTrack ist gerade nicht erreichbar. '
+      'Deine Daten bleiben erhalten, versuche es später erneut.',
     );
+    return;
   }
+
+  _showSnackBar(context, '$fallbackMessage: ${_readableError(e)}');
+}
+
+Future<void> _signOutAfterExpiredSession(BuildContext context) async {
+  _showSnackBar(context, 'Bitte melde dich erneut an.');
+  try {
+    await AuthBackend().postLogout();
+  } catch (_) {}
+  if (context.mounted) {
+    await deleteBoxAndNavigateToLogin(context);
+  }
+}
+
+bool _isBackendUnavailable(Object e) {
+  if (e is BackendUnavailableException) {
+    return true;
+  }
+  return e is Response && e.statusCode >= 500;
+}
+
+String _readableError(Object e) {
+  if (e is! Response) {
+    return '$e';
+  }
+  try {
+    final decoded = json.decode(utf8.decode(e.bodyBytes));
+    final dynamic raw = (decoded as Map<String, dynamic>?)?['message'];
+    if (raw == null) {
+      return 'Status ${e.statusCode}';
+    }
+    return raw is List ? raw.join(', ') : '$raw';
+  } on FormatException {
+    return 'Status ${e.statusCode}';
+  }
+}
+
+void _showSnackBar(BuildContext context, String message) {
+  if (!context.mounted) {
+    return;
+  }
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text(message)),
+  );
 }
 
 IconData privacyIconFor(PrivacyMode? mode) {
