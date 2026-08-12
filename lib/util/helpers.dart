@@ -2,17 +2,16 @@ import 'dart:convert';
 
 import 'package:ticktrack/enum/privacy_mode_enum.dart';
 import 'package:ticktrack/state/avatar_store.dart';
+import 'package:ticktrack/state/cache_store.dart';
 import 'package:ticktrack/state/group_context.dart';
 import 'package:ticktrack/state/note_attachment_store.dart';
 import 'package:ticktrack/state/reminder_scheduler.dart';
 import 'package:ticktrack/state/reminder_sync.dart';
 import 'package:blvckleg_dart_core/exception/backend_unavailable.dart';
 import 'package:blvckleg_dart_core/exception/session_expired.dart';
-import 'package:blvckleg_dart_core/models/auth/login_response_model.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hive/hive.dart';
 import 'package:http/http.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -40,15 +39,11 @@ Future<void> launchUrlInBrowser(Uri url) async {
 }
 
 Future<void> deleteBoxAndNavigateToLogin(BuildContext context) async {
-  final Box<LoginResponse> loginBox = Hive.box<LoginResponse>('auth');
-
-  await loginBox.delete('auth');
-
-  final AuthBackend authBackend = AuthBackend();
-  authBackend.loggedInUser = null;
+  await AuthBackend().clearSession();
   GroupContext().clear();
   AvatarStore().clear();
   NoteAttachmentStore().clear();
+  await CacheStore().clear();
   await ReminderScheduler().cancelAll();
   ReminderSync().reset();
 
@@ -68,8 +63,7 @@ Future<void> applyRenamedUsername(String username) async {
   }
 
   user.username = username;
-  final Box<LoginResponse> loginBox = Hive.box<LoginResponse>('auth');
-  await loginBox.put('auth', session);
+  await AuthBackend().persistSession(session);
 }
 
 Future<void> navigateAfterAuth(BuildContext context) async {

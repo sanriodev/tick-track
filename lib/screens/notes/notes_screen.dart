@@ -5,6 +5,7 @@ import 'package:ticktrack/enum/privacy_mode_enum.dart';
 import 'package:ticktrack/models/note/dto/update_note_dto.dart';
 import 'package:ticktrack/models/note/note_api_model.dart';
 import 'package:ticktrack/models/note/dto/create_note_dto.dart';
+import 'package:ticktrack/state/cache_store.dart';
 import 'package:ticktrack/state/group_context.dart';
 import 'package:ticktrack/state/pin_store.dart';
 import 'package:ticktrack/util/haptics.dart';
@@ -63,41 +64,48 @@ class _NotesScreenState extends State<NotesScreen> {
   }
 
   Future<void> getNotes() async {
-    try {
+    final int? groupId = GroupContext().activeGroup?.id;
+    final String cacheKey = CacheKey.notes(groupId);
+    final cached = CacheStore().readList(cacheKey, Note.fromJson);
+
+    if (cached != null) {
+      _showNotes(cached.items);
+    } else {
       setState(() {
         isLoading = true;
       });
-      final backend = Backend();
-      final res = await backend.getAllNotes(
-        groupId: GroupContext().activeGroup?.id,
-      );
-      final own = res
-          .where((element) =>
-              element.user!.username ==
-              AuthBackend().loggedInUser?.user?.username)
-          .toList();
-      final shared = res
-          .where((element) =>
-              element.user!.username !=
-              AuthBackend().loggedInUser?.user?.username)
-          .toList();
+    }
+
+    try {
+      final fresh = await Backend().getAllNotes(groupId: groupId);
+      await CacheStore().writeList(cacheKey, fresh);
+      _showNotes(fresh);
       await PinStore()
-          .pruneMissing(PinStore.noteKind, res.map((note) => note.id));
-      setState(() {
-        isLoading = false;
-        ownNotes = own;
-        sharedNotes = shared;
-      });
+          .pruneMissing(PinStore.noteKind, fresh.map((note) => note.id));
     } catch (e) {
       setState(() {
         isLoading = false;
       });
-      if (e is SessionExpiredException) {
-        await showBackendError(context, e, 'Bitte melde dich erneut an.');
-      } else if (mounted) {
+      if (mounted) {
         await showBackendError(context, e, 'Aktion fehlgeschlagen');
       }
     }
+  }
+
+  void _showNotes(List<Note> notes) {
+    final String? ownUsername = AuthBackend().loggedInUser?.user?.username;
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      isLoading = false;
+      ownNotes = notes
+          .where((note) => note.user?.username == ownUsername)
+          .toList();
+      sharedNotes = notes
+          .where((note) => note.user?.username != ownUsername)
+          .toList();
+    });
   }
 
   Future<void> createNewItem(CreateNoteDto data) async {
