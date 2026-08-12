@@ -13,6 +13,7 @@ import 'package:ticktrack/widgets/note/note_markdown_view.dart';
 import 'package:ticktrack/enum/privacy_mode_enum.dart';
 import 'package:ticktrack/models/note/note_api_model.dart';
 import 'package:ticktrack/models/note/dto/update_note_dto.dart';
+import 'package:ticktrack/state/cache_store.dart';
 import 'package:ticktrack/state/group_context.dart';
 import 'package:ticktrack/util/haptics.dart';
 import 'package:ticktrack/util/helpers.dart';
@@ -112,24 +113,41 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
   }
 
   Future<void> _loadNote() async {
+    final String cacheKey = CacheKey.note(id);
+    final cached = CacheStore().readItem(cacheKey, Note.fromJson);
+    if (cached != null) {
+      _showNote(cached.item);
+    }
+
     try {
-      final backend = Backend();
-      final loaded = await backend.getNote(id);
-      setState(() {
-        note = loaded;
-        _savedContent = loaded.content ?? '';
-        _lastKnownText = _savedContent;
-        _commentController.text = _savedContent;
-        _saveState = _SaveState.idle;
-      });
+      final loaded = await Backend().getNote(id);
+      await CacheStore().writeItem(cacheKey, loaded);
+      _showNote(loaded, keepLocalEdits: true);
       await NoteAttachmentStore().loadForNote(id);
     } catch (e) {
-      if (e is SessionExpiredException) {
-        await showBackendError(context, e, 'Bitte melde dich erneut an.');
-      } else if (mounted) {
-        await showBackendError(context, e, 'Aktion fehlgeschlagen');
+      if (mounted) {
+        await showBackendError(context, e, 'Aktion fehlgeschlagen',
+            alertWhenOffline: false);
       }
     }
+  }
+
+  void _showNote(Note loaded, {bool keepLocalEdits = false}) {
+    if (!mounted) {
+      return;
+    }
+    if (keepLocalEdits && _hasUnsavedChanges) {
+      setState(() => note = loaded);
+      return;
+    }
+
+    setState(() {
+      note = loaded;
+      _savedContent = loaded.content ?? '';
+      _lastKnownText = _savedContent;
+      _commentController.text = _savedContent;
+      _saveState = _SaveState.idle;
+    });
   }
 
   void _onContentChanged(String value) {

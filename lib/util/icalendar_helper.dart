@@ -69,9 +69,8 @@ String _recurrenceRule(CalendarEvent event) {
     return frequency;
   }
 
-  final until = event.allDay
-      ? _dateStamp(seriesEnd)
-      : _utcStamp(_endOfDay(seriesEnd));
+  final until =
+      event.allDay ? _dateStamp(seriesEnd) : _utcStamp(_endOfDay(seriesEnd));
   return '$frequency;UNTIL=$until';
 }
 

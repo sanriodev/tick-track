@@ -2,6 +2,7 @@
 
 import 'package:ticktrack/backend/service/backend_service.dart';
 import 'package:ticktrack/models/activity/activity_model.dart';
+import 'package:ticktrack/state/cache_store.dart';
 import 'package:ticktrack/state/group_context.dart';
 import 'package:ticktrack/util/helpers.dart';
 import 'package:ticktrack/widgets/activity/activity_graph_widget.dart';
@@ -11,8 +12,6 @@ import 'package:ticktrack/widgets/group/group_context_switcher.dart';
 import 'package:ticktrack/widgets/navigation/bottom_menu.dart';
 import 'package:ticktrack/widgets/option_button.dart';
 import 'package:ticktrack/widgets/skeleton/skeleton_card.dart';
-import 'package:blvckleg_dart_core/exception/session_expired.dart';
-import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:flutter/material.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
@@ -50,47 +49,77 @@ class _ActivityScreenState extends State<ActivityScreen> {
   }
 
   Future<void> getActivity() async {
-    setState(() {
-      isLoading = true;
-    });
+    final int? groupId = GroupContext().activeGroup?.id;
+    final String mode = selectedFilterMode;
+    final bool splitsOwnAndAll = mode == 'any';
+
+    if (!_showCachedActivity(groupId, mode, splitsOwnAndAll)) {
+      setState(() {
+        isLoading = true;
+      });
+    }
+
     try {
-      final backend = Backend();
-      final groupId = GroupContext().activeGroup?.id;
-      if (selectedFilterMode == 'any') {
-        final resAll =
-            await backend.getActivity(selectedFilterMode, groupId: groupId);
-        final res = await backend.getActivity('own', groupId: groupId);
-        setState(() {
-          ownActivites = res;
-          allActivites = resAll;
-          isLoading = false;
-        });
-      } else {
-        final res =
-            await backend.getActivity(selectedFilterMode, groupId: groupId);
-        setState(() {
-          ownActivites = res;
-          allActivites = res;
-          isLoading = false;
-        });
+      final all = await Backend().getActivity(mode, groupId: groupId);
+      await CacheStore().writeList(CacheKey.activity(groupId, mode), all);
+
+      if (!splitsOwnAndAll) {
+        _showActivity(own: all, all: all);
+        return;
       }
+
+      final own = await Backend().getActivity('own', groupId: groupId);
+      await CacheStore().writeList(CacheKey.activity(groupId, 'own'), own);
+      _showActivity(own: own, all: all);
     } catch (e) {
       setState(() {
         isLoading = false;
       });
-      if (e is SessionExpiredException) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Bitte melde dich erneut an.')),
-        );
-
-        try {
-          await AuthBackend().postLogout();
-          await deleteBoxAndNavigateToLogin(context);
-        } catch (e) {
-          await deleteBoxAndNavigateToLogin(context);
-        }
+      if (mounted) {
+        await showBackendError(context, e, 'Laden fehlgeschlagen',
+            alertWhenOffline: false);
       }
     }
+  }
+
+  bool _showCachedActivity(int? groupId, String mode, bool splitsOwnAndAll) {
+    final cachedAll = CacheStore().readList<EventlogMessage<dynamic>>(
+      CacheKey.activity(groupId, mode),
+      EventlogMessage.fromJson,
+    );
+    if (cachedAll == null) {
+      return false;
+    }
+
+    if (!splitsOwnAndAll) {
+      _showActivity(own: cachedAll.items, all: cachedAll.items);
+      return true;
+    }
+
+    final cachedOwn = CacheStore().readList<EventlogMessage<dynamic>>(
+      CacheKey.activity(groupId, 'own'),
+      EventlogMessage.fromJson,
+    );
+    if (cachedOwn == null) {
+      return false;
+    }
+
+    _showActivity(own: cachedOwn.items, all: cachedAll.items);
+    return true;
+  }
+
+  void _showActivity({
+    required List<EventlogMessage<dynamic>> own,
+    required List<EventlogMessage<dynamic>> all,
+  }) {
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      isLoading = false;
+      ownActivites = own;
+      allActivites = all;
+    });
   }
 
   @override

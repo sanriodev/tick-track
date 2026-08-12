@@ -52,6 +52,18 @@ class EventlogMessage<T> {
           : null,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'actionType': actionType,
+      'entityType': entityType,
+      'entityId': entityId,
+      'actionStatus': actionStatus,
+      'date': date.toIso8601String(),
+      'user': user.toJson(),
+      'group': group?.toJson(),
+    };
+  }
 }
 
 class ActivityGroup {
@@ -66,6 +78,8 @@ class ActivityGroup {
       name: json['name'] as String,
     );
   }
+
+  Map<String, dynamic> toJson() => {'id': id, 'name': name};
 }
 
 class EntityEvent<T> {
@@ -86,4 +100,6 @@ class AcitvityUser {
       id: json['id'] as int,
     );
   }
+
+  Map<String, dynamic> toJson() => {'username': username, 'id': id};
 }

@@ -1,14 +1,9 @@
 // ignore_for_file: use_build_context_synchronously, avoid_dynamic_calls
 
-import 'dart:convert';
-
 import 'package:ticktrack/backend/service/backend_service.dart';
 import 'package:ticktrack/state/group_context.dart';
 import 'package:ticktrack/util/helpers.dart';
-import 'package:blvckleg_dart_core/exception/session_expired.dart';
-import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class GroupOnboardingScreen extends StatefulWidget {
@@ -57,26 +52,8 @@ class _GroupOnboardingScreenState extends State<GroupOnboardingScreen> {
         navigateToRoute(context, 'home');
       }
     } catch (e) {
-      if (e is SessionExpiredException) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Bitte melde dich erneut an.')),
-        );
-        try {
-          await AuthBackend().postLogout();
-          await deleteBoxAndNavigateToLogin(context);
-        } catch (e) {
-          await deleteBoxAndNavigateToLogin(context);
-        }
-      } else if (e is Response) {
-        final jsonData = await json.decode(utf8.decode(e.bodyBytes));
-        final String? message = jsonData['message'] as String?;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Beitritt fehlgeschlagen: $message')),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Beitritt fehlgeschlagen: $e')),
-        );
+      if (mounted) {
+        await showBackendError(context, e, 'Beitritt fehlgeschlagen');
       }
     } finally {
       if (mounted) setState(() => _joining = false);

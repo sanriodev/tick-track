@@ -48,7 +48,8 @@ String toggleTaskAt(String markdown, int taskIndex) {
 String _flipTaskState(String line, RegExpMatch match) {
   final statePosition = match.group(1)!.length;
   final isChecked = match.group(2)!.toLowerCase() == 'x';
-  return line.replaceRange(statePosition, statePosition + 1, isChecked ? ' ' : 'x');
+  return line.replaceRange(
+      statePosition, statePosition + 1, isChecked ? ' ' : 'x');
 }
 
 int? attachmentIdFromUri(String uri) {

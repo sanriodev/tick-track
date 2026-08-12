@@ -5,6 +5,7 @@ import 'dart:convert';
 
 import 'package:image_picker/image_picker.dart';
 import 'package:ticktrack/backend/service/backend_service.dart';
+import 'package:ticktrack/state/cache_store.dart';
 import 'package:ticktrack/state/avatar_store.dart';
 import 'package:ticktrack/util/haptics.dart';
 import 'package:ticktrack/util/helpers.dart';
@@ -41,18 +42,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _load() async {
-    setState(() => _isLoading = true);
+    final cached = CacheStore().readItem(CacheKey.ownUser(), User.fromJson);
+    if (cached != null) {
+      _showUser(cached.item);
+    } else {
+      setState(() => _isLoading = true);
+    }
+
     try {
       final user = await AuthBackend().getOwnUser();
-      if (!mounted) return;
-      setState(() {
-        _ownUser = user;
-        _isLoading = false;
-      });
+      await CacheStore().writeItem(CacheKey.ownUser(), user);
+      _showUser(user);
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
-      await showBackendError(context, e, 'Profil konnte nicht geladen werden');
+      await showBackendError(context, e, 'Profil konnte nicht geladen werden',
+          alertWhenOffline: false);
     }
+  }
+
+  void _showUser(User user) {
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _ownUser = user;
+      _isLoading = false;
+    });
   }
 
   Future<void> _showChangeUsernameDialog() async {

@@ -64,6 +64,26 @@ class CalendarEvent extends BaseUserRelation {
           : null,
     );
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'description': description,
+      'location': location,
+      'startAt': startAt.toUtc().toIso8601String(),
+      'endAt': endAt.toUtc().toIso8601String(),
+      'allDay': allDay,
+      'recurrence': recurrence.toJson(),
+      'recurrenceEndDate': recurrenceEndDate?.toUtc().toIso8601String(),
+      'color': color?.toJson(),
+      'remindMinutesBefore': remindMinutesBefore,
+      'privacyMode': privacyMode.toJson(),
+      'groupId': groupId,
+      'user': user?.toJson(),
+      'lastModifiedUser': lastModifiedUser?.toJson(),
+    };
+  }
 }
 
 class CalendarOccurrence {
@@ -87,6 +107,15 @@ class CalendarOccurrence {
       endAt: DateTime.parse(json['endAt'] as String).toLocal(),
       isRecurrence: json['isRecurrence'] as bool? ?? false,
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'event': event.toJson(),
+      'startAt': startAt.toUtc().toIso8601String(),
+      'endAt': endAt.toUtc().toIso8601String(),
+      'isRecurrence': isRecurrence,
+    };
   }
 
   DateTime get day => DateTime(startAt.year, startAt.month, startAt.day);

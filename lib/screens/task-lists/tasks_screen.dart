@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:ticktrack/backend/service/backend_service.dart';
+import 'package:ticktrack/state/cache_store.dart';
 import 'package:ticktrack/enum/privacy_mode_enum.dart';
 import 'package:ticktrack/models/task/dto/create_task_dto.dart';
 import 'package:ticktrack/models/task/task_api_model.dart';
@@ -77,29 +78,41 @@ class _TasksScreenState extends State<TasksScreen> {
   }
 
   Future<void> _getTasksForList() async {
-    try {
+    final String cacheKey = CacheKey.tasksForList(list.id);
+    final cached = CacheStore().readList(cacheKey, Task.fromJson);
+
+    if (cached != null) {
+      _showTasks(cached.items);
+    } else {
       setState(() {
         isLoading = true;
       });
-      final backend = Backend();
-      final res = await backend.getAllTasksForList(list.id);
-      final complete = res.where((task) => task.isDone).toList();
-      final incomplete = res.where((task) => !task.isDone).toList();
-      setState(() {
-        completeTasks = complete;
-        incompleteTasks = incomplete;
-        isLoading = false;
-      });
+    }
+
+    try {
+      final fresh = await Backend().getAllTasksForList(list.id);
+      await CacheStore().writeList(cacheKey, fresh);
+      _showTasks(fresh);
     } catch (e) {
       setState(() {
         isLoading = false;
       });
-      if (e is SessionExpiredException) {
-        await showBackendError(context, e, 'Bitte melde dich erneut an.');
-      } else if (mounted) {
-        await showBackendError(context, e, 'Aktion fehlgeschlagen');
+      if (mounted) {
+        await showBackendError(context, e, 'Aktion fehlgeschlagen',
+            alertWhenOffline: false);
       }
     }
+  }
+
+  void _showTasks(List<Task> tasks) {
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      isLoading = false;
+      completeTasks = tasks.where((task) => task.isDone).toList();
+      incompleteTasks = tasks.where((task) => !task.isDone).toList();
+    });
   }
 
   Future<void> _createNewTask(CreateTaskDto data) async {
