@@ -199,7 +199,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           AutofillHints.email
                         ],
                         decoration: InputDecoration(
-                          labelText: 'Username',
+                          labelText: 'Benutzername',
                           hintText: 'Benutzername',
                           labelStyle: theme.primaryTextTheme.bodySmall,
                           hintStyle: theme.primaryTextTheme.bodySmall,
@@ -257,8 +257,9 @@ class _LoginScreenState extends State<LoginScreen> {
                               style: ButtonStyle(
                                   backgroundColor: WidgetStateProperty.all(
                                       Colors.transparent)),
-                              tooltip:
-                                  _obscure ? 'Show password' : 'Hide password',
+                              tooltip: _obscure
+                                  ? 'Passwort zeigen'
+                                  : 'Passwort verstecken',
                               iconSize: 20,
                               icon: Icon(_obscure
                                   ? Icons.visibility

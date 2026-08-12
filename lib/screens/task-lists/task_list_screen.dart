@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:ticktrack/backend/service/backend_service.dart';
+import 'package:ticktrack/state/cache_store.dart';
 import 'package:ticktrack/enum/privacy_mode_enum.dart';
 import 'package:ticktrack/models/tasklist/dto/update_task_list_dto.dart';
 import 'package:ticktrack/models/tasklist/task_list_api_model.dart';
@@ -64,41 +65,49 @@ class _TaskListScreenState extends State<TaskListScreen> {
   }
 
   Future<void> getTaskLists() async {
-    try {
+    final int? groupId = GroupContext().activeGroup?.id;
+    final String cacheKey = CacheKey.taskLists(groupId);
+    final cached = CacheStore().readList(cacheKey, TaskList.fromJson);
+
+    if (cached != null) {
+      _showTaskLists(cached.items);
+    } else {
       setState(() {
         isLoading = true;
       });
-      final backend = Backend();
-      final res = await backend.getAllTaskLists(
-        groupId: GroupContext().activeGroup?.id,
-      );
-      final own = res
-          .where((element) =>
-              element.user!.username ==
-              AuthBackend().loggedInUser?.user?.username)
-          .toList();
-      final shared = res
-          .where((element) =>
-              element.user!.username !=
-              AuthBackend().loggedInUser?.user?.username)
-          .toList();
+    }
+
+    try {
+      final fresh = await Backend().getAllTaskLists(groupId: groupId);
+      await CacheStore().writeList(cacheKey, fresh);
+      _showTaskLists(fresh);
       await PinStore()
-          .pruneMissing(PinStore.taskListKind, res.map((list) => list.id));
-      setState(() {
-        ownTaskLists = own;
-        sharedTaskLists = shared;
-        isLoading = false;
-      });
+          .pruneMissing(PinStore.taskListKind, fresh.map((list) => list.id));
     } catch (e) {
       setState(() {
         isLoading = false;
       });
-      if (e is SessionExpiredException) {
-        await showBackendError(context, e, 'Bitte melde dich erneut an.');
-      } else if (mounted) {
-        await showBackendError(context, e, 'Aktion fehlgeschlagen');
+      if (mounted) {
+        await showBackendError(context, e, 'Aktion fehlgeschlagen',
+            alertWhenOffline: false);
       }
     }
+  }
+
+  void _showTaskLists(List<TaskList> taskLists) {
+    final String? ownUsername = AuthBackend().loggedInUser?.user?.username;
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      isLoading = false;
+      ownTaskLists = taskLists
+          .where((list) => list.user?.username == ownUsername)
+          .toList();
+      sharedTaskLists = taskLists
+          .where((list) => list.user?.username != ownUsername)
+          .toList();
+    });
   }
 
   Future<void> createNewItem(CreateTaskListDto data) async {

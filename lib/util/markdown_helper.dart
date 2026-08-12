@@ -48,7 +48,8 @@ String toggleTaskAt(String markdown, int taskIndex) {
 String _flipTaskState(String line, RegExpMatch match) {
   final statePosition = match.group(1)!.length;
   final isChecked = match.group(2)!.toLowerCase() == 'x';
-  return line.replaceRange(statePosition, statePosition + 1, isChecked ? ' ' : 'x');
+  return line.replaceRange(
+      statePosition, statePosition + 1, isChecked ? ' ' : 'x');
 }
 
 int? attachmentIdFromUri(String uri) {
@@ -78,6 +79,26 @@ String? _uriOf(String imageMarkdown) {
     return null;
   }
   return imageMarkdown.substring(start + 1, end);
+}
+
+String rewriteAttachmentReferences(
+  String markdown,
+  Map<int, String> uriByAttachmentId,
+) {
+  return markdown.replaceAllMapped(_imagePattern, (match) {
+    final image = match.group(0)!;
+    final uri = _uriOf(image);
+    final attachmentId = uri == null ? null : attachmentIdFromUri(uri);
+    final replacement = uriByAttachmentId[attachmentId];
+    if (replacement == null) {
+      return image;
+    }
+    return image.replaceRange(
+      image.lastIndexOf('(') + 1,
+      image.lastIndexOf(')'),
+      replacement,
+    );
+  });
 }
 
 String removeAttachmentReference(String markdown, int attachmentId) {

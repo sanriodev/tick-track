@@ -1,4 +1,5 @@
 import 'package:ticktrack/screens/home/main_app_screen.dart';
+import 'package:ticktrack/state/cache_store.dart';
 import 'package:ticktrack/state/reminder_scheduler.dart';
 import 'package:blvckleg_dart_core/util/util.dart';
 import 'package:flutter/material.dart';
@@ -14,6 +15,7 @@ void main() async {
   await Hive.openBox('groupContext');
   await Hive.openBox('pins');
   await Hive.openBox('avatars');
+  await CacheStore.openBox();
 
   initializeDateFormatting('de_DE');
   Intl.defaultLocale = 'de_DE';

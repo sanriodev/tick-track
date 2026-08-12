@@ -1,13 +1,16 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:ticktrack/backend/service/backend_service.dart';
+import 'package:ticktrack/state/cache_store.dart';
 import 'package:ticktrack/enum/event_color_enum.dart';
 import 'package:ticktrack/models/calendar/calendar_event_model.dart';
 import 'package:ticktrack/state/avatar_store.dart';
 import 'package:ticktrack/state/group_context.dart';
 import 'package:ticktrack/state/reminder_sync.dart';
+import 'package:ticktrack/util/calendar_export_helper.dart';
 import 'package:ticktrack/util/haptics.dart';
 import 'package:ticktrack/util/helpers.dart';
+import 'package:ticktrack/util/share_helper.dart';
 import 'package:ticktrack/widgets/app_drawer_widget.dart';
 import 'package:ticktrack/widgets/calendar/calendar_month_grid.dart';
 import 'package:ticktrack/widgets/calendar/calendar_occurrence_tile.dart';
@@ -20,6 +23,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+
+const Duration _exportPastRange = Duration(days: 365);
+const Duration _exportFutureRange = Duration(days: 730);
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -36,6 +42,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   Map<DateTime, List<CalendarOccurrence>> _byDay = {};
   bool _isLoading = true;
+  bool _isExporting = false;
+
+  String get _calendarName {
+    final groupName = GroupContext().activeGroup?.name;
+    return groupName == null
+        ? 'TickTrack Kalender'
+        : 'TickTrack Kalender $groupName';
+  }
 
   @override
   void initState() {
@@ -60,7 +74,16 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   Future<void> _load({bool forceReminderSync = false}) async {
-    setState(() => _isLoading = true);
+    final int? groupId = GroupContext().activeGroup?.id;
+    final String cacheKey = CacheKey.calendarMonth(groupId, _visibleMonth);
+    final cached = CacheStore().readList(cacheKey, CalendarOccurrence.fromJson);
+
+    if (cached != null) {
+      _showOccurrences(cached.items);
+    } else {
+      setState(() => _isLoading = true);
+    }
+
     final from = DateTime(_visibleMonth.year, _visibleMonth.month)
         .subtract(const Duration(days: 7));
     final to = DateTime(_visibleMonth.year, _visibleMonth.month + 1)
@@ -68,15 +91,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
     try {
       final occurrences = await Backend().getCalendarEvents(
-        groupId: GroupContext().activeGroup?.id,
+        groupId: groupId,
         from: from,
         to: to,
       );
+      await CacheStore().writeList(cacheKey, occurrences);
       if (!mounted) return;
-      setState(() {
-        _byDay = _bucketByDay(occurrences);
-        _isLoading = false;
-      });
+      _showOccurrences(occurrences);
       AvatarStore().sync(
         occurrences.map((o) => o.event.user?.id).whereType<int>().toSet(),
       );
@@ -84,8 +105,19 @@ class _CalendarScreenState extends State<CalendarScreen> {
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
       await showBackendError(
-          context, e, 'Kalenderevents konnten nicht geladen werden');
+          context, e, 'Kalenderevents konnten nicht geladen werden',
+          alertWhenOffline: false);
     }
+  }
+
+  void _showOccurrences(List<CalendarOccurrence> occurrences) {
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _byDay = _bucketByDay(occurrences);
+      _isLoading = false;
+    });
   }
 
   Map<DateTime, List<CalendarOccurrence>> _bucketByDay(
@@ -168,6 +200,48 @@ class _CalendarScreenState extends State<CalendarScreen> {
     }
   }
 
+  Future<void> _exportCalendar() async {
+    Haptics.tap();
+    setState(() => _isExporting = true);
+    final now = DateTime.now();
+
+    try {
+      final occurrences = await Backend().getCalendarEvents(
+        groupId: GroupContext().activeGroup?.id,
+        from: now.subtract(_exportPastRange),
+        to: now.add(_exportFutureRange),
+      );
+      final events = distinctEventsOf(occurrences);
+
+      if (events.isEmpty) {
+        _showMessage('Keine Kalenderevents zum Exportieren.');
+        return;
+      }
+      await shareCalendar(
+        context,
+        events: events,
+        calendarName: _calendarName,
+      );
+    } catch (e) {
+      Haptics.warning();
+      await showBackendError(
+          context, e, 'Kalender konnte nicht exportiert werden');
+    } finally {
+      if (mounted) {
+        setState(() => _isExporting = false);
+      }
+    }
+  }
+
+  void _showMessage(String message) {
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
   Future<void> _deleteEvent(CalendarEvent event) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -235,6 +309,18 @@ class _CalendarScreenState extends State<CalendarScreen> {
             color: theme.primaryIconTheme.color,
             onPressed: _jumpToToday,
           ),
+          // IconButton(
+          //   tooltip: 'Kalender als iCalendar exportieren',
+          //   icon: _isExporting
+          //       ? const SizedBox(
+          //           width: 18,
+          //           height: 18,
+          //           child: CircularProgressIndicator(strokeWidth: 2),
+          //         )
+          //       : const PhosphorIcon(PhosphorIconsRegular.export),
+          //   color: theme.primaryIconTheme.color,
+          //   onPressed: _isExporting ? null : _exportCalendar,
+          // ),
           const GroupContextSwitcher(),
           OptionButton(
             onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),

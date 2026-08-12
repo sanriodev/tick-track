@@ -1,5 +1,6 @@
 import 'package:ticktrack/routes/routes.dart';
 import 'package:ticktrack/state/reminder_sync.dart';
+import 'package:ticktrack/widgets/connectivity_banner.dart';
 import 'package:ticktrack/ui/theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -80,6 +81,7 @@ class _MainAppScreenState extends State<MainAppScreen> {
         GlobalCupertinoLocalizations.delegate,
       ],
       routerConfig: _router,
+      builder: (context, child) => ConnectivityBanner(child: child!),
     );
   }
 }

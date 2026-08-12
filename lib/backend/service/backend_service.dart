@@ -19,13 +19,67 @@ import 'package:ticktrack/models/tasklist/task_list_api_model.dart';
 import 'package:ticktrack/models/note/dto/create_note_dto.dart';
 import 'package:ticktrack/models/tasklist/dto/create_task_list_dto.dart';
 import 'package:ticktrack/models/note/dto/update_note_dto.dart';
+import 'package:ticktrack/state/connectivity_status.dart';
 import 'package:blvckleg_dart_core/abstract/backend_abstract.dart';
+import 'package:http/http.dart' show Response;
+
+const Map<String, String> _jsonHeaders = <String, String>{
+  'content-type': 'application/json; charset=utf-8',
+};
 
 class Backend extends ABackend {
   static final Backend _instance = Backend._privateConstructor();
   factory Backend() => _instance;
   Backend._privateConstructor() {
     super.init();
+  }
+
+  Response _markReachable(Response response) {
+    ConnectivityStatus().reportReachable();
+    return response;
+  }
+
+  @override
+  Future<Response> get(
+    String path, {
+    Map<String, String>? headers = _jsonHeaders,
+  }) async {
+    return _markReachable(await super.get(path, headers: headers));
+  }
+
+  @override
+  Future<Response> post(
+    Object? body,
+    String path, {
+    Map<String, String>? headers = _jsonHeaders,
+  }) async {
+    return _markReachable(await super.post(body, path, headers: headers));
+  }
+
+  @override
+  Future<Response> put(
+    Object? body,
+    String path, {
+    Map<String, String>? headers = _jsonHeaders,
+  }) async {
+    return _markReachable(await super.put(body, path, headers: headers));
+  }
+
+  @override
+  Future<Response> patch(
+    Object body,
+    String path, {
+    Map<String, String>? headers = _jsonHeaders,
+  }) async {
+    return _markReachable(await super.patch(body, path, headers: headers));
+  }
+
+  @override
+  Future<Response> delete(
+    String path, {
+    Map<String, String>? headers = _jsonHeaders,
+  }) async {
+    return _markReachable(await super.delete(path, headers: headers));
   }
 
   Future<TaskList> createTaskList(CreateTaskListDto list) async {

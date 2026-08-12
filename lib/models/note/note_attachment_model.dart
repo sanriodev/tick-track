@@ -31,6 +31,16 @@ class NoteAttachment {
   String get markdownReference => '![]($attachmentUriScheme:$id)';
 
   double get aspectRatio => height == 0 ? 1 : width / height;
+
+  String get fileExtension => switch (mimeType) {
+        'image/png' => 'png',
+        'image/jpeg' || 'image/jpg' => 'jpg',
+        'image/webp' => 'webp',
+        'image/gif' => 'gif',
+        'image/heic' => 'heic',
+        'image/heif' => 'heif',
+        _ => 'bin',
+      };
 }
 
 class NoteAttachmentData extends NoteAttachment {

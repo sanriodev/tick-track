@@ -1,5 +1,6 @@
 import 'package:ticktrack/backend/service/backend_service.dart';
 import 'package:ticktrack/models/group/group_api_model.dart';
+import 'package:ticktrack/state/cache_store.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
@@ -22,7 +23,25 @@ class GroupContext extends ChangeNotifier {
 
   Future<void> refresh() async {
     _groups = await Backend().getMyGroups();
+    await CacheStore().writeList(CacheKey.groups(), _groups);
+    await _selectActiveGroup();
+  }
 
+  Future<void> restoreFromCache() async {
+    if (_groups.isNotEmpty) {
+      return;
+    }
+
+    final cached = CacheStore().readList(CacheKey.groups(), Group.fromJson);
+    if (cached == null) {
+      return;
+    }
+
+    _groups = cached.items;
+    await _selectActiveGroup();
+  }
+
+  Future<void> _selectActiveGroup() async {
     final box = Hive.box('groupContext');
     final storedId = _activeGroup?.id ?? box.get(_storageKey) as int?;
 
