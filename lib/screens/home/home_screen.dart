@@ -1,7 +1,9 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:ticktrack/backend/service/backend_service.dart';
+import 'package:ticktrack/state/cache_store.dart';
 import 'package:ticktrack/models/activity/activity_model.dart';
+import 'package:ticktrack/models/base/base_user_relation.dart';
 import 'package:ticktrack/models/calendar/calendar_event_model.dart';
 import 'package:ticktrack/models/note/note_api_model.dart';
 import 'package:ticktrack/models/tasklist/task_list_api_model.dart';
@@ -56,74 +58,88 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  List<T> _ownEntriesOf<T extends BaseUserRelation>(List<T> entries) {
+    final String? ownUsername = AuthBackend().loggedInUser?.user?.username;
+    return entries
+        .where((entry) => entry.user?.username == ownUsername)
+        .toList();
+  }
+
   Future<void> _getTaskLists() async {
-    try {
-      final backend = Backend();
-      final res = await backend.getAllTaskLists(
-        groupId: GroupContext().activeGroup?.id,
-      );
-      final own = res
-          .where((element) =>
-              element.user!.username ==
-              AuthBackend().loggedInUser?.user?.username)
-          .toList();
-      _taskLists = own;
-    } catch (e) {
-      rethrow;
-    }
+    final String cacheKey = CacheKey.taskLists(GroupContext().activeGroup?.id);
+    final res = await Backend().getAllTaskLists(
+      groupId: GroupContext().activeGroup?.id,
+    );
+    await CacheStore().writeList(cacheKey, res);
+    _taskLists = _ownEntriesOf(res);
   }
 
   Future<void> _getNotes() async {
-    try {
-      final backend = Backend();
-      final res = await backend.getAllNotes(
-        groupId: GroupContext().activeGroup?.id,
-      );
-      final own = res
-          .where((element) =>
-              element.user!.username ==
-              AuthBackend().loggedInUser?.user?.username)
-          .toList();
-      _notes = own;
-    } catch (e) {
-      rethrow;
-    }
+    final String cacheKey = CacheKey.notes(GroupContext().activeGroup?.id);
+    final res = await Backend().getAllNotes(
+      groupId: GroupContext().activeGroup?.id,
+    );
+    await CacheStore().writeList(cacheKey, res);
+    _notes = _ownEntriesOf(res);
   }
 
   Future<void> _getActivities() async {
-    try {
-      final backend = Backend();
-      final res = await backend.getActivity(
-        'any',
-        groupId: GroupContext().activeGroup?.id,
-      );
-      setState(() {
-        _activities = res;
-      });
-    } catch (e) {
-      rethrow;
-    }
+    final int? groupId = GroupContext().activeGroup?.id;
+    final res = await Backend().getActivity('any', groupId: groupId);
+    await CacheStore().writeList(CacheKey.activity(groupId, 'any'), res);
+    _activities = res;
   }
 
   Future<void> _getUpcomingEvents() async {
-    try {
-      final now = DateTime.now();
-      final res = await Backend().getCalendarEvents(
-        groupId: GroupContext().activeGroup?.id,
-        from: now,
-        to: now.add(const Duration(days: 14)),
-      );
-      _upcoming = res;
-    } catch (e) {
-      rethrow;
+    final int? groupId = GroupContext().activeGroup?.id;
+    final now = DateTime.now();
+    final res = await Backend().getCalendarEvents(
+      groupId: groupId,
+      from: now,
+      to: now.add(const Duration(days: 14)),
+    );
+    await CacheStore().writeList(CacheKey.upcomingEvents(groupId), res);
+    _upcoming = res;
+  }
+
+  bool _showCachedData() {
+    final int? groupId = GroupContext().activeGroup?.id;
+    final cachedTaskLists =
+        CacheStore().readList(CacheKey.taskLists(groupId), TaskList.fromJson);
+    final cachedNotes =
+        CacheStore().readList(CacheKey.notes(groupId), Note.fromJson);
+    final cachedActivities = CacheStore().readList<EventlogMessage<dynamic>>(
+      CacheKey.activity(groupId, 'any'),
+      EventlogMessage.fromJson,
+    );
+    final cachedUpcoming = CacheStore().readList(
+      CacheKey.upcomingEvents(groupId),
+      CalendarOccurrence.fromJson,
+    );
+
+    if (cachedTaskLists == null && cachedNotes == null) {
+      return false;
     }
+
+    setState(() {
+      _taskLists = _ownEntriesOf(cachedTaskLists?.items ?? <TaskList>[]);
+      _notes = _ownEntriesOf(cachedNotes?.items ?? <Note>[]);
+      _activities = cachedActivities?.items ?? _activities;
+      _upcoming = cachedUpcoming?.items ?? _upcoming;
+      isLoading = false;
+    });
+
+    return true;
   }
 
   Future<void> _loadData() async {
-    try {
+    if (!_showCachedData()) {
       setState(() {
         isLoading = true;
       });
+    }
+
+    try {
       await Future.wait([
         _getTaskLists(),
         _getNotes(),
@@ -131,6 +147,9 @@ class _HomeScreenState extends State<HomeScreen> {
         _getUpcomingEvents(),
       ]);
 
+      if (!mounted) {
+        return;
+      }
       setState(() {
         isLoading = false;
       });

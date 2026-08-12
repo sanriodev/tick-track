@@ -8,16 +8,20 @@ class CacheKey {
   static String note(int id) => 'note:$id';
   static String notes(int? groupId) => 'notes:${_scope(groupId)}';
   static String taskLists(int? groupId) => 'taskLists:${_scope(groupId)}';
-  static String activity(int? groupId) => 'activity:${_scope(groupId)}';
+  static String tasksForList(int listId) => 'tasks:$listId';
   static String groups() => 'groups';
+  static String ownUser() => 'ownUser';
 
-  static String calendarEvents(int? groupId, DateTime from, DateTime to) =>
-      'calendarEvents:${_scope(groupId)}:${_day(from)}:${_day(to)}';
+  static String activity(int? groupId, String mode) =>
+      'activity:${_scope(groupId)}:$mode';
+
+  static String calendarMonth(int? groupId, DateTime month) =>
+      'calendarMonth:${_scope(groupId)}:${month.year}-${month.month}';
+
+  static String upcomingEvents(int? groupId) =>
+      'upcomingEvents:${_scope(groupId)}';
 
   static String _scope(int? groupId) => groupId?.toString() ?? 'self';
-
-  static String _day(DateTime date) =>
-      '${date.year}-${date.month}-${date.day}';
 }
 
 class CachedEntry<T> {

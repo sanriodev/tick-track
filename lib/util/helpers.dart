@@ -74,7 +74,9 @@ Future<void> navigateAfterAuth(BuildContext context) async {
       target = 'group-onboarding';
     }
     ReminderSync().sync(force: true);
-  } catch (_) {}
+  } catch (_) {
+    await GroupContext().restoreFromCache();
+  }
   if (context.mounted) {
     navigateToRoute(context, target);
   }

@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:ticktrack/backend/service/backend_service.dart';
+import 'package:ticktrack/state/cache_store.dart';
 import 'package:ticktrack/enum/event_color_enum.dart';
 import 'package:ticktrack/models/calendar/calendar_event_model.dart';
 import 'package:ticktrack/state/avatar_store.dart';
@@ -73,7 +74,16 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   Future<void> _load({bool forceReminderSync = false}) async {
-    setState(() => _isLoading = true);
+    final int? groupId = GroupContext().activeGroup?.id;
+    final String cacheKey = CacheKey.calendarMonth(groupId, _visibleMonth);
+    final cached = CacheStore().readList(cacheKey, CalendarOccurrence.fromJson);
+
+    if (cached != null) {
+      _showOccurrences(cached.items);
+    } else {
+      setState(() => _isLoading = true);
+    }
+
     final from = DateTime(_visibleMonth.year, _visibleMonth.month)
         .subtract(const Duration(days: 7));
     final to = DateTime(_visibleMonth.year, _visibleMonth.month + 1)
@@ -81,15 +91,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
     try {
       final occurrences = await Backend().getCalendarEvents(
-        groupId: GroupContext().activeGroup?.id,
+        groupId: groupId,
         from: from,
         to: to,
       );
+      await CacheStore().writeList(cacheKey, occurrences);
       if (!mounted) return;
-      setState(() {
-        _byDay = _bucketByDay(occurrences);
-        _isLoading = false;
-      });
+      _showOccurrences(occurrences);
       AvatarStore().sync(
         occurrences.map((o) => o.event.user?.id).whereType<int>().toSet(),
       );
@@ -99,6 +107,16 @@ class _CalendarScreenState extends State<CalendarScreen> {
       await showBackendError(
           context, e, 'Kalenderevents konnten nicht geladen werden');
     }
+  }
+
+  void _showOccurrences(List<CalendarOccurrence> occurrences) {
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _byDay = _bucketByDay(occurrences);
+      _isLoading = false;
+    });
   }
 
   Map<DateTime, List<CalendarOccurrence>> _bucketByDay(
