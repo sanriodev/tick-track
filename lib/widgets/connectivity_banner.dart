@@ -74,7 +74,7 @@ class _OfflineBar extends StatelessWidget {
             ),
             const SizedBox(width: 6),
             Text(
-              'Offline: Änderungen werden nicht gespeichert',
+              'Offline',
               style: theme.textTheme.labelSmall?.copyWith(
                 color: theme.colorScheme.onErrorContainer,
                 fontWeight: FontWeight.w600,
