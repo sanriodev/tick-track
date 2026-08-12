@@ -309,18 +309,18 @@ class _CalendarScreenState extends State<CalendarScreen> {
             color: theme.primaryIconTheme.color,
             onPressed: _jumpToToday,
           ),
-          IconButton(
-            tooltip: 'Kalender als iCalendar exportieren',
-            icon: _isExporting
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const PhosphorIcon(PhosphorIconsRegular.export),
-            color: theme.primaryIconTheme.color,
-            onPressed: _isExporting ? null : _exportCalendar,
-          ),
+          // IconButton(
+          //   tooltip: 'Kalender als iCalendar exportieren',
+          //   icon: _isExporting
+          //       ? const SizedBox(
+          //           width: 18,
+          //           height: 18,
+          //           child: CircularProgressIndicator(strokeWidth: 2),
+          //         )
+          //       : const PhosphorIcon(PhosphorIconsRegular.export),
+          //   color: theme.primaryIconTheme.color,
+          //   onPressed: _isExporting ? null : _exportCalendar,
+          // ),
           const GroupContextSwitcher(),
           OptionButton(
             onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
