@@ -28,9 +28,10 @@ packages:
   blvckleg_dart_core:
     dependency: "direct main"
     description:
-      path: "../dart-core"
-      relative: true
-    source: path
+      name: blvckleg_dart_core
+      sha256: "64e8ac12e397d77a7abb7427812b0aa16b020e448dac3a735796a1e5d67fd300"
+      url: "https://pub.dev"
+    source: hosted
     version: "1.0.1"
   boolean_selector:
     dependency: transitive
