@@ -55,7 +55,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _showUser(user);
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
-      await showBackendError(context, e, 'Profil konnte nicht geladen werden');
+      await showBackendError(context, e, 'Profil konnte nicht geladen werden',
+          alertWhenOffline: false);
     }
   }
 

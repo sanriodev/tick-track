@@ -158,7 +158,8 @@ class _HomeScreenState extends State<HomeScreen> {
         isLoading = false;
       });
       if (mounted) {
-        await showBackendError(context, e, 'Laden fehlgeschlagen');
+        await showBackendError(context, e, 'Laden fehlgeschlagen',
+            alertWhenOffline: false);
       }
     }
   }

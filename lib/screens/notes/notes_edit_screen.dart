@@ -126,7 +126,8 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
       await NoteAttachmentStore().loadForNote(id);
     } catch (e) {
       if (mounted) {
-        await showBackendError(context, e, 'Aktion fehlgeschlagen');
+        await showBackendError(context, e, 'Aktion fehlgeschlagen',
+            alertWhenOffline: false);
       }
     }
   }

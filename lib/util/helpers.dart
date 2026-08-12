@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:ticktrack/enum/privacy_mode_enum.dart';
 import 'package:ticktrack/state/avatar_store.dart';
 import 'package:ticktrack/state/cache_store.dart';
+import 'package:ticktrack/state/connectivity_status.dart';
 import 'package:ticktrack/state/group_context.dart';
 import 'package:ticktrack/state/note_attachment_store.dart';
 import 'package:ticktrack/state/reminder_scheduler.dart';
@@ -44,6 +45,7 @@ Future<void> deleteBoxAndNavigateToLogin(BuildContext context) async {
   AvatarStore().clear();
   NoteAttachmentStore().clear();
   await CacheStore().clear();
+  ConnectivityStatus().reset();
   await ReminderScheduler().cancelAll();
   ReminderSync().reset();
 
@@ -85,19 +87,19 @@ Future<void> navigateAfterAuth(BuildContext context) async {
 Future<void> showBackendError(
   BuildContext context,
   Object e,
-  String fallbackMessage,
-) async {
+  String fallbackMessage, {
+  bool alertWhenOffline = true,
+}) async {
   if (e is SessionExpiredException) {
     await _signOutAfterExpiredSession(context);
     return;
   }
 
   if (_isBackendUnavailable(e)) {
-    _showSnackBar(
-      context,
-      'TickTrack ist gerade nicht erreichbar. '
-      'Deine Daten bleiben erhalten, versuche es später erneut.',
-    );
+    ConnectivityStatus().reportUnreachable();
+    if (alertWhenOffline) {
+      _showSnackBar(context, '$fallbackMessage: TickTrack ist offline.');
+    }
     return;
   }
 

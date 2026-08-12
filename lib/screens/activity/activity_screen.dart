@@ -76,7 +76,8 @@ class _ActivityScreenState extends State<ActivityScreen> {
         isLoading = false;
       });
       if (mounted) {
-        await showBackendError(context, e, 'Laden fehlgeschlagen');
+        await showBackendError(context, e, 'Laden fehlgeschlagen',
+            alertWhenOffline: false);
       }
     }
   }

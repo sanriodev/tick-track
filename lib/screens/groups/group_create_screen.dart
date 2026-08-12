@@ -1,6 +1,5 @@
 // ignore_for_file: use_build_context_synchronously, avoid_dynamic_calls
 
-
 import 'package:ticktrack/backend/service/backend_service.dart';
 import 'package:ticktrack/models/group/group_api_model.dart';
 import 'package:ticktrack/state/group_context.dart';
@@ -43,7 +42,8 @@ class _GroupCreateScreenState extends State<GroupCreateScreen> {
       setState(() => _createdGroup = group);
     } catch (e) {
       if (mounted) {
-        await showBackendError(context, e, 'Gruppe konnte nicht erstellt werden');
+        await showBackendError(
+            context, e, 'Gruppe konnte nicht erstellt werden');
       }
     } finally {
       if (mounted) setState(() => _submitting = false);

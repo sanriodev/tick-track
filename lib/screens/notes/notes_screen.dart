@@ -87,7 +87,8 @@ class _NotesScreenState extends State<NotesScreen> {
         isLoading = false;
       });
       if (mounted) {
-        await showBackendError(context, e, 'Aktion fehlgeschlagen');
+        await showBackendError(context, e, 'Aktion fehlgeschlagen',
+            alertWhenOffline: false);
       }
     }
   }
@@ -99,12 +100,10 @@ class _NotesScreenState extends State<NotesScreen> {
     }
     setState(() {
       isLoading = false;
-      ownNotes = notes
-          .where((note) => note.user?.username == ownUsername)
-          .toList();
-      sharedNotes = notes
-          .where((note) => note.user?.username != ownUsername)
-          .toList();
+      ownNotes =
+          notes.where((note) => note.user?.username == ownUsername).toList();
+      sharedNotes =
+          notes.where((note) => note.user?.username != ownUsername).toList();
     });
   }
 

@@ -1,6 +1,5 @@
 // ignore_for_file: use_build_context_synchronously, avoid_dynamic_calls
 
-
 import 'package:ticktrack/backend/service/backend_service.dart';
 import 'package:ticktrack/state/group_context.dart';
 import 'package:ticktrack/util/helpers.dart';

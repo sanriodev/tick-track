@@ -88,7 +88,8 @@ class _TaskListScreenState extends State<TaskListScreen> {
         isLoading = false;
       });
       if (mounted) {
-        await showBackendError(context, e, 'Aktion fehlgeschlagen');
+        await showBackendError(context, e, 'Aktion fehlgeschlagen',
+            alertWhenOffline: false);
       }
     }
   }

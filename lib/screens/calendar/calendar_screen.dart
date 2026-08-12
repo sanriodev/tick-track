@@ -105,7 +105,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
       await showBackendError(
-          context, e, 'Kalenderevents konnten nicht geladen werden');
+          context, e, 'Kalenderevents konnten nicht geladen werden',
+          alertWhenOffline: false);
     }
   }
 
