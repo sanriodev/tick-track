@@ -35,6 +35,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _busy = false;
   User? _ownUser;
 
+  bool get _mfaEnabled => _ownUser?.mfaEnabled ?? false;
+
   @override
   void initState() {
     super.initState();
@@ -342,6 +344,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } finally {
       if (mounted) setState(() => _busy = false);
     }
+  }
+
+  Future<void> _openMfaSettings() async {
+    await navigateToRoute(context, 'mfa', backEnabled: true);
+    await _load();
   }
 
   Future<void> _setActivityPrivacy(bool public) async {
@@ -672,6 +679,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 size: 18,
               ),
               onTap: _busy ? null : _showChangePasswordDialog,
+            ),
+            ListTile(
+              leading: PhosphorIcon(
+                _mfaEnabled
+                    ? PhosphorIconsRegular.shieldCheck
+                    : PhosphorIconsRegular.shieldWarning,
+                color: theme.primaryIconTheme.color,
+              ),
+              title: Text(
+                'Zwei-Faktor-Authentifizierung',
+                style: theme.textTheme.titleSmall,
+              ),
+              subtitle: Text(
+                _mfaEnabled
+                    ? 'Aktiv - Geräte und Wiederherstellungscodes verwalten.'
+                    : 'Schütze deinen Account mit Face ID, Fingerabdruck oder '
+                        'einem Sicherheitsschlüssel.',
+                style: theme.textTheme.bodySmall,
+              ),
+              trailing: PhosphorIcon(
+                PhosphorIconsRegular.caretRight,
+                color: theme.primaryIconTheme.color,
+                size: 18,
+              ),
+              onTap: _busy ? null : _openMfaSettings,
             ),
           ],
         ),

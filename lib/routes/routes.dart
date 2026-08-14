@@ -6,13 +6,16 @@ import 'package:ticktrack/screens/groups/group_details_screen.dart';
 import 'package:ticktrack/screens/groups/group_onboarding_screen.dart';
 import 'package:ticktrack/screens/home/home_screen.dart';
 import 'package:ticktrack/screens/login/login_screen.dart';
+import 'package:ticktrack/screens/login/mfa_challenge_screen.dart';
 import 'package:ticktrack/screens/login/onboarding/onboarding_screen.dart';
+import 'package:ticktrack/screens/profile/mfa_screen.dart';
 import 'package:ticktrack/screens/notes/notes_edit_screen.dart';
 import 'package:ticktrack/screens/notes/notes_screen.dart';
 import 'package:ticktrack/screens/profile/profile_screen.dart';
 import 'package:ticktrack/screens/splash/splash_screen.dart';
 import 'package:ticktrack/screens/task-lists/task_list_screen.dart';
 import 'package:ticktrack/screens/task-lists/tasks_screen.dart';
+import 'package:blvckleg_dart_core/models/auth/mfa_challenge_model.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -89,6 +92,40 @@ GoRouter createRouter() {
           child: OnboardingScreen(
             pending: state.extra as PendingConfirmation?,
           ),
+          transitionDuration: const Duration(milliseconds: transitionDuration),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: CurveTween(curve: Curves.easeIn).animate(animation),
+              child: child,
+            );
+          },
+        ),
+      ),
+      GoRoute(
+        name: 'mfa-challenge',
+        path: '/mfa-challenge',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          name: 'mfa-challenge',
+          child: MfaChallengeScreen(
+            challenge: state.extra as MfaChallenge?,
+          ),
+          transitionDuration: const Duration(milliseconds: transitionDuration),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: CurveTween(curve: Curves.easeIn).animate(animation),
+              child: child,
+            );
+          },
+        ),
+      ),
+      GoRoute(
+        name: 'mfa',
+        path: '/mfa',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          name: 'mfa',
+          child: const MfaScreen(),
           transitionDuration: const Duration(milliseconds: transitionDuration),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(

@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:ticktrack/backend/service/backend_service.dart';
 import 'package:ticktrack/screens/login/onboarding/onboarding_screen.dart';
 import 'package:ticktrack/util/helpers.dart';
+import 'package:blvckleg_dart_core/exception/mfa_required.dart';
 import 'package:blvckleg_dart_core/models/settings/settings_model.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:blvckleg_dart_core/settings/settings.dart';
@@ -65,6 +66,13 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await authBackend.postLogin(username, password);
       await navigateAfterAuth(context);
+    } on MfaRequiredException catch (e) {
+      await navigateToRoute(
+        context,
+        'mfa-challenge',
+        extra: e.challenge,
+        backEnabled: true,
+      );
     } catch (e) {
       if (e is Response) {
         final jsonData = await json.decode(utf8.decode(e.bodyBytes));

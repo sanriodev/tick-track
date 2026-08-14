@@ -61,3 +61,5 @@ play-store-service-account.json
 /output/
 /android/vendor/
 /android/fastlane/report.xml
+# local path override for the dart-core checkout next to this repo
+pubspec_overrides.yaml

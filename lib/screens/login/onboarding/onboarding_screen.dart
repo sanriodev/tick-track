@@ -6,6 +6,7 @@ import 'dart:convert';
 import 'package:ticktrack/backend/service/backend_service.dart';
 import 'package:ticktrack/models/application/availability_model.dart';
 import 'package:ticktrack/util/helpers.dart';
+import 'package:blvckleg_dart_core/exception/mfa_required.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -313,6 +314,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         _passwordCtrl.text,
       );
       await navigateAfterAuth(context);
+    } on MfaRequiredException catch (e) {
+      await navigateToRoute(
+        context,
+        'mfa-challenge',
+        extra: e.challenge,
+        backEnabled: true,
+      );
     } catch (e) {
       await _showResponseError(e, 'Login fehlgeschlagen');
       navigateToRoute(context, 'login');
