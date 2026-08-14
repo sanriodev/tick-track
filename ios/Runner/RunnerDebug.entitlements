@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	Debug only. `?mode=developer` makes the device fetch the association file
+	straight from the domain instead of going through Apple's CDN, which
+	otherwise caches it and can take a while to pick up a change.
+
+	Requires "Associated Domains Development" to be switched on on the device
+	under Settings -> Developer. Must never ship in a release build - see
+	Runner.entitlements for that.
+	-->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>webcredentials:api.tick-track.app?mode=developer</string>
+	</array>
+</dict>
+</plist>
