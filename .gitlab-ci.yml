@@ -3,6 +3,7 @@ default:
     - ios-build-server
 
 stages:
+  - test
   - build
   - release
 
@@ -91,6 +92,17 @@ variables:
     - mkdir -p $CI_PROJECT_DIR/output
     - cp $CI_PROJECT_DIR/build/app/outputs/apk/release/app-release.apk $CI_PROJECT_DIR/output/ 2>/dev/null || true
     - cp $CI_PROJECT_DIR/build/app/outputs/bundle/release/app-release.aab $CI_PROJECT_DIR/output/ 2>/dev/null || true
+
+lint-and-test:
+  <<: *android_build_template
+  stage: test
+  allow_failure: true
+  only:
+    - dev
+    - merge_requests
+  script:
+    - /opt/homebrew/bin/fvm flutter analyze
+    - /opt/homebrew/bin/fvm flutter test
 
 android_feature:
   <<: *android_build_template

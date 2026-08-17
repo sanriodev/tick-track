@@ -1,4 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">TickTrack - die WG App</string>
+    <!--
+    App side of the passkey domain association, the counterpart to the
+    associated-domains entitlement on iOS. Without it Play Services refuses
+    every registration with "RP ID cannot be validated", even though the
+    assetlinks file on the domain is correct. The quotes have to stay escaped,
+    the resource holds JSON as a plain string.
+    -->
+    <string name="asset_statements" translatable="false">
+        [{
+          \"include\": \"https://api.tick-track.app/.well-known/assetlinks.json\"
+        }]
+    </string>
 </resources>
