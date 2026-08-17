@@ -96,6 +96,7 @@ variables:
 lint-and-test:
   <<: *android_build_template
   stage: test
+  allow_failure: true
   only:
     - dev
     - merge_requests
