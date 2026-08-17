@@ -54,6 +54,12 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
+        <!-- Points Play Services at the assetlinks file of the passkey relying
+             party, see @string/asset_statements. -->
+        <meta-data
+            android:name="asset_statements"
+            android:resource="@string/asset_statements" />
+
         <!-- delivers a scheduled reminder while the app is not running -->
         <receiver
             android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver"

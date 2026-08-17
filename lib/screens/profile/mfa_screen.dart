@@ -85,7 +85,7 @@ class _MfaScreenState extends State<MfaScreen> {
     final confirmed = await _confirm(
       title: 'Gerät entfernen',
       message: 'Dieses Gerät kann sich dann nicht mehr als zweiter Faktor '
-          'anmelden. Ist es dein letzter Faktor, wird Zwei-Faktor '
+          'anmelden. Ist es dein letzter Faktor, wird MFA '
           'automatisch deaktiviert.',
       confirmLabel: 'Entfernen',
       destructive: true,

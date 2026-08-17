@@ -688,14 +688,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 color: theme.primaryIconTheme.color,
               ),
               title: Text(
-                'Zwei-Faktor-Authentifizierung',
+                'Multi-Faktor-Authentifizierung',
                 style: theme.textTheme.titleSmall,
               ),
               subtitle: Text(
                 _mfaEnabled
                     ? 'Aktiv - Geräte und Wiederherstellungscodes verwalten.'
-                    : 'Schütze deinen Account mit Face ID, Fingerabdruck oder '
-                        'einem Sicherheitsschlüssel.',
+                    : 'Schütze deinen Account mit MFA',
                 style: theme.textTheme.bodySmall,
               ),
               trailing: PhosphorIcon(
