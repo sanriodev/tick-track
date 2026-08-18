@@ -28,8 +28,8 @@ class GroupsPreviewWidget extends StatelessWidget {
 
         final width = MediaQuery.of(context).size.width;
         final isTablet = width > _tabletBreakpoint;
-        final listHeight = isTablet ? 150.0 : 120.0;
-        final itemWidth = isTablet ? width / 4 : width / 2.2;
+        final listHeight = isTablet ? 130.0 : 100.0;
+        final itemWidth = isTablet ? width / 4.6 : width / 2.4;
 
         return Card(
           elevation: 2.0,
@@ -184,7 +184,7 @@ class GroupsPreviewWidget extends StatelessWidget {
                     await GroupContext().setActiveGroup(group);
                   },
             child: Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(10),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -269,16 +269,16 @@ class GroupsPreviewWidget extends StatelessWidget {
               navigateToRoute(context, 'group-create', backEnabled: true);
             },
             child: Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(10),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   PhosphorIcon(
                     PhosphorIconsRegular.plusCircle,
-                    size: 28,
+                    size: 24,
                     color: accent,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   Text(
                     'Neue Gruppe hinzufügen',
                     textAlign: TextAlign.center,

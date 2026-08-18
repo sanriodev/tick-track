@@ -59,7 +59,7 @@ class MfaCredentialTile extends StatelessWidget {
       if (credential.lastUsedAt != null)
         'zuletzt genutzt am ${_formatDate(credential.lastUsedAt!)}',
     ];
-    return parts.isEmpty ? 'Zweiter Faktor' : parts.join(' · ');
+    return parts.isEmpty ? 'Registrierter Faktor' : parts.join(' · ');
   }
 
   String _formatDate(DateTime value) =>

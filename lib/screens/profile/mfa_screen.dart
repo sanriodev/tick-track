@@ -54,7 +54,7 @@ class _MfaScreenState extends State<MfaScreen> {
       await showBackendError(
         context,
         e,
-        'Zwei-Faktor-Einstellungen konnten nicht geladen werden',
+        'MFA-Einstellungen konnten nicht geladen werden',
       );
     }
   }
@@ -68,7 +68,7 @@ class _MfaScreenState extends State<MfaScreen> {
     try {
       await _mfaService.registerCredential(nickname: nickname);
       Haptics.tap();
-      _showMessage('Gerät registriert. Zwei-Faktor ist jetzt aktiv.');
+      _showMessage('Gerät registriert. MFA ist jetzt aktiv.');
       await _load();
       if (wasFirstFactor) await _offerRecoveryCodes();
     } on MfaCancelledException {
@@ -149,14 +149,14 @@ class _MfaScreenState extends State<MfaScreen> {
     try {
       await AuthBackend().enableMfa();
       Haptics.tap();
-      _showMessage('Zwei-Faktor ist wieder aktiv.');
+      _showMessage('MFA ist wieder aktiv.');
       await _load();
     } catch (e) {
       Haptics.warning();
       await showBackendError(
         context,
         e,
-        'Zwei-Faktor konnte nicht aktiviert werden',
+        'MFA konnte nicht aktiviert werden',
       );
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -171,14 +171,14 @@ class _MfaScreenState extends State<MfaScreen> {
     try {
       await AuthBackend().disableMfa(password: password);
       Haptics.tap();
-      _showMessage('Zwei-Faktor ist deaktiviert.');
+      _showMessage('MFA ist deaktiviert.');
       await _load();
     } catch (e) {
       Haptics.warning();
       await showBackendError(
         context,
         e,
-        'Zwei-Faktor konnte nicht deaktiviert werden',
+        'MFA konnte nicht deaktiviert werden',
       );
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -311,7 +311,7 @@ class _MfaScreenState extends State<MfaScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Zwei-Faktor',
+          'MFA',
           style: theme.primaryTextTheme.titleMedium,
         ),
         backgroundColor: theme.scaffoldBackgroundColor,
@@ -371,7 +371,7 @@ class _MfaScreenState extends State<MfaScreen> {
           color: theme.colorScheme.primary,
         ),
         title: Text(
-          'Zwei-Faktor wieder aktivieren',
+          'MFA wieder aktivieren',
           style: theme.textTheme.titleSmall,
         ),
         subtitle: Text(
@@ -397,7 +397,7 @@ class _MfaScreenState extends State<MfaScreen> {
           size: 28,
         ),
         title: Text(
-          active ? 'Zwei-Faktor ist aktiv' : 'Zwei-Faktor ist inaktiv',
+          active ? 'MFA ist aktiv' : 'MFA ist inaktiv',
           style: theme.textTheme.titleSmall,
         ),
         subtitle: Text(
@@ -435,7 +435,7 @@ class _MfaScreenState extends State<MfaScreen> {
                 color: theme.primaryIconTheme.color,
               ),
               title: Text(
-                'Zwei-Faktor aktivieren',
+                'MFA aktivieren',
                 style: theme.textTheme.titleSmall,
               ),
               subtitle: _passkeySupported
@@ -466,7 +466,7 @@ class _MfaScreenState extends State<MfaScreen> {
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                 child: Text(
-                  'Kein Gerät registriert. Zwei-Faktor läuft nur über '
+                  'Kein Gerät registriert. MFA läuft nur über '
                   'Wiederherstellungscodes.',
                   style: theme.textTheme.bodySmall,
                 ),
@@ -536,7 +536,7 @@ class _MfaScreenState extends State<MfaScreen> {
           color: theme.colorScheme.error,
         ),
         title: Text(
-          'Zwei-Faktor deaktivieren',
+          'MFA deaktivieren',
           style: theme.textTheme.titleSmall?.copyWith(
             color: theme.colorScheme.error,
             fontWeight: FontWeight.w600,
