@@ -42,6 +42,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   Map<DateTime, List<CalendarOccurrence>> _byDay = {};
   bool _isLoading = true;
+  // ignore: unused_field
   bool _isExporting = false;
 
   String get _calendarName {
@@ -200,6 +201,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     }
   }
 
+  // ignore: unused_element
   Future<void> _exportCalendar() async {
     Haptics.tap();
     setState(() => _isExporting = true);

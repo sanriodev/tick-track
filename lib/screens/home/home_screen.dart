@@ -14,10 +14,13 @@ import 'package:ticktrack/widgets/activity_preview_widget.dart';
 import 'package:ticktrack/widgets/app_drawer_widget.dart';
 import 'package:ticktrack/widgets/calendar_preview_widget.dart';
 import 'package:ticktrack/widgets/group/group_context_switcher.dart';
+import 'package:ticktrack/widgets/group/groups_preview_widget.dart';
 import 'package:ticktrack/widgets/navigation/bottom_menu.dart';
 import 'package:ticktrack/widgets/notes_preview_widget.dart';
 import 'package:ticktrack/widgets/option_button.dart';
+import 'package:ticktrack/widgets/profile_preview_widget.dart';
 import 'package:ticktrack/widgets/to_do_list_widget.dart';
+import 'package:blvckleg_dart_core/models/user/user_model.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:flutter/material.dart';
 
@@ -35,6 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Note> _notes = [];
   List<EventlogMessage<dynamic>> _activities = [];
   List<CalendarOccurrence> _upcoming = [];
+  User? _ownUser;
 
   bool isLoading = true;
   final _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -90,6 +94,12 @@ class _HomeScreenState extends State<HomeScreen> {
     _activities = res;
   }
 
+  Future<void> _getOwnUser() async {
+    final user = await AuthBackend().getOwnUser();
+    await CacheStore().writeItem(CacheKey.ownUser(), user);
+    _ownUser = user;
+  }
+
   Future<void> _getUpcomingEvents() async {
     final int? groupId = GroupContext().activeGroup?.id;
     final now = DateTime.now();
@@ -116,6 +126,10 @@ class _HomeScreenState extends State<HomeScreen> {
       CacheKey.upcomingEvents(groupId),
       CalendarOccurrence.fromJson,
     );
+
+    final cachedOwnUser =
+        CacheStore().readItem(CacheKey.ownUser(), User.fromJson);
+    _ownUser = cachedOwnUser?.item ?? _ownUser;
 
     if (cachedTaskLists == null && cachedNotes == null) {
       return false;
@@ -145,6 +159,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _getNotes(),
         _getActivities(),
         _getUpcomingEvents(),
+        _getOwnUser(),
       ]);
 
       if (!mounted) {
@@ -194,12 +209,21 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Text(
-                      AuthBackend().loggedInUser?.user?.username != null
-                          ? "Willkommen zurück, ${AuthBackend().loggedInUser?.user?.username}!"
-                          : "Willkommen zurück!",
-                      style: Theme.of(context).primaryTextTheme.displayLarge),
-                  const SizedBox(height: 24),
+                  ProfilePreviewWidget(
+                    user: _ownUser,
+                    isLoading: isLoading,
+                    onPressed: () {
+                      navigateToRoute(context, 'profile', backEnabled: true);
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  GroupsPreviewWidget(
+                    onPressed: () {
+                      navigateToRoute(context, 'group-details',
+                          backEnabled: true);
+                    },
+                  ),
+                  const SizedBox(height: 16),
                   TodoPreviewWidget(
                     themeMode: MainAppScreen.of(context)!.currentTheme!,
                     onPressed: () {
