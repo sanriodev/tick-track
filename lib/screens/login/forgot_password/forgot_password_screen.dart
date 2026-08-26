@@ -120,7 +120,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         username: _requestedUsername,
       );
       _showMessage(
-        'Falls der Account existiert, wurde ein neuer Code gesendet.',
+        'Falls der Account existiert, wurde ein neuer Code per Email gesendet.',
       );
     } catch (e) {
       await _showResponseError(e, 'Senden fehlgeschlagen');
@@ -300,7 +300,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 const SizedBox(height: 12),
                 Text(
                   'Falls der Account existiert, haben wir dir einen '
-                  '$_codeLength-stelligen Code geschickt.',
+                  '$_codeLength-stelligen Code per Email geschickt.',
                   style: theme.primaryTextTheme.bodySmall,
                   textAlign: TextAlign.center,
                 ),
