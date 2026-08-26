@@ -541,6 +541,55 @@ class Backend extends ABackend {
     }
   }
 
+  Future<void> requestPasswordReset({String? email, String? username}) async {
+    final body = json.encode({
+      if (email != null) 'email': email,
+      if (username != null) 'username': username,
+    });
+    final res = await post(body, 'v1/application/forgot-password');
+
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      return;
+    } else {
+      throw res;
+    }
+  }
+
+  Future<String> verifyPasswordResetCode(
+    String code, {
+    String? email,
+    String? username,
+  }) async {
+    final body = json.encode({
+      if (email != null) 'email': email,
+      if (username != null) 'username': username,
+      'code': code,
+    });
+    final res = await post(body, 'v1/application/forgot-password/verify');
+
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      final jsonData = await json.decode(utf8.decode(res.bodyBytes))['data']
+          as Map<String, dynamic>;
+      return jsonData['resetToken'] as String;
+    } else {
+      throw res;
+    }
+  }
+
+  Future<void> resetPassword(String resetToken, String password) async {
+    final body = json.encode({
+      'resetToken': resetToken,
+      'password': password,
+    });
+    final res = await post(body, 'v1/application/reset-password');
+
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      return;
+    } else {
+      throw res;
+    }
+  }
+
   Future<void> deleteOwnAccount() async {
     final res = await delete('v1/account/');
 

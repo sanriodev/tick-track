@@ -24,9 +24,6 @@ import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
-const Duration _exportPastRange = Duration(days: 365);
-const Duration _exportFutureRange = Duration(days: 730);
-
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
 
@@ -42,14 +39,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   Map<DateTime, List<CalendarOccurrence>> _byDay = {};
   bool _isLoading = true;
-  // ignore: unused_field
   bool _isExporting = false;
 
-  String get _calendarName {
+  String _calendarNameOfYear(int year) {
     final groupName = GroupContext().activeGroup?.name;
     return groupName == null
-        ? 'TickTrack Kalender'
-        : 'TickTrack Kalender $groupName';
+        ? 'TickTrack Kalender $year'
+        : 'TickTrack Kalender $groupName $year';
   }
 
   @override
@@ -201,28 +197,33 @@ class _CalendarScreenState extends State<CalendarScreen> {
     }
   }
 
-  // ignore: unused_element
+  Future<List<CalendarEvent>> _loadEventsOfYear(int year) async {
+    final firstDayOfYear = DateTime(year);
+    final firstDayOfNextYear = DateTime(year + 1);
+    final occurrences = await Backend().getCalendarEvents(
+      groupId: GroupContext().activeGroup?.id,
+      from: firstDayOfYear,
+      to: firstDayOfNextYear,
+    );
+    return distinctEventsOf(occurrences);
+  }
+
   Future<void> _exportCalendar() async {
     Haptics.tap();
     setState(() => _isExporting = true);
-    final now = DateTime.now();
+    final year = DateTime.now().year;
 
     try {
-      final occurrences = await Backend().getCalendarEvents(
-        groupId: GroupContext().activeGroup?.id,
-        from: now.subtract(_exportPastRange),
-        to: now.add(_exportFutureRange),
-      );
-      final events = distinctEventsOf(occurrences);
+      final events = await _loadEventsOfYear(year);
 
       if (events.isEmpty) {
-        _showMessage('Keine Kalenderevents zum Exportieren.');
+        _showMessage('Keine Kalenderevents in $year zum Exportieren.');
         return;
       }
       await shareCalendar(
         context,
         events: events,
-        calendarName: _calendarName,
+        calendarName: _calendarNameOfYear(year),
       );
     } catch (e) {
       Haptics.warning();
@@ -311,18 +312,18 @@ class _CalendarScreenState extends State<CalendarScreen> {
             color: theme.primaryIconTheme.color,
             onPressed: _jumpToToday,
           ),
-          // IconButton(
-          //   tooltip: 'Kalender als iCalendar exportieren',
-          //   icon: _isExporting
-          //       ? const SizedBox(
-          //           width: 18,
-          //           height: 18,
-          //           child: CircularProgressIndicator(strokeWidth: 2),
-          //         )
-          //       : const PhosphorIcon(PhosphorIconsRegular.export),
-          //   color: theme.primaryIconTheme.color,
-          //   onPressed: _isExporting ? null : _exportCalendar,
-          // ),
+          IconButton(
+            tooltip: 'Kalender als iCalendar exportieren',
+            icon: _isExporting
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const PhosphorIcon(PhosphorIconsRegular.export),
+            color: theme.primaryIconTheme.color,
+            onPressed: _isExporting ? null : _exportCalendar,
+          ),
           const GroupContextSwitcher(),
           OptionButton(
             onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
