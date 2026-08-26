@@ -290,26 +290,40 @@ class _LoginScreenState extends State<LoginScreen> {
                             : null,
                         onFieldSubmitted: (_) => _submit(),
                       ),
-                      if (appSettings?.registrationEnabled ?? false)
-                        const SizedBox(height: 24),
-                      if (appSettings?.registrationEnabled ?? false)
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: GestureDetector(
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          GestureDetector(
                             onTap: () {
-                              navigateToRoute(context, 'onboarding',
+                              navigateToRoute(context, 'forgot-password',
                                   backEnabled: true);
                             },
                             child: Text(
-                              'Noch keinen Account?',
+                              'Passwort vergessen?',
                               style: theme.primaryTextTheme.bodySmall?.copyWith(
                                 color: theme.colorScheme.primary,
                                 decoration: TextDecoration.underline,
                               ),
-                              textAlign: TextAlign.center,
                             ),
                           ),
-                        ),
+                          if (appSettings?.registrationEnabled ?? false)
+                            GestureDetector(
+                              onTap: () {
+                                navigateToRoute(context, 'onboarding',
+                                    backEnabled: true);
+                              },
+                              child: Text(
+                                'Noch keinen Account?',
+                                style:
+                                    theme.primaryTextTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.primary,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
                       const SizedBox(height: 24),
                       SizedBox(
                         width: double.infinity,

@@ -5,6 +5,7 @@ import 'package:ticktrack/screens/groups/group_create_screen.dart';
 import 'package:ticktrack/screens/groups/group_details_screen.dart';
 import 'package:ticktrack/screens/groups/group_onboarding_screen.dart';
 import 'package:ticktrack/screens/home/home_screen.dart';
+import 'package:ticktrack/screens/login/forgot_password/forgot_password_screen.dart';
 import 'package:ticktrack/screens/login/login_screen.dart';
 import 'package:ticktrack/screens/login/mfa_challenge_screen.dart';
 import 'package:ticktrack/screens/login/onboarding/onboarding_screen.dart';
@@ -92,6 +93,22 @@ GoRouter createRouter() {
           child: OnboardingScreen(
             pending: state.extra as PendingConfirmation?,
           ),
+          transitionDuration: const Duration(milliseconds: transitionDuration),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: CurveTween(curve: Curves.easeIn).animate(animation),
+              child: child,
+            );
+          },
+        ),
+      ),
+      GoRoute(
+        name: 'forgot-password',
+        path: '/forgot-password',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          name: 'forgot-password',
+          child: const ForgotPasswordScreen(),
           transitionDuration: const Duration(milliseconds: transitionDuration),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(
