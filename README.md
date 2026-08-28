@@ -6,11 +6,11 @@ Werbefrei, kostenlos, Open Source. Mehr Infos auf unserer [Website](https://tick
 
 <p>
   <a href="https://apps.apple.com/at/app/ticktrack-die-wg-app/id6789569288">
-    <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/de-de?size=250x83" alt="Im App Store laden" height="54">
+    <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/de-de?size=250x83" alt="Im App Store laden" height="40">
   </a>
   &nbsp;
   <a href="https://play.google.com/store/apps/details?id=app.ticktrack.todonotes">
-    <img src="docs/badges/google-play-badge.png" alt="Jetzt bei Google Play" height="54">
+    <img src="docs/badges/google-play-badge.png" alt="Jetzt bei Google Play" height="40">
   </a>
 </p>
 
