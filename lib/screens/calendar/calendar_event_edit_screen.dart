@@ -535,21 +535,44 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
         children: [
           Text('Farbe', style: theme.primaryTextTheme.titleSmall),
           const SizedBox(height: 8),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: [
-              _buildSwatch(theme, readOnly, null),
-              for (final value in EventColor.values)
-                _buildSwatch(theme, readOnly, value),
-            ],
+          LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints constraints) {
+              const swatches = <EventColor?>[null, ...EventColor.values];
+              final diameter = _swatchDiameter(
+                constraints.maxWidth,
+                swatches.length,
+              );
+
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  for (final value in swatches)
+                    _buildSwatch(theme, readOnly, value, diameter),
+                ],
+              );
+            },
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSwatch(ThemeData theme, bool readOnly, EventColor? value) {
+  double _swatchDiameter(double availableWidth, int swatchCount) {
+    const maxDiameter = 34.0;
+    const minDiameter = 22.0;
+    const minSpacing = 6.0;
+
+    final fittingDiameter =
+        (availableWidth - minSpacing * (swatchCount - 1)) / swatchCount;
+    return fittingDiameter.clamp(minDiameter, maxDiameter);
+  }
+
+  Widget _buildSwatch(
+    ThemeData theme,
+    bool readOnly,
+    EventColor? value,
+    double diameter,
+  ) {
     final isSelected = _color == value;
     final swatchColor = value?.resolve(theme.brightness);
 
@@ -569,8 +592,8 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
                 },
           customBorder: const CircleBorder(),
           child: Container(
-            width: 34,
-            height: 34,
+            width: diameter,
+            height: diameter,
             decoration: BoxDecoration(
               color: swatchColor ?? Colors.transparent,
               shape: BoxShape.circle,
@@ -585,7 +608,7 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
             child: value == null
                 ? Icon(
                     Icons.block,
-                    size: 16,
+                    size: diameter * 0.47,
                     color: theme.primaryTextTheme.displayMedium?.color
                         ?.withValues(alpha: 0.6),
                   )

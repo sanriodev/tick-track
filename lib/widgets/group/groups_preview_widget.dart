@@ -266,7 +266,7 @@ class GroupsPreviewWidget extends StatelessWidget {
             borderRadius: BorderRadius.circular(10.0),
             onTap: () {
               Haptics.tap();
-              navigateToRoute(context, 'group-create', backEnabled: true);
+              navigateToRoute(context, 'group-add', backEnabled: true);
             },
             child: Padding(
               padding: const EdgeInsets.all(10),

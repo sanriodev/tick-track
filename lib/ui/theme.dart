@@ -38,6 +38,10 @@ class ActivityHeatmapColors extends ThemeExtension<ActivityHeatmapColors> {
   }
 }
 
+const RoundedRectangleBorder bottomSheetShape = RoundedRectangleBorder(
+  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+);
+
 ThemeData appThemeLight = ThemeData(
   colorScheme: ColorScheme.fromSeed(
     seedColor: Colors.grey,
@@ -55,6 +59,10 @@ ThemeData appThemeLight = ThemeData(
     titleTextStyle: TextStyle(color: Colors.grey[800]),
     elevation: 0,
     surfaceTintColor: Colors.transparent,
+  ),
+  bottomSheetTheme: BottomSheetThemeData(
+    backgroundColor: Colors.grey[300],
+    shape: bottomSheetShape,
   ),
   primaryTextTheme: textThemeLight(),
   textTheme: textThemeLight(),
@@ -203,6 +211,10 @@ ThemeData appThemeDark = ThemeData(
       titleTextStyle: TextStyle(color: Colors.grey[300]),
       elevation: 0,
       surfaceTintColor: Colors.transparent,
+    ),
+    bottomSheetTheme: BottomSheetThemeData(
+      backgroundColor: Colors.grey[800],
+      shape: bottomSheetShape,
     ),
     buttonTheme: ButtonThemeData(
       buttonColor: Colors.grey[400],

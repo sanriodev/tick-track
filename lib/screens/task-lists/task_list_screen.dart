@@ -10,7 +10,7 @@ import 'package:ticktrack/state/group_context.dart';
 import 'package:ticktrack/state/pin_store.dart';
 import 'package:ticktrack/util/haptics.dart';
 import 'package:ticktrack/util/helpers.dart';
-import 'package:ticktrack/widgets/app_drawer_widget.dart';
+import 'package:ticktrack/widgets/app_options_sheet.dart';
 import 'package:ticktrack/widgets/empty_state_widget.dart';
 import 'package:ticktrack/widgets/group/group_context_switcher.dart';
 import 'package:ticktrack/widgets/navigation/bottom_menu.dart';
@@ -35,7 +35,6 @@ class _TaskListScreenState extends State<TaskListScreen> {
   List<TaskList> sharedTaskLists = [];
   String collectionName = '';
   bool isLoading = true;
-  final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
@@ -306,7 +305,6 @@ class _TaskListScreenState extends State<TaskListScreen> {
     final hasAnyList = ownTaskLists.isNotEmpty || sharedTaskLists.isNotEmpty;
 
     return Scaffold(
-      key: _scaffoldKey,
       bottomNavigationBar: const BottomMenu(),
       appBar: AppBar(
         title: Text("Aufgabenlisten",
@@ -317,12 +315,11 @@ class _TaskListScreenState extends State<TaskListScreen> {
           const GroupContextSwitcher(),
           OptionButton(
             onPressed: () {
-              _scaffoldKey.currentState?.openEndDrawer();
+              showAppOptionsSheet(context);
             },
           )
         ],
       ),
-      endDrawer: AppDrawer(),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Haptics.tap();

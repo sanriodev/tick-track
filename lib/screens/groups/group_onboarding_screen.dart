@@ -1,8 +1,9 @@
 // ignore_for_file: use_build_context_synchronously, avoid_dynamic_calls
 
-import 'package:ticktrack/backend/service/backend_service.dart';
-import 'package:ticktrack/state/group_context.dart';
+import 'package:ticktrack/models/group/group_api_model.dart';
 import 'package:ticktrack/util/helpers.dart';
+import 'package:ticktrack/widgets/group/group_add_form.dart';
+import 'package:ticktrack/widgets/group/group_created_success.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
@@ -15,49 +16,27 @@ class GroupOnboardingScreen extends StatefulWidget {
 
 class _GroupOnboardingScreenState extends State<GroupOnboardingScreen> {
   final PageController _pageController = PageController();
-  final _joinCodeCtrl = TextEditingController();
 
   int _currentPage = 0;
-  bool _joining = false;
+  Group? _createdGroup;
 
   static const int _pageCount = 3;
 
   @override
   void dispose() {
     _pageController.dispose();
-    _joinCodeCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _joinGroup() async {
-    final code = _joinCodeCtrl.text.trim().toUpperCase();
-    if (code.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Bitte gib einen Einladungscode ein.')),
-      );
-      return;
-    }
+  void _showCreatedGroup(Group group) {
+    setState(() => _createdGroup = group);
+  }
 
-    FocusScope.of(context).unfocus();
-    setState(() => _joining = true);
-
-    try {
-      final group = await Backend().joinGroup(code);
-      await GroupContext().refresh();
-      await GroupContext().setActiveGroup(group);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gruppe "${group.name}" beigetreten.')),
-        );
-        navigateToRoute(context, 'home');
-      }
-    } catch (e) {
-      if (mounted) {
-        await showBackendError(context, e, 'Beitritt fehlgeschlagen');
-      }
-    } finally {
-      if (mounted) setState(() => _joining = false);
-    }
+  void _goHomeAfterJoin(Group group) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Gruppe "${group.name}" beigetreten.')),
+    );
+    navigateToRoute(context, 'home');
   }
 
   void _nextPage() {
@@ -160,118 +139,23 @@ class _GroupOnboardingScreenState extends State<GroupOnboardingScreen> {
     );
   }
 
-  Widget _buildActionPage(ThemeData theme) {
+  Widget _buildActionPage() {
+    final group = _createdGroup;
+
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 480),
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Leg los!',
-                style: theme.primaryTextTheme.displayLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
+          child: group == null
+              ? GroupAddForm(
+                  onGroupJoined: _goHomeAfterJoin,
+                  onGroupCreated: _showCreatedGroup,
+                )
+              : GroupCreatedSuccess(
+                  group: group,
+                  onContinue: () => navigateToRoute(context, 'home'),
                 ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Tritt mit einem Einladungscode einer Gruppe bei oder erstelle deine eigene.',
-                style: theme.primaryTextTheme.bodySmall,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              TextField(
-                controller: _joinCodeCtrl,
-                textCapitalization: TextCapitalization.characters,
-                textInputAction: TextInputAction.done,
-                style: theme.primaryTextTheme.bodySmall?.copyWith(
-                  letterSpacing: 2,
-                ),
-                decoration: InputDecoration(
-                  labelText: 'Einladungscode',
-                  hintText: 'z.B. A2B3C4D5',
-                  labelStyle: theme.primaryTextTheme.bodySmall,
-                  hintStyle: theme.primaryTextTheme.bodySmall,
-                  prefixIcon: const Icon(Icons.key_outlined, size: 20),
-                  isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                ),
-                onSubmitted: (_) => _joinGroup(),
-              ),
-              const SizedBox(height: 16),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: _joining ? null : _joinGroup,
-                  icon: _joining
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Icon(
-                          Icons.login,
-                          color: theme.primaryIconTheme.color,
-                        ),
-                  label: Text(
-                    'Gruppe beitreten',
-                    style: theme.primaryTextTheme.displayLarge?.copyWith(
-                      color: theme.brightness == Brightness.light
-                          ? Colors.white
-                          : Colors.grey[900],
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(48),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  const Expanded(child: Divider()),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Text(
-                      'oder',
-                      style: theme.primaryTextTheme.bodySmall,
-                    ),
-                  ),
-                  const Expanded(child: Divider()),
-                ],
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    navigateToRoute(context, 'group-create', backEnabled: true);
-                  },
-                  icon: Icon(
-                    Icons.add,
-                    color: theme.colorScheme.primary,
-                  ),
-                  label: Text(
-                    'Neue Gruppe erstellen',
-                    style: theme.primaryTextTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(48),
-                    side: BorderSide(color: theme.colorScheme.primary),
-                  ),
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );
@@ -347,7 +231,7 @@ class _GroupOnboardingScreenState extends State<GroupOnboardingScreen> {
                       ],
                     ),
                   ),
-                  _buildActionPage(theme),
+                  _buildActionPage(),
                 ],
               ),
             ),

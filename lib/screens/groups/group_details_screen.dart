@@ -6,7 +6,7 @@ import 'package:ticktrack/models/group/group_api_model.dart';
 import 'package:ticktrack/state/avatar_store.dart';
 import 'package:ticktrack/state/group_context.dart';
 import 'package:ticktrack/util/helpers.dart';
-import 'package:ticktrack/widgets/app_drawer_widget.dart';
+import 'package:ticktrack/widgets/app_options_sheet.dart';
 import 'package:ticktrack/widgets/group/group_context_switcher.dart';
 import 'package:ticktrack/widgets/option_button.dart';
 import 'package:ticktrack/widgets/skeleton/skeleton_card.dart';
@@ -28,8 +28,6 @@ class GroupDetailsScreen extends StatefulWidget {
 }
 
 class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
-  final _scaffoldKey = GlobalKey<ScaffoldState>();
-
   bool _isLoading = true;
   bool _busy = false;
   Group? _group;
@@ -338,111 +336,9 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
     }
   }
 
-  Future<void> _joinGroup(String joinCode) async {
-    try {
-      final group = await Backend().joinGroup(joinCode);
-      await GroupContext().refresh();
-      await GroupContext().setActiveGroup(group);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gruppe "${group.name}" beigetreten.')),
-      );
-      await _load();
-    } catch (e) {
-      await showBackendError(context, e, 'Beitritt fehlgeschlagen');
-    }
-  }
-
-  Future<void> _showAddGroupDialogue() async {
-    String joinCode = '';
-    final theme = Theme.of(context);
-    await showDialog<void>(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: Text(
-            'Gruppe hinzufügen',
-            style: theme.textTheme.titleMedium,
-          ),
-          content: StatefulBuilder(
-            builder: (context, setDialogState) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    'Tritt mit einem Einladungscode einer Gruppe bei:',
-                    style: theme.primaryTextTheme.bodySmall,
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    textCapitalization: TextCapitalization.characters,
-                    style: theme.primaryTextTheme.bodySmall?.copyWith(
-                      letterSpacing: 2,
-                    ),
-                    decoration: InputDecoration(
-                      labelText: 'Einladungscode',
-                      labelStyle: theme.primaryTextTheme.bodySmall,
-                      hintStyle: theme.primaryTextTheme.bodySmall,
-                      border: const OutlineInputBorder(),
-                    ),
-                    onChanged: (value) {
-                      setDialogState(() {
-                        joinCode = value;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      const Expanded(child: Divider()),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: Text(
-                          'oder',
-                          style: theme.primaryTextTheme.bodySmall,
-                        ),
-                      ),
-                      const Expanded(child: Divider()),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  OutlinedButton.icon(
-                    onPressed: () {
-                      Navigator.of(dialogContext).pop();
-                      navigateToRoute(context, 'group-create',
-                          backEnabled: true);
-                    },
-                    icon: Icon(Icons.add, color: theme.colorScheme.primary),
-                    label: Text(
-                      'Neue Gruppe erstellen',
-                      style: theme.primaryTextTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Abbrechen'),
-            ),
-            TextButton(
-              onPressed: () async {
-                final code = joinCode.trim().toUpperCase();
-                if (code.isEmpty) return;
-                Navigator.of(dialogContext).pop();
-                await _joinGroup(code);
-              },
-              child: const Text('Beitreten'),
-            ),
-          ],
-        );
-      },
-    );
+  Future<void> _openAddGroup() async {
+    await navigateToRoute(context, 'group-add', backEnabled: true);
+    if (mounted) await _load();
   }
 
   @override
@@ -450,7 +346,6 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      key: _scaffoldKey,
       appBar: AppBar(
         title:
             Text('Gruppendetails', style: theme.primaryTextTheme.titleMedium),
@@ -468,12 +363,11 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
           const GroupContextSwitcher(),
           OptionButton(
             onPressed: () {
-              _scaffoldKey.currentState?.openEndDrawer();
+              showAppOptionsSheet(context);
             },
           ),
         ],
       ),
-      endDrawer: const AppDrawer(),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _load,
@@ -512,7 +406,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
         ),
         const SizedBox(height: 24),
         ElevatedButton.icon(
-          onPressed: _showAddGroupDialogue,
+          onPressed: _openAddGroup,
           icon: Icon(Icons.add, color: theme.primaryIconTheme.color),
           label: Text(
             'Gruppe hinzufügen',
@@ -546,7 +440,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
         ],
         const SizedBox(height: 24),
         OutlinedButton.icon(
-          onPressed: _busy ? null : _showAddGroupDialogue,
+          onPressed: _busy ? null : _openAddGroup,
           icon: Icon(Icons.add, color: theme.colorScheme.primary),
           label: Text(
             'Weitere Gruppe hinzufügen',

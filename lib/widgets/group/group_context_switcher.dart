@@ -11,10 +11,6 @@ class GroupContextSwitcher extends StatelessWidget {
     final groupContext = GroupContext();
     await showModalBottomSheet<void>(
       context: context,
-      backgroundColor: Theme.of(context).canvasColor,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
       builder: (sheetContext) {
         return SafeArea(
           child: Column(
