@@ -11,7 +11,7 @@ import 'package:ticktrack/util/calendar_export_helper.dart';
 import 'package:ticktrack/util/haptics.dart';
 import 'package:ticktrack/util/helpers.dart';
 import 'package:ticktrack/util/share_helper.dart';
-import 'package:ticktrack/widgets/app_drawer_widget.dart';
+import 'package:ticktrack/widgets/app_options_sheet.dart';
 import 'package:ticktrack/widgets/calendar/calendar_month_grid.dart';
 import 'package:ticktrack/widgets/calendar/calendar_occurrence_tile.dart';
 import 'package:ticktrack/widgets/empty_state_widget.dart';
@@ -32,8 +32,6 @@ class CalendarScreen extends StatefulWidget {
 }
 
 class _CalendarScreenState extends State<CalendarScreen> {
-  final _scaffoldKey = GlobalKey<ScaffoldState>();
-
   late DateTime _visibleMonth;
   late DateTime _selectedDay;
 
@@ -299,7 +297,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
     final selected = _byDay[_selectedDay] ?? const [];
 
     return Scaffold(
-      key: _scaffoldKey,
       bottomNavigationBar: const BottomMenu(),
       appBar: AppBar(
         title: Text('Kalender', style: theme.primaryTextTheme.titleMedium),
@@ -326,11 +323,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
           ),
           const GroupContextSwitcher(),
           OptionButton(
-            onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+            onPressed: () => showAppOptionsSheet(context),
           ),
         ],
       ),
-      endDrawer: const AppDrawer(),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Haptics.tap();

@@ -18,7 +18,7 @@ import 'package:ticktrack/state/group_context.dart';
 import 'package:ticktrack/util/haptics.dart';
 import 'package:ticktrack/util/helpers.dart';
 import 'package:ticktrack/util/share_helper.dart';
-import 'package:ticktrack/widgets/app_drawer_widget.dart';
+import 'package:ticktrack/widgets/app_options_sheet.dart';
 import 'package:ticktrack/widgets/group/group_context_switcher.dart';
 import 'package:blvckleg_dart_core/exception/session_expired.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
@@ -43,7 +43,6 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
   final TextEditingController _commentController = TextEditingController();
   late int id;
   Note? note;
-  final _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _initialized = false;
 
   Timer? _autosaveTimer;
@@ -375,7 +374,6 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
         }
       },
       child: Scaffold(
-        key: _scaffoldKey,
         appBar: AppBar(
           title: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -424,12 +422,11 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
                 semanticLabel: 'Einstellungen',
               ),
               onPressed: () {
-                _scaffoldKey.currentState?.openEndDrawer();
+                showAppOptionsSheet(context);
               },
             ),
           ],
         ),
-        endDrawer: AppDrawer(),
         body: Container(
           color: Theme.of(context).cardColor,
           child: Column(

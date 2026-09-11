@@ -11,7 +11,7 @@ import 'package:ticktrack/screens/home/main_app_screen.dart';
 import 'package:ticktrack/state/group_context.dart';
 import 'package:ticktrack/util/helpers.dart';
 import 'package:ticktrack/widgets/activity_preview_widget.dart';
-import 'package:ticktrack/widgets/app_drawer_widget.dart';
+import 'package:ticktrack/widgets/app_options_sheet.dart';
 import 'package:ticktrack/widgets/calendar_preview_widget.dart';
 import 'package:ticktrack/widgets/group/group_context_switcher.dart';
 import 'package:ticktrack/widgets/group/groups_preview_widget.dart';
@@ -41,7 +41,6 @@ class _HomeScreenState extends State<HomeScreen> {
   User? _ownUser;
 
   bool isLoading = true;
-  final _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
@@ -182,7 +181,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        key: _scaffoldKey,
         bottomNavigationBar: const BottomMenu(),
         appBar: AppBar(
           title: Text("Home",
@@ -193,12 +191,11 @@ class _HomeScreenState extends State<HomeScreen> {
             const GroupContextSwitcher(),
             OptionButton(
               onPressed: () {
-                _scaffoldKey.currentState?.openEndDrawer();
+                showAppOptionsSheet(context);
               },
             )
           ],
         ),
-        endDrawer: AppDrawer(),
         body: RefreshIndicator(
             onRefresh: () {
               return _loadData();

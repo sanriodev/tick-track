@@ -9,7 +9,7 @@ import 'package:ticktrack/state/cache_store.dart';
 import 'package:ticktrack/state/avatar_store.dart';
 import 'package:ticktrack/util/haptics.dart';
 import 'package:ticktrack/util/helpers.dart';
-import 'package:ticktrack/widgets/app_drawer_widget.dart';
+import 'package:ticktrack/widgets/app_options_sheet.dart';
 import 'package:ticktrack/widgets/option_button.dart';
 import 'package:ticktrack/widgets/skeleton/skeleton_card.dart';
 import 'package:ticktrack/widgets/user_avatar_widget.dart';
@@ -29,8 +29,6 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final _scaffoldKey = GlobalKey<ScaffoldState>();
-
   bool _isLoading = true;
   bool _busy = false;
   User? _ownUser;
@@ -440,7 +438,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      key: _scaffoldKey,
       appBar: AppBar(
         title: Text('Profil', style: theme.primaryTextTheme.titleMedium),
         backgroundColor: theme.scaffoldBackgroundColor,
@@ -455,11 +452,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         actions: [
           OptionButton(
-            onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+            onPressed: () => showAppOptionsSheet(context),
           ),
         ],
       ),
-      endDrawer: const AppDrawer(),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _load,

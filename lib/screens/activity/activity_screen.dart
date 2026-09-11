@@ -7,7 +7,7 @@ import 'package:ticktrack/state/group_context.dart';
 import 'package:ticktrack/util/helpers.dart';
 import 'package:ticktrack/widgets/activity/activity_graph_widget.dart';
 import 'package:ticktrack/widgets/activity/activity_history_widget.dart';
-import 'package:ticktrack/widgets/app_drawer_widget.dart';
+import 'package:ticktrack/widgets/app_options_sheet.dart';
 import 'package:ticktrack/widgets/group/group_context_switcher.dart';
 import 'package:ticktrack/widgets/navigation/bottom_menu.dart';
 import 'package:ticktrack/widgets/option_button.dart';
@@ -25,7 +25,6 @@ class ActivityScreen extends StatefulWidget {
 class _ActivityScreenState extends State<ActivityScreen> {
   bool isLoading = true;
   String selectedFilterMode = 'any';
-  final _scaffoldKey = GlobalKey<ScaffoldState>();
   List<EventlogMessage<dynamic>> ownActivites = [];
   List<EventlogMessage<dynamic>> allActivites = [];
 
@@ -125,7 +124,6 @@ class _ActivityScreenState extends State<ActivityScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffoldKey,
       bottomNavigationBar: const BottomMenu(),
       appBar: AppBar(
         title: Text("Aktivitäten",
@@ -136,12 +134,11 @@ class _ActivityScreenState extends State<ActivityScreen> {
           const GroupContextSwitcher(),
           OptionButton(
             onPressed: () {
-              _scaffoldKey.currentState?.openEndDrawer();
+              showAppOptionsSheet(context);
             },
           )
         ],
       ),
-      endDrawer: AppDrawer(),
       body: RefreshIndicator(
         onRefresh: () async {
           setState(() {

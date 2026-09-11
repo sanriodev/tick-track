@@ -10,7 +10,7 @@ import 'package:ticktrack/state/group_context.dart';
 import 'package:ticktrack/util/haptics.dart';
 import 'package:ticktrack/util/helpers.dart';
 import 'package:ticktrack/util/report_helper.dart';
-import 'package:ticktrack/widgets/app_drawer_widget.dart';
+import 'package:ticktrack/widgets/app_options_sheet.dart';
 import 'package:ticktrack/widgets/empty_state_widget.dart';
 import 'package:ticktrack/widgets/group/group_context_switcher.dart';
 import 'package:ticktrack/widgets/option_button.dart';
@@ -35,7 +35,6 @@ class _TasksScreenState extends State<TasksScreen> {
   List<Task> incompleteTasks = [];
   late TaskList list;
   bool isLoading = true;
-  final _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _initialized = false;
 
   @override
@@ -315,7 +314,6 @@ class _TasksScreenState extends State<TasksScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        key: _scaffoldKey,
         appBar: AppBar(
           title: Text(list.name,
               style: Theme.of(context).primaryTextTheme.titleMedium),
@@ -335,12 +333,11 @@ class _TasksScreenState extends State<TasksScreen> {
             const GroupContextSwitcher(),
             OptionButton(
               onPressed: () {
-                _scaffoldKey.currentState?.openEndDrawer();
+                showAppOptionsSheet(context);
               },
             )
           ],
         ),
-        endDrawer: AppDrawer(),
         floatingActionButton: FloatingActionButton(
           onPressed: () {
             Haptics.tap();

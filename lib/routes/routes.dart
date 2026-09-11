@@ -1,7 +1,7 @@
 import 'package:ticktrack/screens/activity/activity_screen.dart';
 import 'package:ticktrack/screens/calendar/calendar_event_edit_screen.dart';
 import 'package:ticktrack/screens/calendar/calendar_screen.dart';
-import 'package:ticktrack/screens/groups/group_create_screen.dart';
+import 'package:ticktrack/screens/groups/group_add_screen.dart';
 import 'package:ticktrack/screens/groups/group_details_screen.dart';
 import 'package:ticktrack/screens/groups/group_onboarding_screen.dart';
 import 'package:ticktrack/screens/home/home_screen.dart';
@@ -201,12 +201,12 @@ GoRouter createRouter() {
         ),
       ),
       GoRoute(
-        name: 'group-create',
-        path: '/group-create',
+        name: 'group-add',
+        path: '/group-add',
         pageBuilder: (context, state) => CustomTransitionPage(
           key: state.pageKey,
-          name: 'group-create',
-          child: const GroupCreateScreen(),
+          name: 'group-add',
+          child: const GroupAddScreen(),
           transitionDuration: const Duration(milliseconds: transitionDuration),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(
