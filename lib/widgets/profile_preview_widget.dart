@@ -1,3 +1,4 @@
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/util/haptics.dart';
 import 'package:ticktrack/widgets/user_avatar_widget.dart';
 import 'package:blvckleg_dart_core/models/user/user_model.dart';
@@ -53,14 +54,14 @@ class ProfilePreviewWidget extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Willkommen zurück,',
+                      context.l10n.welcomeBackName,
                       style: theme.textTheme.labelMedium?.copyWith(
                         color: Colors.grey,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      username ?? 'Dein Profil',
+                      username ?? context.l10n.yourProfile,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -71,8 +72,8 @@ class ProfilePreviewWidget extends StatelessWidget {
                     Text(
                       email ??
                           (isLoading
-                              ? 'Profil wird geladen …'
-                              : 'Keine E-Mail-Adresse hinterlegt'),
+                              ? context.l10n.profileLoading
+                              : context.l10n.noEmailOnFile),
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: Colors.grey,
                       ),

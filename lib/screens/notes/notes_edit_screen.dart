@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:image_picker/image_picker.dart';
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/backend/service/backend_service.dart';
 import 'package:ticktrack/state/note_attachment_store.dart';
 import 'package:ticktrack/util/markdown_editing.dart';
@@ -103,7 +104,7 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
       } else {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Fehlender Parameter für Notiz.')),
+            SnackBar(content: Text(context.l10n.noteMissingParameter)),
           );
           Navigator.of(context).pop();
         });
@@ -125,7 +126,7 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
       await NoteAttachmentStore().loadForNote(id);
     } catch (e) {
       if (mounted) {
-        await showBackendError(context, e, 'Aktion fehlgeschlagen',
+        await showBackendError(context, e, context.l10n.actionFailed,
             alertWhenOffline: false);
       }
     }
@@ -196,9 +197,9 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
         setState(() => _saveState = _SaveState.failed);
       }
       if (e is SessionExpiredException) {
-        await showBackendError(context, e, 'Bitte melde dich erneut an.');
+        await showBackendError(context, e, context.l10n.sessionExpired);
       } else if (mounted) {
-        await showBackendError(context, e, 'Aktion fehlgeschlagen');
+        await showBackendError(context, e, context.l10n.actionFailed);
       }
     }
   }
@@ -235,7 +236,7 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
     } catch (e) {
       Haptics.warning();
       await showBackendError(
-          context, e, 'Bild konnte nicht hochgeladen werden');
+          context, e, context.l10n.imageUploadFailed);
     } finally {
       if (mounted) {
         setState(() => _uploadingImage = false);
@@ -258,7 +259,7 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
                 PhosphorIconsRegular.camera,
                 color: theme.primaryIconTheme.color,
               ),
-              title: Text('Foto aufnehmen',
+              title: Text(context.l10n.imageTakePhoto,
                   style: theme.primaryTextTheme.titleSmall),
               onTap: () => Navigator.of(sheetContext).pop(ImageSource.camera),
             ),
@@ -267,7 +268,7 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
                 PhosphorIconsRegular.image,
                 color: theme.primaryIconTheme.color,
               ),
-              title: Text('Aus Galerie wählen',
+              title: Text(context.l10n.imagePickFromGallery,
                   style: theme.primaryTextTheme.titleSmall),
               onTap: () => Navigator.of(sheetContext).pop(ImageSource.gallery),
             ),
@@ -290,12 +291,7 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
       Haptics.warning();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Kein Zugriff auf Kamera oder Fotos. '
-              'Du kannst das in den Systemeinstellungen erlauben.',
-            ),
-          ),
+          SnackBar(content: Text(context.l10n.imagePermissionDenied)),
         );
       }
       return null;
@@ -327,7 +323,7 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
     if (hasSelection && note != null) {
       items.add(
         ContextMenuButtonItem(
-          label: 'Teilen',
+          label: context.l10n.share,
           onPressed: () {
             state.hideToolbar();
             shareText(
@@ -353,13 +349,13 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
       case _SaveState.idle:
         return null;
       case _SaveState.unsaved:
-        return Text('Nicht gespeichert', style: style);
+        return Text(context.l10n.saveStateUnsaved, style: style);
       case _SaveState.saving:
-        return Text('Speichert …', style: style);
+        return Text(context.l10n.saveStateSaving, style: style);
       case _SaveState.saved:
-        return Text('Gespeichert', style: style);
+        return Text(context.l10n.saveStateSaved, style: style);
       case _SaveState.failed:
-        return Text('Speichern fehlgeschlagen', style: style);
+        return Text(context.l10n.saveStateFailed, style: style);
     }
   }
 
@@ -379,7 +375,7 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(note?.title ?? 'Notiz bearbeiten',
+              Text(note?.title ?? context.l10n.noteEdit,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).primaryTextTheme.titleMedium),
               if (indicator != null) indicator,
@@ -397,18 +393,18 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
             const GroupContextSwitcher(),
             if (note != null)
               IconButton(
-                icon: const PhosphorIcon(
+                icon: PhosphorIcon(
                   PhosphorIconsRegular.shareNetwork,
-                  semanticLabel: 'Notiz teilen',
+                  semanticLabel: context.l10n.noteShare,
                 ),
-                tooltip: 'Notiz teilen',
+                tooltip: context.l10n.noteShare,
                 color: Theme.of(context).primaryIconTheme.color,
                 onPressed: () => shareNote(context, note!),
               ),
             if (_isEditable)
               IconButton(
                 icon: const Icon(Icons.save),
-                tooltip: 'Speichern',
+                tooltip: context.l10n.save,
                 color: Theme.of(context).primaryIconTheme.color,
                 onPressed: () {
                   Haptics.tap();
@@ -417,9 +413,9 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
               ),
             IconButton(
               color: Theme.of(context).primaryIconTheme.color,
-              icon: const PhosphorIcon(
+              icon: PhosphorIcon(
                 PhosphorIconsRegular.gear,
-                semanticLabel: 'Einstellungen',
+                semanticLabel: context.l10n.settings,
               ),
               onPressed: () {
                 showAppOptionsSheet(context);
@@ -451,16 +447,16 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: SegmentedButton<_EditorMode>(
-        segments: const [
+        segments: [
           ButtonSegment(
             value: _EditorMode.preview,
-            label: Text('Rich Text'),
-            icon: PhosphorIcon(PhosphorIconsRegular.eye, size: 16),
+            label: Text(context.l10n.editorRichText),
+            icon: const PhosphorIcon(PhosphorIconsRegular.eye, size: 16),
           ),
           ButtonSegment(
             value: _EditorMode.write,
-            label: Text('Markdown'),
-            icon: PhosphorIcon(PhosphorIconsRegular.pencilSimple, size: 16),
+            label: Text(context.l10n.editorMarkdown),
+            icon: const PhosphorIcon(PhosphorIconsRegular.pencilSimple, size: 16),
           ),
         ],
         selected: {_mode},
@@ -525,7 +521,7 @@ class _NotesEditScreenState extends State<NotesEditScreen> {
       scrollPadding: const EdgeInsets.all(24),
       style: Theme.of(context).primaryTextTheme.titleSmall,
       decoration: InputDecoration(
-        hintText: 'Notiz in Markdown...',
+        hintText: context.l10n.noteMarkdownHint,
         hintStyle: Theme.of(context).primaryTextTheme.titleSmall,
         contentPadding: const EdgeInsets.all(16.0),
         border: InputBorder.none,
@@ -599,7 +595,8 @@ class _LinkDialogState extends State<_LinkDialog> {
     final theme = Theme.of(context);
 
     return AlertDialog(
-      title: Text('Link einfügen', style: theme.primaryTextTheme.bodySmall),
+      title:
+          Text(context.l10n.linkInsertTitle, style: theme.primaryTextTheme.bodySmall),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -607,7 +604,7 @@ class _LinkDialogState extends State<_LinkDialog> {
             controller: _labelController,
             style: theme.primaryTextTheme.bodySmall,
             decoration: InputDecoration(
-              labelText: 'Text (optional)',
+              labelText: context.l10n.linkTextOptional,
               labelStyle: theme.primaryTextTheme.bodySmall,
             ),
           ),
@@ -618,7 +615,7 @@ class _LinkDialogState extends State<_LinkDialog> {
             keyboardType: TextInputType.url,
             style: theme.primaryTextTheme.bodySmall,
             decoration: InputDecoration(
-              labelText: 'Adresse',
+              labelText: context.l10n.linkAddress,
               hintText: 'https://',
               labelStyle: theme.primaryTextTheme.bodySmall,
             ),
@@ -629,12 +626,13 @@ class _LinkDialogState extends State<_LinkDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text('Abbrechen', style: theme.primaryTextTheme.titleSmall),
+          child:
+              Text(context.l10n.cancel, style: theme.primaryTextTheme.titleSmall),
         ),
         ElevatedButton(
           onPressed: _submit,
           child: Text(
-            'Einfügen',
+            context.l10n.insert,
             style: theme.primaryTextTheme.titleSmall?.copyWith(
               color: theme.brightness == Brightness.light
                   ? Colors.white

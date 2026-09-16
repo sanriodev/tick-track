@@ -1,5 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/backend/service/backend_service.dart';
 import 'package:ticktrack/models/block/blocked_user_model.dart';
 import 'package:ticktrack/models/group/group_api_model.dart';
@@ -83,7 +84,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
       AvatarStore().sync(group.members.map((member) => member.id));
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
-      await showBackendError(context, e, 'Gruppe konnte nicht geladen werden');
+      await showBackendError(context, e, context.l10n.groupLoadFailed);
     }
   }
 
@@ -123,7 +124,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Abbrechen'),
+              child: Text(context.l10n.cancel),
             ),
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
@@ -148,33 +149,27 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
     final isLastMember = group.members.length <= 1;
     if (_isOwner && !isLastMember) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Übertrage zuerst den Gruppenbesitz an ein anderes Mitglied.',
-          ),
-        ),
+        SnackBar(content: Text(context.l10n.groupTransferFirst)),
       );
       return;
     }
 
     final confirmed = await _confirm(
-      title: 'Gruppe verlassen?',
+      title: context.l10n.groupLeaveTitle,
       content: Text(
         isLastMember
-            ? 'Du bist das letzte Mitglied - die Gruppe "${group.name}" wird '
-                'dadurch gelöscht. Alle Einträge dieser Gruppe gehen verloren.'
-            : 'Möchtest du die Gruppe "${group.name}" wirklich verlassen? '
-                'Du verlierst den Zugriff auf alle Einträge dieser Gruppe.',
+            ? context.l10n.groupLeaveLastMember(group.name)
+            : context.l10n.groupLeaveConfirm(group.name),
         style: Theme.of(context).textTheme.bodyMedium,
       ),
-      confirmLabel: 'Verlassen',
+      confirmLabel: context.l10n.leave,
       destructive: true,
     );
     if (!confirmed) return;
 
     await _run(
       () => Backend().leaveGroup(group.id),
-      'Gruppe konnte nicht verlassen werden',
+      context.l10n.groupLeaveFailed,
     );
   }
 
@@ -183,27 +178,25 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
     if (group == null) return;
 
     final confirmed = await _confirm(
-      title: 'Besitz übertragen?',
+      title: context.l10n.groupTransferTitle,
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '"${member.username}" wird neuer Besitzer der Gruppe '
-            '"${group.name}".',
+            context.l10n.groupTransferMessage(member.username, group.name),
             style: Theme.of(context).textTheme.bodyMedium,
           ),
           const SizedBox(height: 12),
           Text(
-            'Du gibst damit deine Besitzerrechte ab und kannst danach keine '
-            'Mitglieder mehr entfernen oder den Besitz weitergeben.',
+            context.l10n.groupTransferWarning,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                 ),
           ),
         ],
       ),
-      confirmLabel: 'Übertragen',
+      confirmLabel: context.l10n.transfer,
     );
     if (!confirmed) return;
 
@@ -211,12 +204,12 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
       () => Backend()
           .transferGroupOwnership(group.id, member.id)
           .then((_) => null),
-      'Besitz konnte nicht übertragen werden',
+      context.l10n.groupTransferFailed,
     );
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('"${member.username}" ist jetzt Gruppenbesitzer.'),
+          content: Text(context.l10n.groupTransferDone(member.username)),
         ),
       );
     }
@@ -227,21 +220,19 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
     if (group == null) return;
 
     final confirmed = await _confirm(
-      title: 'Mitglied entfernen?',
+      title: context.l10n.groupRemoveMemberTitle,
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '"${member.username}" wird aus der Gruppe "${group.name}" '
-            'entfernt.',
+            context.l10n.groupRemoveMemberMessage(
+                member.username, group.name),
             style: Theme.of(context).textTheme.bodyMedium,
           ),
           const SizedBox(height: 12),
           Text(
-            'Alle Notizen, Aufgabenlisten und Aufgaben, die "${member.username}" '
-            'in dieser Gruppe erstellt hat, werden dabei unwiderruflich '
-            'gelöscht.',
+            context.l10n.groupRemoveMemberWarning(member.username),
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                   color: Theme.of(context).colorScheme.error,
@@ -249,18 +240,18 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
           ),
         ],
       ),
-      confirmLabel: 'Entfernen',
+      confirmLabel: context.l10n.remove,
       destructive: true,
     );
     if (!confirmed) return;
 
     await _run(
       () => Backend().removeGroupMember(group.id, member.id).then((_) => null),
-      'Mitglied konnte nicht entfernt werden',
+      context.l10n.groupRemoveMemberFailed,
     );
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('"${member.username}" wurde entfernt.')),
+        SnackBar(content: Text(context.l10n.groupRemoveMemberDone(member.username))),
       );
     }
   }
@@ -272,22 +263,21 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: Text('Nutzer blockieren?', style: theme.textTheme.titleMedium),
+          title: Text(context.l10n.blockUserTitle,
+              style: theme.textTheme.titleMedium),
           content: Text(
-            'Inhalte und Aktivitäten von "${member.username}" verschwinden '
-            'sofort aus deiner Ansicht. Du kannst die Blockierung jederzeit '
-            'wieder aufheben.',
+            context.l10n.blockUserMessage(member.username),
             style: theme.textTheme.bodyMedium,
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Abbrechen'),
+              child: Text(context.l10n.cancel),
             ),
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
               child: Text(
-                'Blockieren',
+                context.l10n.block,
                 style: TextStyle(color: theme.colorScheme.error),
               ),
             ),
@@ -299,11 +289,11 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
 
     await _run(
       () => Backend().blockUser(member.id),
-      'Nutzer konnte nicht blockiert werden',
+      context.l10n.blockUserFailed,
     );
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('"${member.username}" wurde blockiert.')),
+        SnackBar(content: Text(context.l10n.blockUserDone(member.username))),
       );
     }
   }
@@ -311,12 +301,12 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
   Future<void> _unblockUser(BlockedUser blocked) async {
     await _run(
       () => Backend().unblockUser(blocked.id),
-      'Blockierung konnte nicht aufgehoben werden',
+      context.l10n.unblockFailed,
     );
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('"${blocked.username}" ist nicht mehr blockiert.'),
+          content: Text(context.l10n.unblockDone(blocked.username)),
         ),
       );
     }
@@ -325,12 +315,12 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
   Future<void> _unblockMember(User member) async {
     await _run(
       () => Backend().unblockUser(member.id),
-      'Blockierung konnte nicht aufgehoben werden',
+      context.l10n.unblockFailed,
     );
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('"${member.username}" ist nicht mehr blockiert.'),
+          content: Text(context.l10n.unblockDone(member.username)),
         ),
       );
     }
@@ -348,7 +338,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
     return Scaffold(
       appBar: AppBar(
         title:
-            Text('Gruppendetails', style: theme.primaryTextTheme.titleMedium),
+            Text(context.l10n.groupDetails, style: theme.primaryTextTheme.titleMedium),
         backgroundColor: theme.scaffoldBackgroundColor,
         centerTitle: false,
         leading: Padding(
@@ -400,7 +390,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
         ),
         const SizedBox(height: 16),
         Text(
-          'Du bist in keiner Gruppe.',
+          context.l10n.groupNone,
           style: theme.primaryTextTheme.displayLarge,
           textAlign: TextAlign.center,
         ),
@@ -409,7 +399,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
           onPressed: _openAddGroup,
           icon: Icon(Icons.add, color: theme.primaryIconTheme.color),
           label: Text(
-            'Gruppe hinzufügen',
+            context.l10n.groupAdd,
             style: theme.primaryTextTheme.displayLarge?.copyWith(
               color: theme.brightness == Brightness.light
                   ? Colors.white
@@ -443,7 +433,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
           onPressed: _busy ? null : _openAddGroup,
           icon: Icon(Icons.add, color: theme.colorScheme.primary),
           label: Text(
-            'Weitere Gruppe hinzufügen',
+            context.l10n.groupAddAnother,
             style: theme.primaryTextTheme.bodySmall?.copyWith(
               color: theme.colorScheme.primary,
               fontWeight: FontWeight.w600,
@@ -461,7 +451,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
             color: theme.colorScheme.error,
           ),
           label: Text(
-            'Gruppe verlassen',
+            context.l10n.groupLeave,
             style: theme.primaryTextTheme.bodySmall?.copyWith(
               color: theme.colorScheme.error,
               fontWeight: FontWeight.w600,
@@ -476,8 +466,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
           Padding(
             padding: const EdgeInsets.only(top: 8),
             child: Text(
-              'Als Besitzer musst du den Gruppenbesitz übertragen, bevor du '
-              'die Gruppe verlassen kannst.',
+              context.l10n.groupOwnerMustTransfer,
               style: theme.textTheme.labelSmall,
               textAlign: TextAlign.center,
             ),
@@ -521,16 +510,16 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${group.members.length} '
-                    '${group.members.length == 1 ? 'Mitglied' : 'Mitglieder'}',
+                    context.l10n.memberCount(group.members.length),
                     style: theme.textTheme.bodySmall,
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    owner != null
-                        ? 'Besitzer: ${owner.username}'
-                            '${_isOwner ? ' (du)' : ''}'
-                        : 'Kein Besitzer',
+                    owner == null
+                        ? context.l10n.groupNoOwner
+                        : _isOwner
+                            ? context.l10n.groupOwnerIsYou(owner.username)
+                            : context.l10n.groupOwnerIs(owner.username),
                     style: theme.textTheme.bodySmall,
                   ),
                 ],
@@ -553,7 +542,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
               child: Text(
-                'Mitglieder',
+                context.l10n.members,
                 style: theme.textTheme.titleSmall
                     ?.copyWith(fontWeight: FontWeight.bold),
               ),
@@ -591,7 +580,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
           if (isSelf)
             Padding(
               padding: const EdgeInsets.only(left: 6),
-              child: Text('(du)', style: theme.textTheme.labelSmall),
+              child: Text(context.l10n.you, style: theme.textTheme.labelSmall),
             ),
         ],
       ),
@@ -605,7 +594,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  'Besitzer',
+                  context.l10n.owner,
                   style: theme.textTheme.labelSmall
                       ?.copyWith(color: theme.colorScheme.primary),
                 ),
@@ -643,7 +632,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                         ),
                         const SizedBox(width: 12),
                         Text(
-                          'Zum Besitzer machen',
+                          context.l10n.makeOwner,
                           style: theme.textTheme.bodySmall,
                         ),
                       ],
@@ -661,7 +650,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                         ),
                         const SizedBox(width: 12),
                         Text(
-                          'Blockierung aufheben',
+                          context.l10n.unblock,
                           style: theme.textTheme.bodySmall,
                         ),
                       ],
@@ -679,7 +668,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                         ),
                         const SizedBox(width: 12),
                         Text(
-                          'Nutzer blockieren',
+                          context.l10n.blockUser,
                           style: theme.textTheme.bodySmall
                               ?.copyWith(color: theme.colorScheme.error),
                         ),
@@ -698,7 +687,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                         ),
                         const SizedBox(width: 12),
                         Text(
-                          'Aus Gruppe entfernen',
+                          context.l10n.removeFromGroup,
                           style: theme.textTheme.bodySmall
                               ?.copyWith(color: theme.colorScheme.error),
                         ),
@@ -722,7 +711,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
               child: Text(
-                'Blockierte Nutzer',
+                context.l10n.blockedUsers,
                 style: theme.textTheme.titleSmall
                     ?.copyWith(fontWeight: FontWeight.bold),
               ),
@@ -730,8 +719,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
               child: Text(
-                'Inhalte und Aktivitäten dieser Nutzer sind für dich '
-                'ausgeblendet.',
+                context.l10n.blockedUsersHint,
                 style: theme.textTheme.bodySmall,
               ),
             ),
@@ -749,7 +737,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                 trailing: TextButton(
                   onPressed: _busy ? null : () => _unblockUser(blocked),
                   child: Text(
-                    'Entblocken',
+                    context.l10n.unblockShort,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.primary,
                       fontWeight: FontWeight.w600,
@@ -772,13 +760,13 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Einladungscode',
+              context.l10n.joinCode,
               style: theme.textTheme.titleSmall
                   ?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 4),
             Text(
-              'Mit diesem Code können andere der Gruppe beitreten.',
+              context.l10n.joinCodeHint,
               style: theme.textTheme.bodySmall,
             ),
             const SizedBox(height: 12),
@@ -805,7 +793,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                   ),
                 ),
                 IconButton(
-                  tooltip: 'Code kopieren',
+                  tooltip: context.l10n.copyCode,
                   icon: PhosphorIcon(
                     PhosphorIconsRegular.copy,
                     color: theme.primaryIconTheme.color,
@@ -816,7 +804,7 @@ class _GroupDetailsScreenState extends State<GroupDetailsScreen> {
                     );
                     if (!mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Einladungscode kopiert.')),
+                      SnackBar(content: Text(context.l10n.joinCodeCopied)),
                     );
                   },
                 ),

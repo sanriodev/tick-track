@@ -1,4 +1,6 @@
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/routes/routes.dart';
+import 'package:ticktrack/state/locale_store.dart';
 import 'package:ticktrack/state/reminder_sync.dart';
 import 'package:ticktrack/widgets/connectivity_banner.dart';
 import 'package:ticktrack/ui/theme.dart';
@@ -8,7 +10,9 @@ import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
 
 class MainAppScreen extends StatefulWidget {
-  const MainAppScreen({super.key});
+  final Locale startupLocale;
+
+  const MainAppScreen({super.key, required this.startupLocale});
 
   @override
   State<MainAppScreen> createState() => _MainAppScreenState();
@@ -19,6 +23,7 @@ class MainAppScreen extends StatefulWidget {
 
 class _MainAppScreenState extends State<MainAppScreen> {
   ThemeMode? currentTheme;
+  late Locale currentLocale;
   late final GoRouter _router;
   late final AppLifecycleListener _lifecycleListener;
 
@@ -34,6 +39,15 @@ class _MainAppScreenState extends State<MainAppScreen> {
     setState(() {
       currentTheme = themeMode;
     });
+  }
+
+  Future<void> changeLocale(Locale locale) async {
+    if (locale == currentLocale) return;
+    await LocaleStore().save(locale);
+    await LocaleStore().applyToDateFormatting(locale);
+    if (!mounted) return;
+    setState(() => currentLocale = locale);
+    ReminderSync().sync(force: true);
   }
 
   ThemeMode _getThemeMode() {
@@ -53,6 +67,7 @@ class _MainAppScreenState extends State<MainAppScreen> {
   void initState() {
     super.initState();
     currentTheme = _getThemeMode();
+    currentLocale = widget.startupLocale;
     _router = createRouter();
     _lifecycleListener = AppLifecycleListener(
       onResume: () => ReminderSync().sync(),
@@ -73,9 +88,10 @@ class _MainAppScreenState extends State<MainAppScreen> {
       themeMode: currentTheme,
       theme: appThemeLight,
       darkTheme: appThemeDark,
-      locale: const Locale('de', 'DE'),
-      supportedLocales: const [Locale('de', 'DE')],
+      locale: currentLocale,
+      supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: const [
+        AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,

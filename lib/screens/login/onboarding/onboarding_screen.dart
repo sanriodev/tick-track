@@ -3,9 +3,11 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/backend/service/backend_service.dart';
 import 'package:ticktrack/models/application/availability_model.dart';
 import 'package:ticktrack/util/helpers.dart';
+import 'package:ticktrack/widgets/language_toggle.dart';
 import 'package:blvckleg_dart_core/exception/mfa_required.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:flutter/gestures.dart';
@@ -165,11 +167,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       final String message =
           raw is List ? raw.join(', ') : (raw as String? ?? '$e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$prefix: $message')),
+        SnackBar(content: Text(context.l10n.errorPrefixed(prefix, message))),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$prefix: ${e}')),
+        SnackBar(content: Text(context.l10n.errorPrefixed(prefix, '$e'))),
       );
     }
   }
@@ -194,12 +196,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
     if (!_acceptedTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Bitte akzeptieren Sie die Datenschutzerklärung und die '
-            'Nutzungsbedingungen',
-          ),
-        ),
+        SnackBar(content: Text(context.l10n.termsAcceptRequired)),
       );
       return;
     }
@@ -227,10 +224,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         });
         _showMessage(
           !availability.usernameAvailable && !availability.emailAvailable
-              ? 'Benutzername und E-Mail-Adresse sind bereits vergeben'
+              ? context.l10n.signupBothTaken
               : !availability.usernameAvailable
-                  ? 'Dieser Benutzername ist bereits vergeben'
-                  : 'Diese E-Mail-Adresse ist bereits registriert',
+                  ? context.l10n.signupUsernameTaken
+                  : context.l10n.signupEmailTaken,
         );
         return;
       }
@@ -238,7 +235,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       await Backend().register(username, email, _passwordCtrl.text);
       _goToCodeStep(email);
     } catch (e) {
-      await _showResponseError(e, 'Registrierung fehlgeschlagen');
+      await _showResponseError(e, context.l10n.signupFailed);
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -252,17 +249,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     if (!availability.sameUser) return false;
 
     if (availability.confirmed) {
-      _showMessage('Dieser Account existiert bereits, bitte melde dich an.');
+      _showMessage(context.l10n.signupAccountExists);
       navigateToRoute(context, 'login');
       return true;
     }
 
     await Backend().register(username, email, _passwordCtrl.text);
     _goToCodeStep(email);
-    _showMessage(
-      'Diese Registrierung wurde nie bestätigt - wir haben dir einen neuen '
-      'Code geschickt.',
-    );
+    _showMessage(context.l10n.signupNeverConfirmed);
     return true;
   }
 
@@ -283,7 +277,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       );
       setState(() => _step = _OnboardingStep.success);
     } catch (e) {
-      await _showResponseError(e, 'Bestätigung fehlgeschlagen');
+      await _showResponseError(e, context.l10n.signupConfirmFailed);
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -298,9 +292,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         username: _usernameCtrl.text.trim(),
       );
       if (email.isEmpty) setState(() => _codeTarget = target);
-      _showMessage('Code wurde erneut gesendet');
+      _showMessage(context.l10n.codeResent);
     } catch (e) {
-      await _showResponseError(e, 'Senden fehlgeschlagen');
+      await _showResponseError(e, context.l10n.sendFailed);
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -322,7 +316,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         backEnabled: true,
       );
     } catch (e) {
-      await _showResponseError(e, 'Login fehlgeschlagen');
+      await _showResponseError(e, context.l10n.signupLoginFailed);
       navigateToRoute(context, 'login');
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -341,6 +335,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         ),
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         centerTitle: true,
+        actions: const [
+          Padding(
+            padding: EdgeInsets.only(right: 12),
+            child: Center(child: LanguageToggle(compact: true)),
+          ),
+        ],
         leading: _step == _OnboardingStep.success
             ? null
             : Padding(
@@ -385,7 +385,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
               const SizedBox(height: 32),
               Text(
-                'Dein Account wurde bestätigt und ist startklar!',
+                context.l10n.signupSuccess,
                 style: theme.primaryTextTheme.displayLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                     ) ??
@@ -410,7 +410,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           color: Theme.of(context).primaryIconTheme.color,
                         ),
                   label: Text(
-                    'Weiter',
+                    context.l10n.next,
                     style: Theme.of(context)
                         .primaryTextTheme
                         .displayLarge
@@ -459,7 +459,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'E-Mail bestätigen',
+                  context.l10n.signupConfirmEmail,
                   style: theme.primaryTextTheme.displayLarge?.copyWith(
                         fontWeight: FontWeight.w700,
                       ) ??
@@ -470,8 +470,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Wir haben dir einen $_codeLength-stelligen Code an '
-                  '$_codeTarget geschickt.',
+                  context.l10n.signupCodeSentTo(_codeLength, _codeTarget),
                   style: theme.primaryTextTheme.bodySmall,
                   textAlign: TextAlign.center,
                 ),
@@ -503,7 +502,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ),
                   validator: (v) => (v == null ||
                           v.trim().length != _codeLength)
-                      ? 'Bitte geben Sie den $_codeLength-stelligen Code ein'
+                      ? context.l10n.codeRequired(_codeLength)
                       : null,
                   onCompleted: (_) => _confirm(),
                 ),
@@ -523,7 +522,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             color: Theme.of(context).primaryIconTheme.color,
                           ),
                     label: Text(
-                      'Bestätigen',
+                      context.l10n.confirm,
                       style: Theme.of(context)
                           .primaryTextTheme
                           .displayLarge
@@ -543,7 +542,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 TextButton(
                   onPressed: _submitting ? null : _resendCode,
                   child: Text(
-                    'Code erneut senden',
+                    context.l10n.resendCode,
                     style: theme.primaryTextTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.primary,
                       decoration: TextDecoration.underline,
@@ -597,7 +596,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Account erstellen',
+                  context.l10n.signupCreateAccount,
                   style: theme.primaryTextTheme.displayLarge?.copyWith(
                         fontWeight: FontWeight.w700,
                       ) ??
@@ -615,8 +614,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   style: theme.primaryTextTheme.bodySmall,
                   onChanged: _onUsernameChanged,
                   decoration: InputDecoration(
-                    labelText: 'Benutzername',
-                    hintText: 'Gewünschter Benutzername',
+                    labelText: context.l10n.username,
+                    hintText: context.l10n.signupUsernameHint,
                     labelStyle: theme.primaryTextTheme.bodySmall,
                     hintStyle: theme.primaryTextTheme.bodySmall,
                     prefixIcon: const Icon(Icons.person_outline, size: 20),
@@ -628,8 +627,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     helperText: _usernameAvailable == null
                         ? null
                         : _usernameAvailable!
-                            ? 'Benutzername ist frei'
-                            : 'Benutzername ist bereits vergeben',
+                            ? context.l10n.signupUsernameFree
+                            : context.l10n.signupUsernameTakenHint,
                     helperStyle: theme.primaryTextTheme.bodySmall?.copyWith(
                       color: _usernameAvailable == true
                           ? Colors.green
@@ -642,7 +641,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                   ),
                   validator: (v) => (v == null || v.trim().isEmpty)
-                      ? 'Bitte geben Sie einen Benutzernamen ein'
+                      ? context.l10n.signupUsernameRequired
                       : null,
                   onFieldSubmitted: (_) => _emailFocus.requestFocus(),
                 ),
@@ -655,8 +654,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   style: theme.primaryTextTheme.bodySmall,
                   onChanged: _onEmailChanged,
                   decoration: InputDecoration(
-                    labelText: 'E-Mail-Adresse',
-                    hintText: 'ihre.email@beispiel.de',
+                    labelText: context.l10n.email,
+                    hintText: context.l10n.signupEmailHint,
                     labelStyle: theme.primaryTextTheme.bodySmall,
                     hintStyle: theme.primaryTextTheme.bodySmall,
                     prefixIcon: const Icon(Icons.email_outlined, size: 20),
@@ -668,8 +667,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     helperText: _emailAvailable == null
                         ? null
                         : _emailAvailable!
-                            ? 'E-Mail-Adresse ist frei'
-                            : 'E-Mail-Adresse ist bereits registriert',
+                            ? context.l10n.signupEmailFree
+                            : context.l10n.signupEmailTakenHint,
                     helperStyle: theme.primaryTextTheme.bodySmall?.copyWith(
                       color: _emailAvailable == true
                           ? Colors.green
@@ -683,10 +682,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ),
                   validator: (v) {
                     if (v == null || v.trim().isEmpty) {
-                      return 'Bitte geben Sie eine E-Mail-Adresse ein';
+                      return context.l10n.signupEmailRequired;
                     }
                     if (!v.contains('@')) {
-                      return 'Bitte geben Sie eine gültige E-Mail-Adresse ein';
+                      return context.l10n.signupEmailInvalid;
                     }
                     return null;
                   },
@@ -702,8 +701,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   autocorrect: false,
                   style: theme.primaryTextTheme.bodySmall,
                   decoration: InputDecoration(
-                    labelText: 'Passwort',
-                    hintText: 'Mindestens 8 Zeichen',
+                    labelText: context.l10n.password,
+                    hintText: context.l10n.passwordMinLength,
                     labelStyle: theme.primaryTextTheme.bodySmall,
                     hintStyle: theme.primaryTextTheme.bodySmall,
                     prefixIcon: const Icon(Icons.lock_outline, size: 20),
@@ -731,7 +730,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         style: ButtonStyle(
                             backgroundColor:
                                 WidgetStateProperty.all(Colors.transparent)),
-                        tooltip: _obscure ? 'Show password' : 'Hide password',
+                        tooltip: _obscure
+                            ? context.l10n.passwordShow
+                            : context.l10n.passwordHide,
                         iconSize: 20,
                         icon: Icon(
                             _obscure ? Icons.visibility : Icons.visibility_off),
@@ -747,7 +748,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                   ),
                   validator: (v) => (v == null || v.length < 8)
-                      ? 'Das Passwort muss mindestens 8 Zeichen haben'
+                      ? context.l10n.passwordMinLengthError
                       : null,
                   onFieldSubmitted: (_) => _submit(),
                 ),
@@ -770,10 +771,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             style: theme.primaryTextTheme.bodySmall,
                             children: [
                               TextSpan(
-                                text: 'Ich bin mit der ',
+                                text: context.l10n.termsPrefix,
                               ),
                               TextSpan(
-                                text: 'Datenschutzerklärung',
+                                text: context.l10n.termsPrivacyPolicy,
                                 style:
                                     theme.primaryTextTheme.bodySmall?.copyWith(
                                   color: theme.colorScheme.primary,
@@ -788,10 +789,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                   },
                               ),
                               TextSpan(
-                                text: ' und den ',
+                                text: context.l10n.termsAnd,
                               ),
                               TextSpan(
-                                text: 'Nutzungsbedingungen',
+                                text: context.l10n.termsOfUse,
                                 style:
                                     theme.primaryTextTheme.bodySmall?.copyWith(
                                   color: theme.colorScheme.primary,
@@ -805,7 +806,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                   },
                               ),
                               TextSpan(
-                                text: ' einverstanden',
+                                text: context.l10n.termsSuffix,
                               ),
                             ],
                           ),
@@ -830,7 +831,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             color: Theme.of(context).primaryIconTheme.color,
                           ),
                     label: Text(
-                      'Registrieren',
+                      context.l10n.signupSubmit,
                       style: Theme.of(context)
                           .primaryTextTheme
                           .displayLarge

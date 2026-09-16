@@ -1,10 +1,18 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:passkeys/types.dart';
 import 'package:ticktrack/backend/service/mfa_error_translator.dart';
 
 class _UnrelatedException implements Exception {}
 
 void main() {
+  late AppLocalizations l10n;
+
+  setUpAll(() async {
+    l10n = await AppLocalizations.delegate.load(const Locale('en'));
+  });
+
   test('ein Abbruch durch den Nutzer ist kein Fehler', () {
     final translated = translatePasskeyError(PasskeyAuthCancelledException());
 
@@ -27,7 +35,11 @@ void main() {
         translatePasskeyError(DomainNotAssociatedException('nicht verknüpft'));
 
     expect(translated, isA<MfaUnavailableException>());
-    expect('$translated', contains('Support'));
+    expect(
+      (translated as MfaUnavailableException).reason,
+      MfaErrorReason.domainNotAssociated,
+    );
+    expect(translated.localizedMessage(l10n), contains('support'));
   });
 
   test('Android ohne Google-Konto wird erklärt', () {
@@ -47,14 +59,22 @@ void main() {
     );
 
     expect(translated, isA<MfaAuthenticatorException>());
-    expect('$translated', contains('bereits registriert'));
+    expect(
+      (translated as MfaAuthenticatorException).reason,
+      MfaErrorReason.credentialAlreadyRegistered,
+    );
+    expect(translated.localizedMessage(l10n), contains('already registered'));
   });
 
   test('ein fehlender Passkey verweist auf den Wiederherstellungscode', () {
     final translated =
         translatePasskeyError(NoCredentialsAvailableException());
 
-    expect('$translated', contains('Wiederherstellungscode'));
+    expect(
+      (translated as MfaAuthenticatorException).reason,
+      MfaErrorReason.noMatchingPasskey,
+    );
+    expect(translated.localizedMessage(l10n), contains('recovery code'));
   });
 
   test('ein Timeout lädt zum erneuten Versuch ein', () {

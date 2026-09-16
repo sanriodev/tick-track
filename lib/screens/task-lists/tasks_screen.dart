@@ -1,5 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/backend/service/backend_service.dart';
 import 'package:ticktrack/state/cache_store.dart';
 import 'package:ticktrack/enum/privacy_mode_enum.dart';
@@ -67,8 +68,7 @@ class _TasksScreenState extends State<TasksScreen> {
       } else {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text('Fehlender Parameter für Aufgabenliste.')),
+            SnackBar(content: Text(context.l10n.taskListMissingParameter)),
           );
           Navigator.of(context).pop();
         });
@@ -97,7 +97,7 @@ class _TasksScreenState extends State<TasksScreen> {
         isLoading = false;
       });
       if (mounted) {
-        await showBackendError(context, e, 'Aktion fehlgeschlagen',
+        await showBackendError(context, e, context.l10n.actionFailed,
             alertWhenOffline: false);
       }
     }
@@ -124,9 +124,9 @@ class _TasksScreenState extends State<TasksScreen> {
         isLoading = false;
       });
       if (e is SessionExpiredException) {
-        await showBackendError(context, e, 'Bitte melde dich erneut an.');
+        await showBackendError(context, e, context.l10n.sessionExpired);
       } else if (mounted) {
-        await showBackendError(context, e, 'Aktion fehlgeschlagen');
+        await showBackendError(context, e, context.l10n.actionFailed);
       }
     }
   }
@@ -141,9 +141,9 @@ class _TasksScreenState extends State<TasksScreen> {
         isLoading = false;
       });
       if (e is SessionExpiredException) {
-        await showBackendError(context, e, 'Bitte melde dich erneut an.');
+        await showBackendError(context, e, context.l10n.sessionExpired);
       } else if (mounted) {
-        await showBackendError(context, e, 'Aktion fehlgeschlagen');
+        await showBackendError(context, e, context.l10n.actionFailed);
       }
     }
   }
@@ -158,9 +158,9 @@ class _TasksScreenState extends State<TasksScreen> {
         isLoading = false;
       });
       if (e is SessionExpiredException) {
-        await showBackendError(context, e, 'Bitte melde dich erneut an.');
+        await showBackendError(context, e, context.l10n.sessionExpired);
       } else if (mounted) {
-        await showBackendError(context, e, 'Aktion fehlgeschlagen');
+        await showBackendError(context, e, context.l10n.actionFailed);
       }
     }
   }
@@ -292,7 +292,7 @@ class _TasksScreenState extends State<TasksScreen> {
                               context,
                               entityType: 'task',
                               entityId: tasks[index].id,
-                              entityLabel: 'Aufgabe',
+                              entityLabel: context.l10n.task,
                               authorId: tasks[index].taskList?.user?.id,
                               authorName: tasks[index].taskList?.user?.username,
                               onBlocked: () => _getTasksForList(),
@@ -300,7 +300,7 @@ class _TasksScreenState extends State<TasksScreen> {
                             backgroundColor: Colors.red,
                             foregroundColor: Colors.white,
                             icon: Icons.flag,
-                            label: 'Melden',
+                            label: context.l10n.report,
                           ),
                       ],
                     ),
@@ -343,7 +343,7 @@ class _TasksScreenState extends State<TasksScreen> {
             Haptics.tap();
             _showCreateTaskDialog();
           },
-          tooltip: 'Neuer Eintrag',
+          tooltip: context.l10n.taskNew,
           child: const Icon(Icons.add),
         ),
         body: RefreshIndicator(
@@ -367,12 +367,10 @@ class _TasksScreenState extends State<TasksScreen> {
                 child: isLoading
                     ? Container()
                     : completeTasks.isEmpty && incompleteTasks.isEmpty
-                        ? const EmptyStateWidget(
+                        ? EmptyStateWidget(
                             icon: PhosphorIconsRegular.listChecks,
-                            title: 'Diese Liste ist leer',
-                            message:
-                                'Lege den ersten Eintrag an - abgehakte Aufgaben '
-                                'rutschen automatisch nach unten.',
+                            title: context.l10n.taskListEmptyTitle,
+                            message: context.l10n.taskListEmptyMessage,
                           )
                         : SingleChildScrollView(
                             physics: const AlwaysScrollableScrollPhysics(),
@@ -380,9 +378,10 @@ class _TasksScreenState extends State<TasksScreen> {
                               mainAxisSize: MainAxisSize.min,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                ..._section("Offene Tasks", incompleteTasks),
-                                ..._section(
-                                    "Abgeschlossene Tasks", completeTasks),
+                                ..._section(context.l10n.sectionOpenTasks,
+                                    incompleteTasks),
+                                ..._section(context.l10n.sectionCompletedTasks,
+                                    completeTasks),
                               ],
                             ),
                           ),
@@ -400,7 +399,7 @@ class _TasksScreenState extends State<TasksScreen> {
       builder: (dialogContext) {
         return AlertDialog(
           title: Text(
-            'Name der Aufgabe',
+            context.l10n.taskNameTitle,
             style: Theme.of(context).primaryTextTheme.bodySmall,
           ),
           content: Column(
@@ -412,7 +411,7 @@ class _TasksScreenState extends State<TasksScreen> {
                 autofocus: true,
                 style: Theme.of(context).primaryTextTheme.bodySmall,
                 decoration: InputDecoration(
-                  labelText: 'Titel',
+                  labelText: context.l10n.title,
                   labelStyle: Theme.of(context).primaryTextTheme.bodySmall,
                 ),
               ),
@@ -421,7 +420,7 @@ class _TasksScreenState extends State<TasksScreen> {
                 controller: contentController,
                 style: Theme.of(context).primaryTextTheme.bodySmall,
                 decoration: InputDecoration(
-                  labelText: 'Inhalt (optional)',
+                  labelText: context.l10n.contentOptional,
                   labelStyle: Theme.of(context).primaryTextTheme.bodySmall,
                 ),
               ),
@@ -432,7 +431,7 @@ class _TasksScreenState extends State<TasksScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text('Abbrechen',
+              child: Text(context.l10n.cancel,
                   style: Theme.of(context).primaryTextTheme.titleSmall),
             ),
             ElevatedButton(
@@ -441,9 +440,7 @@ class _TasksScreenState extends State<TasksScreen> {
                 final c = contentController.text.trim();
                 if (t.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Bitte einen Titel eingeben.'),
-                    ),
+                    SnackBar(content: Text(context.l10n.titleRequired)),
                   );
                   return;
                 }
@@ -458,7 +455,7 @@ class _TasksScreenState extends State<TasksScreen> {
               },
               style: Theme.of(context).elevatedButtonTheme.style,
               child: Text(
-                'Erstellen',
+                context.l10n.create,
                 style: Theme.of(context).primaryTextTheme.titleSmall?.copyWith(
                       color: Theme.of(context).brightness == Brightness.light
                           ? Colors.white

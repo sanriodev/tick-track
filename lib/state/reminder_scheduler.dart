@@ -1,3 +1,5 @@
+import 'package:ticktrack/state/locale_store.dart';
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/models/calendar/calendar_event_model.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -46,19 +48,19 @@ class ReminderScheduler {
 
   bool _exactAllowed = true;
 
-  static const AndroidNotificationDetails _androidDetails =
-      AndroidNotificationDetails(
-    'calendar_reminders',
-    'Erinnerungen',
-    channelDescription: 'Erinnerungen an bevorstehende Kalenderevents',
-    importance: Importance.high,
-    priority: Priority.high,
-  );
+  NotificationDetails _detailsFor(AppLocalizations l10n) => NotificationDetails(
+        android: AndroidNotificationDetails(
+          'calendar_reminders',
+          l10n.reminderChannelName,
+          channelDescription: l10n.reminderChannelDescription,
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+        iOS: const DarwinNotificationDetails(),
+      );
 
-  static const NotificationDetails _details = NotificationDetails(
-    android: _androidDetails,
-    iOS: DarwinNotificationDetails(),
-  );
+  Future<AppLocalizations> _localizations() =>
+      AppLocalizations.delegate.load(LocaleStore().resolveStartupLocale());
 
   Future<void> init() async {
     if (_initialized) {
@@ -178,8 +180,9 @@ class ReminderScheduler {
     } catch (error) {
       debugPrint('Could not clear the pending reminders: $error');
     }
+    final l10n = await _localizations();
     for (final entry in scheduled) {
-      await _schedule(entry.fireAt, entry.occurrence, entry.groupName);
+      await _schedule(l10n, entry.fireAt, entry.occurrence, entry.groupName);
     }
     debugPrint('Reminders: ${scheduled.length} of ${due.length} upcoming '
         'scheduled across ${calendars.length} calendars '
@@ -219,18 +222,20 @@ class ReminderScheduler {
   }
 
   Future<void> _schedule(
+    AppLocalizations l10n,
     DateTime fireAt,
     CalendarOccurrence occurrence,
     String? groupName,
   ) async {
     final event = occurrence.event;
+    final details = _detailsFor(l10n);
     try {
       await _plugin.zonedSchedule(
         _idFor(occurrence),
         event.title,
-        _body(occurrence, groupName),
+        _body(l10n, occurrence, groupName),
         tz.TZDateTime.from(fireAt, tz.local),
-        _details,
+        details,
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.wallClockTime,
         androidScheduleMode: _exactAllowed
@@ -244,9 +249,9 @@ class ReminderScheduler {
         await _plugin.zonedSchedule(
           _idFor(occurrence),
           event.title,
-          _body(occurrence, groupName),
+          _body(l10n, occurrence, groupName),
           tz.TZDateTime.from(fireAt, tz.local),
-          _details,
+          details,
           uiLocalNotificationDateInterpretation:
               UILocalNotificationDateInterpretation.wallClockTime,
           androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
@@ -259,19 +264,18 @@ class ReminderScheduler {
     }
   }
 
-  String _body(CalendarOccurrence occurrence, String? groupName) {
+  String _body(
+    AppLocalizations l10n,
+    CalendarOccurrence occurrence,
+    String? groupName,
+  ) {
     final start = occurrence.startAt;
     final now = DateTime.now();
     final isToday = start.year == now.year &&
         start.month == now.month &&
         start.day == now.day;
 
-    final when = occurrence.event.allDay
-        ? (isToday ? 'Heute' : DateFormat('EEEE, d. MMMM').format(start))
-        : isToday
-            ? 'Heute um ${DateFormat('HH:mm').format(start)}'
-            : DateFormat("EEEE, d. MMMM 'um' HH:mm").format(start);
-
+    final when = _whenLabel(l10n, occurrence, start, isToday: isToday);
     final location = occurrence.event.location?.trim() ?? '';
     final group = groupName?.trim() ?? '';
     return [
@@ -279,6 +283,20 @@ class ReminderScheduler {
       if (location.isNotEmpty) location,
       if (group.isNotEmpty) group,
     ].join(' · ');
+  }
+
+  String _whenLabel(
+    AppLocalizations l10n,
+    CalendarOccurrence occurrence,
+    DateTime start, {
+    required bool isToday,
+  }) {
+    final date = DateFormat.MMMMEEEEd().format(start);
+    if (occurrence.event.allDay) {
+      return isToday ? l10n.today : date;
+    }
+    final time = DateFormat.jm().format(start);
+    return isToday ? l10n.reminderTodayAt(time) : l10n.reminderOnDateAt(date, time);
   }
 
   int _idFor(CalendarOccurrence occurrence) {

@@ -1,3 +1,4 @@
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/models/activity/activity_model.dart';
 import 'package:ticktrack/widgets/activity/activity_history_widget.dart';
 import 'package:flutter/material.dart';
@@ -48,7 +49,7 @@ class ActivityPreviewWidget extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  'Aktivitäten',
+                  context.l10n.activities,
                   style: theme.textTheme.titleMedium
                       ?.copyWith(fontWeight: FontWeight.bold),
                 ),
@@ -71,7 +72,7 @@ class ActivityPreviewWidget extends StatelessWidget {
               child: TextButton(
                 onPressed: onPressed,
                 child: Text(
-                  'Mehr anzeigen',
+                  context.l10n.showMore,
                   style: TextStyle(
                     color: accent,
                     fontWeight: FontWeight.w600,

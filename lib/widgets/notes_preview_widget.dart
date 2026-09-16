@@ -1,3 +1,4 @@
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/models/note/note_api_model.dart';
 import 'package:flutter/material.dart';
 
@@ -62,7 +63,7 @@ class _NotesPreviewWidgetState extends State<NotesPreviewWidget> {
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      'Notizen',
+                      context.l10n.notes,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
@@ -100,7 +101,7 @@ class _NotesPreviewWidgetState extends State<NotesPreviewWidget> {
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6.0),
                 child: Text(
-                  'Keine Notizen vorhanden',
+                  context.l10n.notesPreviewEmpty,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Colors.grey,
                       ),
@@ -130,7 +131,7 @@ class _NotesPreviewWidgetState extends State<NotesPreviewWidget> {
               child: TextButton(
                 onPressed: widget.onPressed,
                 child: Text(
-                  'Mehr anzeigen',
+                  context.l10n.showMore,
                   style: TextStyle(
                     color: Theme.of(context).secondaryHeaderColor,
                     fontWeight: FontWeight.w600,

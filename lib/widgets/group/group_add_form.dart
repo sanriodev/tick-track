@@ -1,3 +1,4 @@
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/backend/service/backend_service.dart';
 import 'package:ticktrack/models/group/group_api_model.dart';
 import 'package:ticktrack/state/group_context.dart';
@@ -38,7 +39,7 @@ class _GroupAddFormState extends State<GroupAddForm> {
     final joinCode = _joinCodeController.text.trim().toUpperCase();
     if (joinCode.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Bitte gib einen Einladungscode ein.')),
+        SnackBar(content: Text(context.l10n.joinCodeRequired)),
       );
       return;
     }
@@ -53,7 +54,7 @@ class _GroupAddFormState extends State<GroupAddForm> {
       if (mounted) widget.onGroupJoined(group);
     } catch (e) {
       if (mounted) {
-        await showBackendError(context, e, 'Beitritt fehlgeschlagen');
+        await showBackendError(context, e, context.l10n.groupJoinFailed);
       }
     } finally {
       if (mounted) setState(() => _joining = false);
@@ -77,7 +78,7 @@ class _GroupAddFormState extends State<GroupAddForm> {
         await showBackendError(
           context,
           e,
-          'Gruppe konnte nicht erstellt werden',
+          context.l10n.groupCreateFailed,
         );
       }
     } finally {
@@ -129,9 +130,8 @@ class _GroupAddFormState extends State<GroupAddForm> {
       children: [
         _buildSectionHeader(
           theme,
-          title: 'Gruppe beitreten',
-          text:
-              'Du hast einen Einladungscode? Dann tritt einer bestehenden Gruppe bei.',
+          title: context.l10n.groupJoin,
+          text: context.l10n.groupJoinHint,
         ),
         const SizedBox(height: 20),
         TextField(
@@ -140,8 +140,8 @@ class _GroupAddFormState extends State<GroupAddForm> {
           textInputAction: TextInputAction.done,
           style: theme.primaryTextTheme.bodySmall?.copyWith(letterSpacing: 2),
           decoration: InputDecoration(
-            labelText: 'Einladungscode',
-            hintText: 'z.B. A2B3C4D5',
+            labelText: context.l10n.joinCode,
+            hintText: context.l10n.joinCodeHintExample,
             labelStyle: theme.primaryTextTheme.bodySmall,
             hintStyle: theme.primaryTextTheme.bodySmall,
             prefixIcon: const Icon(Icons.key_outlined, size: 20),
@@ -164,7 +164,7 @@ class _GroupAddFormState extends State<GroupAddForm> {
                 )
               : Icon(Icons.login, color: theme.colorScheme.primary),
           label: Text(
-            'Gruppe beitreten',
+            context.l10n.groupJoin,
             style: theme.primaryTextTheme.displayLarge?.copyWith(
               color: theme.colorScheme.primary,
             ),
@@ -187,9 +187,8 @@ class _GroupAddFormState extends State<GroupAddForm> {
         children: [
           _buildSectionHeader(
             theme,
-            title: 'Neue Gruppe erstellen',
-            text:
-                'Notizen, Aufgabenlisten und Aktivitäten teilst du nur mit den Mitgliedern deiner Gruppe.',
+            title: context.l10n.groupCreateTitle,
+            text: context.l10n.groupCreateHint,
           ),
           const SizedBox(height: 20),
           TextFormField(
@@ -197,8 +196,8 @@ class _GroupAddFormState extends State<GroupAddForm> {
             textInputAction: TextInputAction.done,
             style: theme.primaryTextTheme.bodySmall,
             decoration: InputDecoration(
-              labelText: 'Name der Gruppe',
-              hintText: 'z.B. Familie, WG, Team',
+              labelText: context.l10n.groupName,
+              hintText: context.l10n.groupNameHint,
               labelStyle: theme.primaryTextTheme.bodySmall,
               hintStyle: theme.primaryTextTheme.bodySmall,
               prefixIcon: const Icon(Icons.group_outlined, size: 20),
@@ -209,7 +208,7 @@ class _GroupAddFormState extends State<GroupAddForm> {
               ),
             ),
             validator: (value) => (value == null || value.trim().isEmpty)
-                ? 'Bitte gib einen Gruppennamen ein'
+                ? context.l10n.groupNameRequired
                 : null,
             onFieldSubmitted: (_) => _createGroup(),
           ),
@@ -224,7 +223,7 @@ class _GroupAddFormState extends State<GroupAddForm> {
                   )
                 : Icon(Icons.add, color: theme.primaryIconTheme.color),
             label: Text(
-              'Gruppe erstellen',
+              context.l10n.groupCreate,
               style: theme.primaryTextTheme.displayLarge?.copyWith(
                 color: theme.brightness == Brightness.light
                     ? Colors.white
@@ -270,7 +269,8 @@ class _GroupAddFormState extends State<GroupAddForm> {
         const Expanded(child: Divider()),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Text('oder', style: theme.primaryTextTheme.bodySmall),
+          child:
+              Text(context.l10n.or, style: theme.primaryTextTheme.bodySmall),
         ),
         const Expanded(child: Divider()),
       ],

@@ -1,3 +1,4 @@
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/state/avatar_store.dart';
 import 'package:flutter/material.dart';
 
@@ -89,7 +90,7 @@ class _UserAvatarWidgetState extends State<UserAvatarWidget> {
     );
 
     return Semantics(
-      label: 'Profilbild von ${widget.username ?? 'unbekannt'}',
+      label: context.l10n.avatarOf(widget.username ?? context.l10n.unknown),
       excludeSemantics: true,
       child: SizedBox(
         width: diameter,

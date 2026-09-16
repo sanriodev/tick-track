@@ -1,5 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/backend/service/backend_service.dart';
 import 'package:ticktrack/state/cache_store.dart';
 import 'package:ticktrack/enum/event_color_enum.dart';
@@ -39,11 +40,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
   bool _isLoading = true;
   bool _isExporting = false;
 
-  String _calendarNameOfYear(int year) {
+  String _calendarNameOfYear(AppLocalizations l10n, int year) {
     final groupName = GroupContext().activeGroup?.name;
     return groupName == null
-        ? 'TickTrack Kalender $year'
-        : 'TickTrack Kalender $groupName $year';
+        ? l10n.calendarNameOfYear(year)
+        : l10n.calendarNameOfGroupYear(groupName, year);
   }
 
   @override
@@ -100,7 +101,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
       await showBackendError(
-          context, e, 'Kalenderevents konnten nicht geladen werden',
+          context, e, context.l10n.eventsLoadFailed,
           alertWhenOffline: false);
     }
   }
@@ -215,18 +216,18 @@ class _CalendarScreenState extends State<CalendarScreen> {
       final events = await _loadEventsOfYear(year);
 
       if (events.isEmpty) {
-        _showMessage('Keine Kalenderevents in $year zum Exportieren.');
+        _showMessage(context.l10n.calendarNothingToExport(year));
         return;
       }
       await shareCalendar(
         context,
         events: events,
-        calendarName: _calendarNameOfYear(year),
+        calendarName: _calendarNameOfYear(context.l10n, year),
       );
     } catch (e) {
       Haptics.warning();
       await showBackendError(
-          context, e, 'Kalender konnte nicht exportiert werden');
+          context, e, context.l10n.calendarExportFailed);
     } finally {
       if (mounted) {
         setState(() => _isExporting = false);
@@ -248,26 +249,26 @@ class _CalendarScreenState extends State<CalendarScreen> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(
-          'Kalenderevent löschen?',
+          context.l10n.eventDeleteTitle,
           style: Theme.of(context).primaryTextTheme.bodySmall,
         ),
         content: Text(
           event.recurrence.repeats
-              ? '"${event.title}" wird mit allen Wiederholungen gelöscht.'
-              : '"${event.title}" wird gelöscht.',
+              ? context.l10n.eventDeleteSeriesMessage(event.title)
+              : context.l10n.eventDeleteMessage(event.title),
           style: Theme.of(context).primaryTextTheme.titleSmall,
         ),
         actionsAlignment: MainAxisAlignment.spaceEvenly,
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text('Abbrechen',
+            child: Text(context.l10n.cancel,
                 style: Theme.of(context).primaryTextTheme.titleSmall),
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
             child: Text(
-              'Löschen',
+              context.l10n.delete,
               style: Theme.of(context).primaryTextTheme.titleSmall?.copyWith(
                     color: Theme.of(context).colorScheme.error,
                   ),
@@ -287,7 +288,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     } catch (e) {
       Haptics.warning();
       await showBackendError(
-          context, e, 'Kalenderevent konnte nicht gelöscht werden');
+          context, e, context.l10n.eventDeleteFailed);
     }
   }
 
@@ -299,18 +300,19 @@ class _CalendarScreenState extends State<CalendarScreen> {
     return Scaffold(
       bottomNavigationBar: const BottomMenu(),
       appBar: AppBar(
-        title: Text('Kalender', style: theme.primaryTextTheme.titleMedium),
+        title:
+            Text(context.l10n.navCalendar, style: theme.primaryTextTheme.titleMedium),
         centerTitle: false,
         backgroundColor: theme.scaffoldBackgroundColor,
         actions: [
           IconButton(
-            tooltip: 'Zu heute',
+            tooltip: context.l10n.calendarJumpToToday,
             icon: const PhosphorIcon(PhosphorIconsRegular.calendarDot),
             color: theme.primaryIconTheme.color,
             onPressed: _jumpToToday,
           ),
           IconButton(
-            tooltip: 'Kalender als iCalendar exportieren',
+            tooltip: context.l10n.calendarExport,
             icon: _isExporting
                 ? const SizedBox(
                     width: 18,
@@ -332,7 +334,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           Haptics.tap();
           _openEditor();
         },
-        tooltip: 'Neues Kalenderevent',
+        tooltip: context.l10n.eventNew,
         child: const Icon(Icons.add),
       ),
       body: RefreshIndicator(
@@ -385,9 +387,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
           child: EmptyStateWidget(
               scrollable: false,
               icon: PhosphorIconsRegular.calendarBlank,
-              title: 'Nichts am ${DateFormat('d. MMMM').format(_selectedDay)}',
-              message: 'Müllabfuhr, Putztag, Besuch - trag ein, was die Gruppe '
-                  'wissen sollte.'),
+              title: context.l10n.calendarNothingOn(
+                DateFormat.MMMMd().format(_selectedDay),
+              ),
+              message: context.l10n.calendarEmptyMessage),
         ),
       ];
     }
@@ -397,7 +400,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
           child: Text(
-            DateFormat('EEEE, d. MMMM y').format(_selectedDay),
+            DateFormat.yMMMMEEEEd().format(_selectedDay),
             style: theme.primaryTextTheme.displayLarge,
           ),
         ),

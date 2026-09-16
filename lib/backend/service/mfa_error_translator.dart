@@ -1,25 +1,59 @@
+import 'package:ticktrack/l10n/l10n.dart';
+import 'package:ticktrack/util/localized_exception.dart';
 import 'package:passkeys/types.dart';
 
 class MfaCancelledException implements Exception {
   const MfaCancelledException();
 }
 
-class MfaUnavailableException implements Exception {
-  final String message;
+enum MfaErrorReason {
+  deviceUnsupported,
+  domainNotAssociated,
+  googleAccountMissing,
+  passwordManagerMissing,
+  credentialAlreadyRegistered,
+  noMatchingPasskey,
+  requestTimeout,
+  malformedServerRequest;
 
-  const MfaUnavailableException(this.message);
-
-  @override
-  String toString() => message;
+  String message(AppLocalizations l10n) => switch (this) {
+        MfaErrorReason.deviceUnsupported => l10n.mfaErrorDeviceUnsupported,
+        MfaErrorReason.domainNotAssociated => l10n.mfaErrorDomainNotAssociated,
+        MfaErrorReason.googleAccountMissing =>
+          l10n.mfaErrorGoogleAccountMissing,
+        MfaErrorReason.passwordManagerMissing =>
+          l10n.mfaErrorPasswordManagerMissing,
+        MfaErrorReason.credentialAlreadyRegistered =>
+          l10n.mfaErrorCredentialAlreadyRegistered,
+        MfaErrorReason.noMatchingPasskey => l10n.mfaErrorNoMatchingPasskey,
+        MfaErrorReason.requestTimeout => l10n.mfaErrorRequestTimeout,
+        MfaErrorReason.malformedServerRequest =>
+          l10n.mfaErrorMalformedServerRequest,
+      };
 }
 
-class MfaAuthenticatorException implements Exception {
-  final String message;
+class MfaUnavailableException implements LocalizedException {
+  final MfaErrorReason reason;
 
-  const MfaAuthenticatorException(this.message);
+  const MfaUnavailableException(this.reason);
 
   @override
-  String toString() => message;
+  String localizedMessage(AppLocalizations l10n) => reason.message(l10n);
+
+  @override
+  String toString() => 'MfaUnavailableException(${reason.name})';
+}
+
+class MfaAuthenticatorException implements LocalizedException {
+  final MfaErrorReason reason;
+
+  const MfaAuthenticatorException(this.reason);
+
+  @override
+  String localizedMessage(AppLocalizations l10n) => reason.message(l10n);
+
+  @override
+  String toString() => 'MfaAuthenticatorException(${reason.name})';
 }
 
 Exception translatePasskeyError(Exception error) {
@@ -28,46 +62,34 @@ Exception translatePasskeyError(Exception error) {
   }
   if (error is DeviceNotSupportedException ||
       error is PasskeyUnsupportedException) {
-    return const MfaUnavailableException(
-      'Dieses Gerät unterstützt keine Passkeys.',
-    );
+    return const MfaUnavailableException(MfaErrorReason.deviceUnsupported);
   }
   if (error is DomainNotAssociatedException) {
-    return const MfaUnavailableException(
-      'Diese App ist nicht für Passkeys freigeschaltet. '
-      'Bitte wende dich an den Support.',
-    );
+    return const MfaUnavailableException(MfaErrorReason.domainNotAssociated);
   }
   if (error is MissingGoogleSignInException ||
       error is SyncAccountNotAvailableException) {
-    return const MfaUnavailableException(
-      'Für Passkeys braucht Android ein eingerichtetes Google-Konto.',
-    );
+    return const MfaUnavailableException(MfaErrorReason.googleAccountMissing);
   }
   if (error is NoCreateOptionException) {
     return const MfaUnavailableException(
-      'Auf diesem Gerät ist kein Passwort-Manager für Passkeys eingerichtet.',
+      MfaErrorReason.passwordManagerMissing,
     );
   }
   if (error is ExcludeCredentialsCanNotBeRegisteredException) {
     return const MfaAuthenticatorException(
-      'Dieses Gerät ist bereits registriert.',
+      MfaErrorReason.credentialAlreadyRegistered,
     );
   }
   if (error is NoCredentialsAvailableException) {
-    return const MfaAuthenticatorException(
-      'Auf diesem Gerät liegt kein passender Passkey. '
-      'Nutze ein registriertes Gerät oder einen Wiederherstellungscode.',
-    );
+    return const MfaAuthenticatorException(MfaErrorReason.noMatchingPasskey);
   }
   if (error is TimeoutException) {
-    return const MfaAuthenticatorException(
-      'Die Anfrage ist abgelaufen. Bitte versuche es erneut.',
-    );
+    return const MfaAuthenticatorException(MfaErrorReason.requestTimeout);
   }
   if (error is MalformedBase64Url) {
     return const MfaAuthenticatorException(
-      'Der Server hat eine unbrauchbare Anfrage geschickt.',
+      MfaErrorReason.malformedServerRequest,
     );
   }
   return error;

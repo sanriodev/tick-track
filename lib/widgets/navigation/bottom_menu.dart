@@ -1,3 +1,4 @@
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/util/helpers.dart';
 import 'package:ticktrack/widgets/navigation/bottom_menu_navigation_item.dart';
 import 'package:flutter/material.dart';
@@ -10,7 +11,8 @@ class BottomMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final int current = getCurrentIndex(context);
+    final pages = _buildPages(context.l10n);
+    final int current = _indexOfCurrentRoute(context, pages);
     return Container(
       decoration: BoxDecoration(
         border: Border(
@@ -45,51 +47,54 @@ class BottomMenu extends StatelessWidget {
             onTap: (int index) {
               navigateToRoute(
                 context,
-                _pages[index].materialRoute,
+                pages[index].materialRoute,
               );
             },
-            items: _pages,
+            items: pages,
           ),
         ],
       ),
     );
   }
 
-  int getCurrentIndex(BuildContext context) {
+  int _indexOfCurrentRoute(
+    BuildContext context,
+    List<BottomMenuNavigationItem> pages,
+  ) {
     final String route = ModalRoute.of(context)!.settings.name!;
-    for (int i = 0; i < _pages.length; i++) {
-      if (_pages[i].materialRoute == route) {
+    for (int i = 0; i < pages.length; i++) {
+      if (pages[i].materialRoute == route) {
         return i;
       }
     }
     return 0;
   }
-}
 
-const List<BottomMenuNavigationItem> _pages = [
-  BottomMenuNavigationItem(
-    icon: PhosphorIcon(PhosphorIconsRegular.house),
-    label: 'Home',
-    materialRoute: 'home',
-  ),
-  BottomMenuNavigationItem(
-    icon: PhosphorIcon(PhosphorIconsRegular.list),
-    label: 'Listen',
-    materialRoute: 'task-lists',
-  ),
-  BottomMenuNavigationItem(
-    icon: PhosphorIcon(PhosphorIconsRegular.note),
-    label: 'Notizen',
-    materialRoute: 'notes',
-  ),
-  BottomMenuNavigationItem(
-    icon: PhosphorIcon(PhosphorIconsRegular.calendarBlank),
-    label: 'Kalender',
-    materialRoute: 'calendar',
-  ),
-  BottomMenuNavigationItem(
-    icon: PhosphorIcon(PhosphorIconsRegular.pulse),
-    label: 'Aktivität',
-    materialRoute: 'activity',
-  ),
-];
+  List<BottomMenuNavigationItem> _buildPages(AppLocalizations l10n) => [
+        BottomMenuNavigationItem(
+          icon: const PhosphorIcon(PhosphorIconsRegular.house),
+          label: l10n.navHome,
+          materialRoute: 'home',
+        ),
+        BottomMenuNavigationItem(
+          icon: const PhosphorIcon(PhosphorIconsRegular.list),
+          label: l10n.navLists,
+          materialRoute: 'task-lists',
+        ),
+        BottomMenuNavigationItem(
+          icon: const PhosphorIcon(PhosphorIconsRegular.note),
+          label: l10n.navNotes,
+          materialRoute: 'notes',
+        ),
+        BottomMenuNavigationItem(
+          icon: const PhosphorIcon(PhosphorIconsRegular.calendarBlank),
+          label: l10n.navCalendar,
+          materialRoute: 'calendar',
+        ),
+        BottomMenuNavigationItem(
+          icon: const PhosphorIcon(PhosphorIconsRegular.pulse),
+          label: l10n.navActivity,
+          materialRoute: 'activity',
+        ),
+      ];
+}

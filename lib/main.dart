@@ -1,12 +1,11 @@
 import 'package:ticktrack/screens/home/main_app_screen.dart';
 import 'package:ticktrack/state/cache_store.dart';
+import 'package:ticktrack/state/locale_store.dart';
 import 'package:ticktrack/state/reminder_scheduler.dart';
 import 'package:blvckleg_dart_core/util/util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hive/hive.dart';
-import 'package:intl/date_symbol_data_local.dart';
-import 'package:intl/intl.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,13 +15,14 @@ void main() async {
   await Hive.openBox('pins');
   await Hive.openBox('avatars');
   await CacheStore.openBox();
+  await LocaleStore.openBox();
 
-  initializeDateFormatting('de_DE');
-  Intl.defaultLocale = 'de_DE';
+  final startupLocale = LocaleStore().resolveStartupLocale();
+  await LocaleStore().applyToDateFormatting(startupLocale);
 
   await ReminderScheduler().init();
 
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 
-  runApp(const MainAppScreen());
+  runApp(MainAppScreen(startupLocale: startupLocale));
 }

@@ -3,8 +3,10 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:ticktrack/backend/service/backend_service.dart';
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/screens/login/onboarding/onboarding_screen.dart';
 import 'package:ticktrack/util/helpers.dart';
+import 'package:ticktrack/widgets/language_toggle.dart';
 import 'package:blvckleg_dart_core/exception/mfa_required.dart';
 import 'package:blvckleg_dart_core/models/settings/settings_model.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
@@ -79,11 +81,11 @@ class _LoginScreenState extends State<LoginScreen> {
         final String? message =
             (jsonData['message'] as List?)?.first as String?;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Login failed: ${message}')),
+          SnackBar(content: Text(context.l10n.loginFailed('$message'))),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Login failed: ${e}')),
+          SnackBar(content: Text(context.l10n.loginFailed('$e'))),
         );
         return;
       }
@@ -110,12 +112,7 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       if (!mounted) return true;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Dein Account wurde noch nicht bestätigt - wir haben dir einen '
-            'neuen Code geschickt.',
-          ),
-        ),
+        SnackBar(content: Text(context.l10n.loginAccountUnconfirmed)),
       );
       navigateToRoute(
         context,
@@ -171,6 +168,12 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         centerTitle: true,
+        actions: const [
+          Padding(
+            padding: EdgeInsets.only(right: 12),
+            child: Center(child: LanguageToggle(compact: true)),
+          ),
+        ],
       ),
       body: SafeArea(
         child: Center(
@@ -186,7 +189,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'Willkommen zurück.',
+                        context.l10n.loginWelcomeBack,
                         style: theme.primaryTextTheme.displayLarge?.copyWith(
                               fontWeight: FontWeight.w700,
                             ) ??
@@ -207,8 +210,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           AutofillHints.email
                         ],
                         decoration: InputDecoration(
-                          labelText: 'Benutzername',
-                          hintText: 'Benutzername',
+                          labelText: context.l10n.username,
+                          hintText: context.l10n.username,
                           labelStyle: theme.primaryTextTheme.bodySmall,
                           hintStyle: theme.primaryTextTheme.bodySmall,
                           prefixIcon:
@@ -220,7 +223,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         validator: (v) => (v == null || v.trim().isEmpty)
-                            ? 'Bitte Benutzernamen eingeben'
+                            ? context.l10n.loginUsernameRequired
                             : null,
                         onFieldSubmitted: (_) => _passwordFocus.requestFocus(),
                       ),
@@ -235,8 +238,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         autocorrect: false,
                         style: theme.primaryTextTheme.bodySmall,
                         decoration: InputDecoration(
-                          labelText: 'Passwort',
-                          hintText: 'dein Passwort',
+                          labelText: context.l10n.password,
+                          hintText: context.l10n.loginPasswordHint,
                           labelStyle: theme.primaryTextTheme.bodySmall,
                           hintStyle: theme.primaryTextTheme.bodySmall,
                           prefixIcon: const Icon(Icons.lock_outline, size: 20),
@@ -266,8 +269,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                   backgroundColor: WidgetStateProperty.all(
                                       Colors.transparent)),
                               tooltip: _obscure
-                                  ? 'Passwort zeigen'
-                                  : 'Passwort verstecken',
+                                  ? context.l10n.passwordShow
+                                  : context.l10n.passwordHide,
                               iconSize: 20,
                               icon: Icon(_obscure
                                   ? Icons.visibility
@@ -286,7 +289,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                         validator: (v) => (v == null || v.isEmpty)
-                            ? 'Bitte Passwort eingeben'
+                            ? context.l10n.loginPasswordRequired
                             : null,
                         onFieldSubmitted: (_) => _submit(),
                       ),
@@ -300,7 +303,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   backEnabled: true);
                             },
                             child: Text(
-                              'Passwort vergessen?',
+                              context.l10n.loginForgotPassword,
                               style: theme.primaryTextTheme.bodySmall?.copyWith(
                                 color: theme.colorScheme.primary,
                                 decoration: TextDecoration.underline,
@@ -314,7 +317,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     backEnabled: true);
                               },
                               child: Text(
-                                'Noch keinen Account?',
+                                context.l10n.loginNoAccount,
                                 style:
                                     theme.primaryTextTheme.bodySmall?.copyWith(
                                   color: theme.colorScheme.primary,
@@ -342,7 +345,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       Theme.of(context).primaryIconTheme.color,
                                 ),
                           label: Text(
-                            'Anmelden',
+                            context.l10n.loginSubmit,
                             style: Theme.of(context)
                                 .primaryTextTheme
                                 .displayLarge

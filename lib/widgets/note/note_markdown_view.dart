@@ -1,3 +1,4 @@
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/util/helpers.dart';
 import 'package:ticktrack/util/markdown_helper.dart';
 import 'package:ticktrack/widgets/note/note_attachment_image.dart';
@@ -17,7 +18,7 @@ class NoteMarkdownView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (markdown.trim().isEmpty) {
-      return _buildEmptyHint(Theme.of(context));
+      return _buildEmptyHint(context, Theme.of(context));
     }
 
     return MarkdownBody(
@@ -57,9 +58,9 @@ class NoteMarkdownView extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyHint(ThemeData theme) {
+  Widget _buildEmptyHint(BuildContext context, ThemeData theme) {
     return Text(
-      'Diese Notiz ist noch leer.',
+      context.l10n.noteEmpty,
       style: theme.primaryTextTheme.displayMedium,
     );
   }

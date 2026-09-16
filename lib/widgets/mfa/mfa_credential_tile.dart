@@ -1,3 +1,4 @@
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:blvckleg_dart_core/models/mfa/webauthn_credential_model.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -19,15 +20,16 @@ class MfaCredentialTile extends StatelessWidget {
 
     return ListTile(
       leading: PhosphorIcon(_icon, color: theme.primaryIconTheme.color),
-      title: Text(_title, style: theme.textTheme.titleSmall),
-      subtitle: Text(_subtitle, style: theme.textTheme.bodySmall),
+      title: Text(_title(context.l10n), style: theme.textTheme.titleSmall),
+      subtitle:
+          Text(_subtitle(context.l10n), style: theme.textTheme.bodySmall),
       trailing: IconButton(
         icon: PhosphorIcon(
           PhosphorIconsRegular.trash,
           color: theme.colorScheme.error,
           size: 20,
         ),
-        tooltip: 'Entfernen',
+        tooltip: context.l10n.remove,
         onPressed: onDelete,
       ),
     );
@@ -40,28 +42,27 @@ class MfaCredentialTile extends StatelessWidget {
     return PhosphorIconsRegular.usb;
   }
 
-  String get _title {
+  String _title(AppLocalizations l10n) {
     final nickname = credential.nickname;
     if (nickname != null && nickname.isNotEmpty) {
       return nickname;
     }
     return credential.isPlatformAuthenticator
-        ? 'Dieses Gerät'
-        : 'Sicherheitsschlüssel';
+        ? l10n.mfaThisDevice
+        : l10n.mfaSecurityKey;
   }
 
-  String get _subtitle {
+  String _subtitle(AppLocalizations l10n) {
     final parts = <String>[
-      if (credential.deviceType == WebAuthnDeviceType.multiDevice)
-        'synchronisiert',
+      if (credential.deviceType == WebAuthnDeviceType.multiDevice) l10n.mfaSynced,
       if (credential.createdAt != null)
-        'registriert am ${_formatDate(credential.createdAt!)}',
+        l10n.mfaRegisteredOn(_formatDate(credential.createdAt!)),
       if (credential.lastUsedAt != null)
-        'zuletzt genutzt am ${_formatDate(credential.lastUsedAt!)}',
+        l10n.mfaLastUsedOn(_formatDate(credential.lastUsedAt!)),
     ];
-    return parts.isEmpty ? 'Registrierter Faktor' : parts.join(' · ');
+    return parts.isEmpty ? l10n.mfaRegisteredFactor : parts.join(' · ');
   }
 
   String _formatDate(DateTime value) =>
-      DateFormat('dd.MM.yyyy').format(value.toLocal());
+      DateFormat.yMd().format(value.toLocal());
 }

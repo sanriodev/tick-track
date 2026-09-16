@@ -1,3 +1,4 @@
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/enum/privacy_mode_enum.dart';
 import 'package:ticktrack/models/note/note_api_model.dart';
 import 'package:ticktrack/state/pin_store.dart';
@@ -92,14 +93,15 @@ class _NoteWidgetState extends State<NoteWidget>
                   icon: _isPinned
                       ? PhosphorIconsFill.pushPin
                       : PhosphorIconsRegular.pushPin,
-                  label: _isPinned ? 'Loslösen' : 'Anpinnen',
+                  label:
+                      _isPinned ? context.l10n.unpin : context.l10n.pin,
                 ),
                 SlidableAction(
                   onPressed: (_) => shareNote(context, widget.note),
                   backgroundColor: theme.canvasColor,
                   foregroundColor: theme.primaryIconTheme.color,
                   icon: PhosphorIconsRegular.shareNetwork,
-                  label: 'Teilen',
+                  label: context.l10n.share,
                 ),
               ],
             ),
@@ -125,7 +127,7 @@ class _NoteWidgetState extends State<NoteWidget>
                       context,
                       entityType: 'note',
                       entityId: widget.note.id,
-                      entityLabel: 'Notiz',
+                      entityLabel: context.l10n.note,
                       authorId: widget.note.user?.id,
                       authorName: widget.note.user?.username,
                       onBlocked: widget.onBlocked,
@@ -133,7 +135,7 @@ class _NoteWidgetState extends State<NoteWidget>
                     backgroundColor: Colors.red,
                     foregroundColor: Colors.white,
                     icon: Icons.flag,
-                    label: 'Melden',
+                    label: context.l10n.report,
                   ),
               ],
             ),
@@ -164,7 +166,7 @@ class _NoteWidgetState extends State<NoteWidget>
                           ),
                           if (_isPinned)
                             IconButton(
-                              tooltip: 'Angepinnt - tippen zum Loslösen',
+                              tooltip: context.l10n.pinnedTapToUnpin,
                               onPressed: _togglePin,
                               visualDensity: VisualDensity.compact,
                               icon: PhosphorIcon(

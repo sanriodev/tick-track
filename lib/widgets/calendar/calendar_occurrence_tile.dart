@@ -1,3 +1,4 @@
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/enum/event_color_enum.dart';
 import 'package:ticktrack/models/calendar/calendar_event_model.dart';
 import 'package:ticktrack/util/haptics.dart';
@@ -50,31 +51,34 @@ class _CalendarOccurrenceTileState extends State<CalendarOccurrenceTile>
   bool get _isOwnEvent =>
       _event.user?.username == AuthBackend().loggedInUser?.user?.username;
 
-  String get _timeLabel {
+  String _timeLabel(AppLocalizations l10n) {
     if (_event.allDay) {
       if (!widget.occurrence.spansDays) {
-        return 'Ganztägig';
+        return l10n.eventAllDay;
       }
-      final from = DateFormat('d.M.').format(widget.occurrence.startAt);
-      final to = DateFormat('d.M.').format(widget.occurrence.endAt);
-      return 'Ganztägig, $from - $to';
+      final dayFormat = DateFormat.Md();
+      return l10n.eventAllDayRange(
+        dayFormat.format(widget.occurrence.startAt),
+        dayFormat.format(widget.occurrence.endAt),
+      );
     }
 
-    final time = DateFormat('HH:mm');
+    final time = DateFormat.jm();
     final start = time.format(widget.occurrence.startAt);
     if (widget.occurrence.endAt == widget.occurrence.startAt) {
       return start;
     }
     if (!widget.occurrence.spansDays) {
-      return '$start - ${time.format(widget.occurrence.endAt)}';
+      return l10n.timeRange(start, time.format(widget.occurrence.endAt));
     }
-    final endStamp = DateFormat('d.M. HH:mm').format(widget.occurrence.endAt);
-    return '$start - $endStamp';
+    final endStamp = DateFormat.MMMd().add_jm().format(widget.occurrence.endAt);
+    return l10n.timeRange(start, endStamp);
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final description = _event.description?.trim() ?? '';
     final location = _event.location?.trim() ?? '';
     final accent = eventColorOf(context, _event.color);
@@ -114,7 +118,7 @@ class _CalendarOccurrenceTileState extends State<CalendarOccurrenceTile>
                       context,
                       entityType: 'calendar_event',
                       entityId: _event.id,
-                      entityLabel: 'Kalenderevent',
+                      entityLabel: l10n.calendarEvent,
                       authorId: _event.user?.id,
                       authorName: _event.user?.username,
                       onBlocked: widget.onBlocked,
@@ -122,7 +126,7 @@ class _CalendarOccurrenceTileState extends State<CalendarOccurrenceTile>
                     backgroundColor: Colors.red,
                     foregroundColor: Colors.white,
                     icon: Icons.flag,
-                    label: 'Melden',
+                    label: l10n.report,
                   ),
               ],
             ),
@@ -165,7 +169,7 @@ class _CalendarOccurrenceTileState extends State<CalendarOccurrenceTile>
                                   Padding(
                                     padding: const EdgeInsets.only(right: 6),
                                     child: Tooltip(
-                                      message: 'Erinnerung aktiv',
+                                      message: l10n.eventReminderActive,
                                       child: PhosphorIcon(
                                         PhosphorIconsRegular.bell,
                                         size: 15,
@@ -176,7 +180,7 @@ class _CalendarOccurrenceTileState extends State<CalendarOccurrenceTile>
                                   ),
                                 if (_event.recurrence.repeats)
                                   Tooltip(
-                                    message: _event.recurrence.label,
+                                    message: _event.recurrence.label(l10n),
                                     child: PhosphorIcon(
                                       PhosphorIconsRegular.repeat,
                                       size: 15,
@@ -188,7 +192,7 @@ class _CalendarOccurrenceTileState extends State<CalendarOccurrenceTile>
                             ),
                             const SizedBox(height: 3),
                             Text(
-                              _timeLabel,
+                              _timeLabel(l10n),
                               style: theme.primaryTextTheme.titleSmall
                                   ?.copyWith(color: accent),
                             ),

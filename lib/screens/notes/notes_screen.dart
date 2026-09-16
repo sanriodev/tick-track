@@ -1,5 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/backend/service/backend_service.dart';
 import 'package:ticktrack/enum/privacy_mode_enum.dart';
 import 'package:ticktrack/models/note/dto/update_note_dto.dart';
@@ -86,7 +87,7 @@ class _NotesScreenState extends State<NotesScreen> {
         isLoading = false;
       });
       if (mounted) {
-        await showBackendError(context, e, 'Aktion fehlgeschlagen',
+        await showBackendError(context, e, context.l10n.actionFailed,
             alertWhenOffline: false);
       }
     }
@@ -119,9 +120,9 @@ class _NotesScreenState extends State<NotesScreen> {
         isLoading = false;
       });
       if (e is SessionExpiredException) {
-        await showBackendError(context, e, 'Bitte melde dich erneut an.');
+        await showBackendError(context, e, context.l10n.sessionExpired);
       } else if (mounted) {
-        await showBackendError(context, e, 'Aktion fehlgeschlagen');
+        await showBackendError(context, e, context.l10n.actionFailed);
       }
     }
   }
@@ -139,9 +140,9 @@ class _NotesScreenState extends State<NotesScreen> {
         isLoading = false;
       });
       if (e is SessionExpiredException) {
-        await showBackendError(context, e, 'Bitte melde dich erneut an.');
+        await showBackendError(context, e, context.l10n.sessionExpired);
       } else if (mounted) {
-        await showBackendError(context, e, 'Aktion fehlgeschlagen');
+        await showBackendError(context, e, context.l10n.actionFailed);
       }
     }
   }
@@ -151,7 +152,7 @@ class _NotesScreenState extends State<NotesScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
             content: Text(
-                'Du kannst die Privatsphäre nur bei deinen eigenen Notizen ändern.')),
+                context.l10n.privacyOwnContentOnly)),
       );
       return;
     }
@@ -171,9 +172,9 @@ class _NotesScreenState extends State<NotesScreen> {
         isLoading = false;
       });
       if (e is SessionExpiredException) {
-        await showBackendError(context, e, 'Bitte melde dich erneut an.');
+        await showBackendError(context, e, context.l10n.sessionExpired);
       } else if (mounted) {
-        await showBackendError(context, e, 'Aktion fehlgeschlagen');
+        await showBackendError(context, e, context.l10n.actionFailed);
       }
     }
   }
@@ -230,7 +231,7 @@ class _NotesScreenState extends State<NotesScreen> {
       builder: (dialogContext) {
         return AlertDialog(
           title: Text(
-            'Neue Notiz',
+            context.l10n.noteNew,
             style: Theme.of(context).primaryTextTheme.bodySmall,
           ),
           content: Column(
@@ -242,7 +243,7 @@ class _NotesScreenState extends State<NotesScreen> {
                 autofocus: true,
                 style: Theme.of(context).primaryTextTheme.bodySmall,
                 decoration: InputDecoration(
-                  labelText: 'Name der Notiz',
+                  labelText: context.l10n.noteName,
                   labelStyle: Theme.of(context).primaryTextTheme.bodySmall,
                 ),
               ),
@@ -253,7 +254,7 @@ class _NotesScreenState extends State<NotesScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text('Abbrechen',
+              child: Text(context.l10n.cancel,
                   style: Theme.of(context).primaryTextTheme.titleSmall),
             ),
             ElevatedButton(
@@ -261,9 +262,7 @@ class _NotesScreenState extends State<NotesScreen> {
                   final name = nameController.text.trim();
                   if (name.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Bitte einen Namen eingeben.'),
-                      ),
+                      SnackBar(content: Text(context.l10n.nameRequired)),
                     );
                     return;
                   }
@@ -277,7 +276,7 @@ class _NotesScreenState extends State<NotesScreen> {
                   }
                 },
                 child: Text(
-                  'Erstellen',
+                  context.l10n.create,
                   style: Theme.of(context)
                       .primaryTextTheme
                       .titleSmall
@@ -311,7 +310,7 @@ class _NotesScreenState extends State<NotesScreen> {
     return Scaffold(
       bottomNavigationBar: const BottomMenu(),
       appBar: AppBar(
-        title: Text("Notizen",
+        title: Text(context.l10n.notes,
             style: Theme.of(context).primaryTextTheme.titleMedium),
         centerTitle: false,
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -329,7 +328,7 @@ class _NotesScreenState extends State<NotesScreen> {
           Haptics.tap();
           _showCreateNoteDialog();
         },
-        tooltip: 'Neue Notiz',
+        tooltip: context.l10n.noteNew,
         child: const Icon(Icons.add),
       ),
       body: RefreshIndicator(
@@ -354,12 +353,10 @@ class _NotesScreenState extends State<NotesScreen> {
               child: isLoading
                   ? Container()
                   : !hasAnyNote
-                      ? const EmptyStateWidget(
+                      ? EmptyStateWidget(
                           icon: PhosphorIconsRegular.note,
-                          title: 'Noch keine Notizen',
-                          message:
-                              'Halte hier Gedanken, Ideen und Absprachen fest. '
-                              'Wische eine Notiz nach rechts, um sie anzupinnen oder zu teilen.',
+                          title: context.l10n.notesEmptyTitle,
+                          message: context.l10n.notesEmptyMessage,
                         )
                       : SingleChildScrollView(
                           physics: const AlwaysScrollableScrollPhysics(),
@@ -367,9 +364,11 @@ class _NotesScreenState extends State<NotesScreen> {
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              ..._section("Angepinnt", pinned),
-                              ..._section("Deine Notizen", own.others),
-                              ..._section("Geteilte Notizen", shared.others),
+                              ..._section(context.l10n.sectionPinned, pinned),
+                              ..._section(
+                                  context.l10n.sectionYourNotes, own.others),
+                              ..._section(context.l10n.sectionSharedNotes,
+                                  shared.others),
                             ],
                           ),
                         ),

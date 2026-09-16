@@ -1,5 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/backend/service/backend_service.dart';
 import 'package:ticktrack/state/cache_store.dart';
 import 'package:ticktrack/models/activity/activity_model.dart';
@@ -172,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
         isLoading = false;
       });
       if (mounted) {
-        await showBackendError(context, e, 'Laden fehlgeschlagen',
+        await showBackendError(context, e, context.l10n.loadFailed,
             alertWhenOffline: false);
       }
     }
@@ -183,7 +184,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
         bottomNavigationBar: const BottomMenu(),
         appBar: AppBar(
-          title: Text("Home",
+          title: Text(context.l10n.home,
               style: Theme.of(context).primaryTextTheme.titleMedium),
           backgroundColor: Theme.of(context).scaffoldBackgroundColor,
           centerTitle: false,
