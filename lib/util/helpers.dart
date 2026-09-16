@@ -16,7 +16,7 @@ import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 Future<T?> navigateToRoute<T>(

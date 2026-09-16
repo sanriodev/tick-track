@@ -16,7 +16,7 @@ import 'package:blvckleg_dart_core/models/user/user_model.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 class GroupDetailsScreen extends StatefulWidget {

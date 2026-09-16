@@ -3,7 +3,7 @@
 import 'package:blvckleg_dart_core/models/auth/mfa_challenge_model.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/backend/service/mfa_service.dart';
 import 'package:ticktrack/util/haptics.dart';

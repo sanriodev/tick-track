@@ -1,7 +1,7 @@
 import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/state/connectivity_status.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 
 class ConnectivityBanner extends StatefulWidget {
   final Widget child;

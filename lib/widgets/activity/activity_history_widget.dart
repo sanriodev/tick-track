@@ -3,7 +3,7 @@ import 'package:ticktrack/models/activity/activity_model.dart';
 import 'package:ticktrack/widgets/user_avatar_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 
 class ActivityHistoryWidget extends StatelessWidget {
   final List<EventlogMessage<dynamic>> activities;

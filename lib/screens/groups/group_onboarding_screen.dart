@@ -6,7 +6,7 @@ import 'package:ticktrack/util/helpers.dart';
 import 'package:ticktrack/widgets/group/group_add_form.dart';
 import 'package:ticktrack/widgets/group/group_created_success.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 
 class GroupOnboardingScreen extends StatefulWidget {
   const GroupOnboardingScreen({super.key});

@@ -12,7 +12,7 @@ import 'package:ticktrack/widgets/slidable_underlay.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 
 class NoteWidget extends StatefulWidget {
   final Note note;

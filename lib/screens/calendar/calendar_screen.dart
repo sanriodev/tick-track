@@ -22,7 +22,7 @@ import 'package:ticktrack/widgets/option_button.dart';
 import 'package:ticktrack/widgets/skeleton/skeleton_card.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 class CalendarScreen extends StatefulWidget {
