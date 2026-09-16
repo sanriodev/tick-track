@@ -2,7 +2,7 @@ import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/models/group/group_api_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 
 class GroupCreatedSuccess extends StatelessWidget {
   const GroupCreatedSuccess({

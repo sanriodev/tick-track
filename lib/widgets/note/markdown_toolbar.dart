@@ -2,7 +2,7 @@ import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/util/haptics.dart';
 import 'package:ticktrack/util/markdown_editing.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 
 class MarkdownToolbar extends StatelessWidget {
   final TextEditingController controller;

@@ -2,7 +2,7 @@ import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/models/activity/activity_model.dart';
 import 'package:ticktrack/widgets/activity/activity_history_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 
 class ActivityPreviewWidget extends StatelessWidget {
   const ActivityPreviewWidget({

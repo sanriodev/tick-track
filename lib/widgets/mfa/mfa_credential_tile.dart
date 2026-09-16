@@ -2,7 +2,7 @@ import 'package:ticktrack/l10n/l10n.dart';
 import 'package:blvckleg_dart_core/models/mfa/webauthn_credential_model.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 
 class MfaCredentialTile extends StatelessWidget {
   const MfaCredentialTile({

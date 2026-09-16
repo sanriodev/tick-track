@@ -2,7 +2,7 @@ import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/enum/event_color_enum.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 
 const int _maxDots = 3;
 

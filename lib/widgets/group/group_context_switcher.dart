@@ -3,7 +3,7 @@ import 'package:ticktrack/models/group/group_api_model.dart';
 import 'package:ticktrack/state/group_context.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 
 class GroupContextSwitcher extends StatelessWidget {
   const GroupContextSwitcher({super.key});

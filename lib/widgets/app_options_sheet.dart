@@ -7,7 +7,7 @@ import 'package:ticktrack/widgets/language_toggle.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphor_icons/phosphor_icons.dart';
 
 const String _privacyUrl = 'https://blvckleg.dev/app-legal';
 const String _supportUrl = 'https://tick-track.app/#support';
