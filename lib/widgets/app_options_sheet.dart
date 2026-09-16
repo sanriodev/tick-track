@@ -1,7 +1,9 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/screens/home/main_app_screen.dart';
 import 'package:ticktrack/util/helpers.dart';
+import 'package:ticktrack/widgets/language_toggle.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -94,34 +96,38 @@ class _AppOptionsSheetState extends State<_AppOptionsSheet> {
           children: [
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              child: Text('Optionen', style: theme.primaryTextTheme.titleSmall),
+              child: Text(
+                context.l10n.optionsTitle,
+                style: theme.primaryTextTheme.titleSmall,
+              ),
             ),
             _buildOptionTile(
               theme,
               icon: _isDarkTheme
                   ? PhosphorIconsRegular.sun
                   : PhosphorIconsRegular.moon,
-              title: 'Theme ändern',
+              title: context.l10n.optionsChangeTheme,
               onTap: _toggleTheme,
             ),
+            _buildLanguageTile(theme),
             const Divider(height: 1),
             _buildOptionTile(
               theme,
               icon: PhosphorIconsRegular.userCircle,
-              title: 'Profil bearbeiten',
+              title: context.l10n.optionsEditProfile,
               onTap: () => _selectOption(_AppOption.profile),
             ),
             _buildOptionTile(
               theme,
               icon: PhosphorIconsRegular.usersThree,
-              title: 'Gruppenübersicht',
+              title: context.l10n.optionsGroupOverview,
               onTap: () => _selectOption(_AppOption.groupDetails),
             ),
             const Divider(height: 1),
             _buildOptionTile(
               theme,
               icon: PhosphorIconsRegular.signOut,
-              title: 'Abmelden',
+              title: context.l10n.optionsSignOut,
               onTap: () => _selectOption(_AppOption.logout),
             ),
             const SizedBox(height: 24),
@@ -129,6 +135,18 @@ class _AppOptionsSheetState extends State<_AppOptionsSheet> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildLanguageTile(ThemeData theme) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      leading: PhosphorIcon(
+        PhosphorIconsRegular.translate,
+        color: theme.primaryIconTheme.color,
+      ),
+      title: Text(context.l10n.language, style: theme.textTheme.bodySmall),
+      trailing: const LanguageToggle(compact: true),
     );
   }
 
@@ -151,8 +169,8 @@ class _AppOptionsSheetState extends State<_AppOptionsSheet> {
       alignment: WrapAlignment.center,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        _buildLinkButton(theme, label: 'Datenschutz', url: _privacyUrl),
-        _buildLinkButton(theme, label: 'Support', url: _supportUrl),
+        _buildLinkButton(theme, label: context.l10n.privacyPolicy, url: _privacyUrl),
+        _buildLinkButton(theme, label: context.l10n.support, url: _supportUrl),
         TextButton(
           style: TextButton.styleFrom(
             padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -164,7 +182,7 @@ class _AppOptionsSheetState extends State<_AppOptionsSheet> {
           ),
           onPressed: _showVersionDialog,
           child: Text(
-            'Version: ${_packageInfo.version}',
+            context.l10n.versionLabel(_packageInfo.version),
             style: theme.textTheme.labelSmall,
           ),
         ),
@@ -197,12 +215,12 @@ class _AppOptionsSheetState extends State<_AppOptionsSheet> {
     final theme = Theme.of(context);
     showAboutDialog(
       context: context,
-      applicationVersion: 'Version: ${_packageInfo.version}',
+      applicationVersion: context.l10n.versionLabel(_packageInfo.version),
       applicationName: 'TickTrack',
       children: [
-        Text('Copyright: MATTEO JUEN', style: theme.textTheme.labelSmall),
+        Text(context.l10n.copyrightLabel, style: theme.textTheme.labelSmall),
         const SizedBox(height: 20),
-        Text('Entwickelt von:', style: theme.textTheme.labelSmall),
+        Text(context.l10n.developedBy, style: theme.textTheme.labelSmall),
         Text('• MATTEO JUEN', style: theme.textTheme.labelSmall),
       ],
     );

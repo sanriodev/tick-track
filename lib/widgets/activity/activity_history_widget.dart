@@ -1,3 +1,4 @@
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/models/activity/activity_model.dart';
 import 'package:ticktrack/widgets/user_avatar_widget.dart';
 import 'package:flutter/material.dart';
@@ -40,7 +41,7 @@ class ActivityHistoryWidget extends StatelessWidget {
       return _wrap(
         Center(
           child: Text(
-            'Noch keine Aktivitäten',
+            context.l10n.activityEmpty,
             style: Theme.of(context).textTheme.bodySmall,
           ),
         ),
@@ -72,7 +73,7 @@ class ActivityHistoryWidget extends StatelessWidget {
       List<EventlogMessage<dynamic>> activities) {
     final map = <String, List<EventlogMessage<dynamic>>>{};
     for (final activity in activities) {
-      final key = DateFormat('MMMM yyyy').format(activity.date);
+      final key = DateFormat.yMMMM().format(activity.date);
       map.putIfAbsent(key, () => []).add(activity);
     }
     return map;
@@ -107,8 +108,8 @@ class _ActivityItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final icon = _iconForActivity(activity);
-    final description = _descriptionForActivity(activity);
-    final timeAgo = _formatTimeAgo(activity.date);
+    final description = _descriptionForActivity(context.l10n, activity);
+    final timeAgo = _formatTimeAgo(context.l10n, activity.date);
 
     return IntrinsicHeight(
       child: Row(
@@ -213,45 +214,60 @@ class _ActivityItem extends StatelessWidget {
     };
   }
 
-  String _descriptionForActivity(EventlogMessage<dynamic> activity) {
-    final groupSentence = activity.groupActivityText;
+  String _descriptionForActivity(
+    AppLocalizations l10n,
+    EventlogMessage<dynamic> activity,
+  ) {
+    final groupSentence = activity.groupActivityText(l10n);
     if (groupSentence != null) return groupSentence;
 
     final entityName = switch (activity.entityType.toLowerCase()) {
-      'note' => 'Notiz',
-      'task' => 'Aufgabe',
-      'task_list' || 'tasklist' => 'Aufgabenliste',
-      'calendar_event' => 'Kalenderevent',
+      'note' => l10n.entityNote,
+      'task' => l10n.entityTask,
+      'task_list' || 'tasklist' => l10n.entityTaskList,
+      'calendar_event' => l10n.entityCalendarEvent,
       _ => activity.entityType,
     };
 
     final actionVerb = switch (activity.actionType.toLowerCase()) {
-      '1' => 'erstellt',
-      '2' => 'aktualisiert',
-      '4' => 'gelöscht',
+      '1' => l10n.actionCreated,
+      '2' => l10n.actionUpdated,
+      '4' => l10n.actionDeleted,
       _ => activity.actionType,
     };
 
     final group = activity.group;
-    final groupSuffix = group != null ? ' in "${group.name}"' : '';
-
-    return '${activity.user.username} hat $entityName $actionVerb$groupSuffix';
+    if (group == null) {
+      return l10n.activityDescription(
+        activity.user.username,
+        entityName,
+        actionVerb,
+      );
+    }
+    return l10n.activityDescriptionInGroup(
+      activity.user.username,
+      entityName,
+      actionVerb,
+      group.name,
+    );
   }
 
-  String _formatTimeAgo(DateTime date) {
+  String _formatTimeAgo(AppLocalizations l10n, DateTime date) {
     final now = DateTime.now();
     final difference = now.difference(date);
 
     if (difference.inDays > 30) {
-      return DateFormat('d. MMM yyyy').format(date);
-    } else if (difference.inDays > 0) {
-      return 'vor ${difference.inDays} ${difference.inDays == 1 ? 'Tag' : 'Tagen'}';
-    } else if (difference.inHours > 0) {
-      return 'vor ${difference.inHours} ${difference.inHours == 1 ? 'Stunde' : 'Stunden'}';
-    } else if (difference.inMinutes > 0) {
-      return 'vor ${difference.inMinutes} ${difference.inMinutes == 1 ? 'Minute' : 'Minuten'}';
-    } else {
-      return 'gerade eben';
+      return DateFormat.yMMMd().format(date);
     }
+    if (difference.inDays > 0) {
+      return l10n.timeAgoDays(difference.inDays);
+    }
+    if (difference.inHours > 0) {
+      return l10n.timeAgoHours(difference.inHours);
+    }
+    if (difference.inMinutes > 0) {
+      return l10n.timeAgoMinutes(difference.inMinutes);
+    }
+    return l10n.timeAgoJustNow;
   }
 }

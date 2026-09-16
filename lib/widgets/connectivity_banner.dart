@@ -1,3 +1,4 @@
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/state/connectivity_status.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -74,7 +75,7 @@ class _OfflineBar extends StatelessWidget {
             ),
             const SizedBox(width: 6),
             Text(
-              'Offline',
+              context.l10n.offline,
               style: theme.textTheme.labelSmall?.copyWith(
                 color: theme.colorScheme.onErrorContainer,
                 fontWeight: FontWeight.w600,

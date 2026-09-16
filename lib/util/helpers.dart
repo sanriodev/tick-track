@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:ticktrack/enum/privacy_mode_enum.dart';
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/state/avatar_store.dart';
 import 'package:ticktrack/state/cache_store.dart';
 import 'package:ticktrack/state/connectivity_status.dart';
@@ -8,6 +9,7 @@ import 'package:ticktrack/state/group_context.dart';
 import 'package:ticktrack/state/note_attachment_store.dart';
 import 'package:ticktrack/state/reminder_scheduler.dart';
 import 'package:ticktrack/state/reminder_sync.dart';
+import 'package:ticktrack/util/localized_exception.dart';
 import 'package:blvckleg_dart_core/exception/backend_unavailable.dart';
 import 'package:blvckleg_dart_core/exception/session_expired.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
@@ -98,16 +100,19 @@ Future<void> showBackendError(
   if (_isBackendUnavailable(e)) {
     ConnectivityStatus().reportUnreachable();
     if (alertWhenOffline) {
-      _showSnackBar(context, '$fallbackMessage: TickTrack ist offline.');
+      _showSnackBar(context, context.l10n.errorOffline(fallbackMessage));
     }
     return;
   }
 
-  _showSnackBar(context, '$fallbackMessage: ${_readableError(e)}');
+  _showSnackBar(
+    context,
+    context.l10n.errorWithDetail(fallbackMessage, _readableError(context, e)),
+  );
 }
 
 Future<void> _signOutAfterExpiredSession(BuildContext context) async {
-  _showSnackBar(context, 'Bitte melde dich erneut an.');
+  _showSnackBar(context, context.l10n.sessionExpired);
   try {
     await AuthBackend().postLogout();
   } catch (_) {}
@@ -123,7 +128,10 @@ bool _isBackendUnavailable(Object e) {
   return e is Response && e.statusCode >= 500;
 }
 
-String _readableError(Object e) {
+String _readableError(BuildContext context, Object e) {
+  if (e is LocalizedException) {
+    return e.localizedMessage(context.l10n);
+  }
   if (e is! Response) {
     return '$e';
   }
@@ -131,11 +139,11 @@ String _readableError(Object e) {
     final decoded = json.decode(utf8.decode(e.bodyBytes));
     final dynamic raw = (decoded as Map<String, dynamic>?)?['message'];
     if (raw == null) {
-      return 'Status ${e.statusCode}';
+      return context.l10n.errorStatusCode(e.statusCode);
     }
     return raw is List ? raw.join(', ') : '$raw';
   } on FormatException {
-    return 'Status ${e.statusCode}';
+    return context.l10n.errorStatusCode(e.statusCode);
   }
 }
 

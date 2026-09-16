@@ -1,5 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/backend/service/backend_service.dart';
 import 'package:ticktrack/state/cache_store.dart';
 import 'package:ticktrack/enum/privacy_mode_enum.dart';
@@ -87,7 +88,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
         isLoading = false;
       });
       if (mounted) {
-        await showBackendError(context, e, 'Aktion fehlgeschlagen',
+        await showBackendError(context, e, context.l10n.actionFailed,
             alertWhenOffline: false);
       }
     }
@@ -119,9 +120,9 @@ class _TaskListScreenState extends State<TaskListScreen> {
         isLoading = false;
       });
       if (e is SessionExpiredException) {
-        await showBackendError(context, e, 'Bitte melde dich erneut an.');
+        await showBackendError(context, e, context.l10n.sessionExpired);
       } else if (mounted) {
-        await showBackendError(context, e, 'Aktion fehlgeschlagen');
+        await showBackendError(context, e, context.l10n.actionFailed);
       }
     }
   }
@@ -136,9 +137,9 @@ class _TaskListScreenState extends State<TaskListScreen> {
         isLoading = false;
       });
       if (e is SessionExpiredException) {
-        await showBackendError(context, e, 'Bitte melde dich erneut an.');
+        await showBackendError(context, e, context.l10n.sessionExpired);
       } else if (mounted) {
-        await showBackendError(context, e, 'Aktion fehlgeschlagen');
+        await showBackendError(context, e, context.l10n.actionFailed);
       }
     }
   }
@@ -146,9 +147,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
   Future<void> updatePrivacy(TaskList taskList, PrivacyMode mode) async {
     if (taskList.user?.username != AuthBackend().loggedInUser?.user?.username) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(
-                'Du kannst die Privatsphäre nur bei deinen eigenen Notizen ändern.')),
+        SnackBar(content: Text(context.l10n.privacyOwnContentOnly)),
       );
       return;
     }
@@ -168,9 +167,9 @@ class _TaskListScreenState extends State<TaskListScreen> {
         isLoading = false;
       });
       if (e is SessionExpiredException) {
-        await showBackendError(context, e, 'Bitte melde dich erneut an.');
+        await showBackendError(context, e, context.l10n.sessionExpired);
       } else if (mounted) {
-        await showBackendError(context, e, 'Aktion fehlgeschlagen');
+        await showBackendError(context, e, context.l10n.actionFailed);
       }
     }
   }
@@ -230,7 +229,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
       builder: (dialogContext) {
         return AlertDialog(
           title: Text(
-            'Neue Liste',
+            context.l10n.taskListNew,
             style: Theme.of(context).primaryTextTheme.bodySmall,
           ),
           content: Column(
@@ -242,7 +241,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                 autofocus: true,
                 style: Theme.of(context).primaryTextTheme.bodySmall,
                 decoration: InputDecoration(
-                  labelText: 'Name der Liste',
+                  labelText: context.l10n.taskListName,
                   labelStyle: Theme.of(context).primaryTextTheme.bodySmall,
                 ),
               ),
@@ -253,7 +252,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: Text('Abbrechen',
+              child: Text(context.l10n.cancel,
                   style: Theme.of(context).primaryTextTheme.titleSmall),
             ),
             ElevatedButton(
@@ -261,8 +260,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                 final name = nameController.text.trim();
                 if (name.isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Bitte einen Namen eingeben.')),
+                    SnackBar(content: Text(context.l10n.nameRequired)),
                   );
                   return;
                 }
@@ -275,7 +273,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                 }
               },
               child: Text(
-                'Erstellen',
+                context.l10n.create,
                 style: Theme.of(context).primaryTextTheme.titleSmall?.copyWith(
                       color: Theme.of(context).brightness == Brightness.light
                           ? Colors.white
@@ -307,7 +305,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
     return Scaffold(
       bottomNavigationBar: const BottomMenu(),
       appBar: AppBar(
-        title: Text("Aufgabenlisten",
+        title: Text(context.l10n.taskLists,
             style: Theme.of(context).primaryTextTheme.titleMedium),
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         centerTitle: false,
@@ -325,7 +323,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
           Haptics.tap();
           _showCreateTaskListDialog();
         },
-        tooltip: 'Neue Liste',
+        tooltip: context.l10n.taskListNew,
         child: const Icon(Icons.add),
       ),
       body: RefreshIndicator(
@@ -350,12 +348,10 @@ class _TaskListScreenState extends State<TaskListScreen> {
               child: isLoading
                   ? Container()
                   : !hasAnyList
-                      ? const EmptyStateWidget(
+                      ? EmptyStateWidget(
                           icon: PhosphorIconsRegular.list,
-                          title: 'Noch keine Aufgabenlisten',
-                          message:
-                              'Bündle Aufgaben in Listen und verfolge, was schon erledigt ist. '
-                              'Wische eine Liste nach rechts, um sie anzupinnen.',
+                          title: context.l10n.taskListsEmptyTitle,
+                          message: context.l10n.taskListsEmptyMessage,
                         )
                       : SingleChildScrollView(
                           physics: const AlwaysScrollableScrollPhysics(),
@@ -363,9 +359,11 @@ class _TaskListScreenState extends State<TaskListScreen> {
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              ..._section("Angepinnt", pinned),
-                              ..._section("Deine Listen", own.others),
-                              ..._section("Geteilte Listen", shared.others),
+                              ..._section(context.l10n.sectionPinned, pinned),
+                              ..._section(
+                                  context.l10n.sectionYourLists, own.others),
+                              ..._section(context.l10n.sectionSharedLists,
+                                  shared.others),
                             ],
                           ),
                         ),

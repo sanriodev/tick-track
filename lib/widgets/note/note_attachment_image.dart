@@ -1,3 +1,4 @@
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/state/note_attachment_store.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -49,7 +50,7 @@ class _NoteAttachmentImageState extends State<NoteAttachmentImage> {
       return _buildImage(bytes);
     }
     if (store.isUnavailable(widget.attachmentId)) {
-      return _buildUnavailable(Theme.of(context));
+      return _buildUnavailable(context, Theme.of(context));
     }
     return _buildPlaceholder(Theme.of(context));
   }
@@ -86,7 +87,7 @@ class _NoteAttachmentImageState extends State<NoteAttachmentImage> {
     );
   }
 
-  Widget _buildUnavailable(ThemeData theme) {
+  Widget _buildUnavailable(BuildContext context, ThemeData theme) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Container(
@@ -105,7 +106,7 @@ class _NoteAttachmentImageState extends State<NoteAttachmentImage> {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                'Bild nicht verfügbar',
+                context.l10n.imageUnavailable,
                 style: theme.primaryTextTheme.displayMedium,
               ),
             ),

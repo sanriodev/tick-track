@@ -1,5 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/backend/service/backend_service.dart';
 import 'package:ticktrack/models/activity/activity_model.dart';
 import 'package:ticktrack/state/cache_store.dart';
@@ -75,7 +76,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
         isLoading = false;
       });
       if (mounted) {
-        await showBackendError(context, e, 'Laden fehlgeschlagen',
+        await showBackendError(context, e, context.l10n.loadFailed,
             alertWhenOffline: false);
       }
     }
@@ -126,7 +127,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
     return Scaffold(
       bottomNavigationBar: const BottomMenu(),
       appBar: AppBar(
-        title: Text("Aktivitäten",
+        title: Text(context.l10n.activities,
             style: Theme.of(context).primaryTextTheme.titleMedium),
         centerTitle: false,
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -169,7 +170,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 16, vertical: 8),
                             child: Text(
-                              "Deine Aktivitäten",
+                              context.l10n.yourActivity,
                               style: Theme.of(context)
                                   .primaryTextTheme
                                   .displayLarge,
@@ -187,7 +188,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  "Letzte Aktivitäten",
+                                  context.l10n.recentActivity,
                                   style: Theme.of(context)
                                       .primaryTextTheme
                                       .displayLarge,
@@ -199,7 +200,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                     DropdownMenuItem(
                                       value: 'own',
                                       child: Text(
-                                        'Eigene',
+                                        context.l10n.filterOwn,
                                         style: Theme.of(context)
                                             .primaryTextTheme
                                             .displayLarge,
@@ -208,7 +209,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                     DropdownMenuItem(
                                       value: 'any',
                                       child: Text(
-                                        'Alle',
+                                        context.l10n.filterAll,
                                         style: Theme.of(context)
                                             .primaryTextTheme
                                             .displayLarge,

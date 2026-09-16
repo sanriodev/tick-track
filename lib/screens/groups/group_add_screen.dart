@@ -1,3 +1,4 @@
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/models/group/group_api_model.dart';
 import 'package:ticktrack/util/helpers.dart';
 import 'package:ticktrack/widgets/group/group_add_form.dart';
@@ -20,7 +21,7 @@ class _GroupAddScreenState extends State<GroupAddScreen> {
 
   void _goHomeAfterJoin(Group group) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Gruppe "${group.name}" beigetreten.')),
+      SnackBar(content: Text(context.l10n.groupJoined(group.name))),
     );
     navigateToRoute(context, 'home');
   }
@@ -33,7 +34,7 @@ class _GroupAddScreenState extends State<GroupAddScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Gruppe hinzufügen',
+          context.l10n.groupAdd,
           style: theme.primaryTextTheme.titleMedium,
         ),
         backgroundColor: theme.scaffoldBackgroundColor,

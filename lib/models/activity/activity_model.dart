@@ -1,3 +1,5 @@
+import 'package:ticktrack/l10n/l10n.dart';
+
 const String groupEntityType = 'group';
 
 const String groupMembershipEntityType = 'group_membership';
@@ -24,17 +26,17 @@ class EventlogMessage<T> {
   bool get isGroupLeave =>
       entityType == groupMembershipEntityType && actionType == '4';
 
-  String? get groupActivityText {
+  String? groupActivityText(AppLocalizations l10n) {
     final name = group?.name;
     final named = name != null ? '"$name" ' : '';
 
     if (entityType == groupEntityType && actionType == '1') {
-      return '${user.username} hat die Gruppe ${named}erstellt';
+      return l10n.activityGroupCreated(user.username, named);
     }
     if (entityType == groupMembershipEntityType) {
       return isGroupLeave
-          ? '${user.username} hat die Gruppe ${named}verlassen'
-          : '${user.username} ist der Gruppe ${named}beigetreten';
+          ? l10n.activityGroupLeft(user.username, named)
+          : l10n.activityGroupJoined(user.username, named);
     }
     return null;
   }

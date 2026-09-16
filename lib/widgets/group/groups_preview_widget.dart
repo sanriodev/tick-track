@@ -1,3 +1,4 @@
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/models/group/group_api_model.dart';
 import 'package:ticktrack/state/group_context.dart';
 import 'package:ticktrack/util/haptics.dart';
@@ -64,7 +65,7 @@ class GroupsPreviewWidget extends StatelessWidget {
                         ),
                         const SizedBox(width: 12),
                         Text(
-                          'Gruppen',
+                          context.l10n.groups,
                           style: theme.textTheme.titleMedium
                               ?.copyWith(fontWeight: FontWeight.bold),
                         ),
@@ -97,7 +98,7 @@ class GroupsPreviewWidget extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
                   child: Text(
-                    'Du bist noch in keiner Gruppe.',
+                    context.l10n.groupsPreviewEmpty,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: Colors.grey,
                     ),
@@ -129,7 +130,7 @@ class GroupsPreviewWidget extends StatelessWidget {
                 child: TextButton(
                   onPressed: onPressed,
                   child: Text(
-                    'Mehr anzeigen',
+                    context.l10n.showMore,
                     style: TextStyle(
                       color: accent,
                       fontWeight: FontWeight.w600,
@@ -157,8 +158,8 @@ class GroupsPreviewWidget extends StatelessWidget {
       button: true,
       selected: isActive,
       label: isActive
-          ? 'Gruppe ${group.name}, aktuell ausgewählt'
-          : 'Zu Gruppe ${group.name} wechseln',
+          ? context.l10n.groupSelected(group.name)
+          : context.l10n.groupSwitchTo(group.name),
       excludeSemantics: true,
       child: Container(
         width: itemWidth,
@@ -202,7 +203,7 @@ class GroupsPreviewWidget extends StatelessWidget {
                         const SizedBox(width: 6),
                         Flexible(
                           child: Text(
-                            'Aktiv',
+                            context.l10n.active,
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: accent,
                               fontWeight: FontWeight.bold,
@@ -226,9 +227,7 @@ class GroupsPreviewWidget extends StatelessWidget {
                   if (group.members.isNotEmpty) ...[
                     const SizedBox(height: 2),
                     Text(
-                      group.members.length == 1
-                          ? '1 Mitglied'
-                          : '${group.members.length} Mitglieder',
+                      context.l10n.memberCount(group.members.length),
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: Colors.grey,
                       ),
@@ -251,7 +250,7 @@ class GroupsPreviewWidget extends StatelessWidget {
 
     return Semantics(
       button: true,
-      label: 'Neue Gruppe hinzufügen',
+      label: context.l10n.groupAddNew,
       excludeSemantics: true,
       child: Container(
         width: itemWidth,
@@ -280,7 +279,7 @@ class GroupsPreviewWidget extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Neue Gruppe hinzufügen',
+                    context.l10n.groupAddNew,
                     textAlign: TextAlign.center,
                     style: theme.textTheme.labelMedium?.copyWith(
                       color: accent,

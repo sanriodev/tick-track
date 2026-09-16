@@ -1,3 +1,4 @@
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/enum/event_color_enum.dart';
 import 'package:ticktrack/models/calendar/calendar_event_model.dart';
 import 'package:flutter/material.dart';
@@ -15,26 +16,29 @@ class CalendarPreviewWidget extends StatelessWidget {
   final bool isLoading;
   final VoidCallback onPressed;
 
-  String _dayLabel(DateTime day) {
+  String _dayLabel(AppLocalizations l10n, DateTime day) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final difference =
         DateTime(day.year, day.month, day.day).difference(today).inDays;
 
     return switch (difference) {
-      0 => 'Heute',
-      1 => 'Morgen',
-      _ when difference < 7 => DateFormat('EEEE').format(day),
-      _ => DateFormat('d. MMM').format(day),
+      0 => l10n.today,
+      1 => l10n.tomorrow,
+      _ when difference < 7 => DateFormat.EEEE().format(day),
+      _ => DateFormat.MMMd().format(day),
     };
   }
 
-  String _label(CalendarOccurrence occurrence) {
-    final day = _dayLabel(occurrence.startAt);
+  String _label(AppLocalizations l10n, CalendarOccurrence occurrence) {
+    final day = _dayLabel(l10n, occurrence.startAt);
     if (occurrence.event.allDay) {
       return day;
     }
-    return '$day, ${DateFormat('HH:mm').format(occurrence.startAt)}';
+    return l10n.dayWithTime(
+      day,
+      DateFormat.jm().format(occurrence.startAt),
+    );
   }
 
   @override
@@ -66,7 +70,7 @@ class CalendarPreviewWidget extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  'Kalenderevents',
+                  context.l10n.calendarPreviewTitle,
                   style: theme.textTheme.titleMedium
                       ?.copyWith(fontWeight: FontWeight.bold),
                 ),
@@ -79,7 +83,7 @@ class CalendarPreviewWidget extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6.0),
                 child: Text(
-                  'Keine Kalenderevents in den nächsten Tagen',
+                  context.l10n.calendarPreviewEmpty,
                   style:
                       theme.textTheme.bodyMedium?.copyWith(color: Colors.grey),
                 ),
@@ -103,7 +107,7 @@ class CalendarPreviewWidget extends StatelessWidget {
                           SizedBox(
                             width: 84,
                             child: Text(
-                              _label(occurrence),
+                              _label(context.l10n, occurrence),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: theme.textTheme.labelMedium?.copyWith(
@@ -130,7 +134,7 @@ class CalendarPreviewWidget extends StatelessWidget {
               child: TextButton(
                 onPressed: onPressed,
                 child: Text(
-                  'Mehr anzeigen',
+                  context.l10n.showMore,
                   style: TextStyle(
                     color: accent,
                     fontWeight: FontWeight.w600,

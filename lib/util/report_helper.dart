@@ -1,3 +1,4 @@
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/backend/service/backend_service.dart';
 import 'package:ticktrack/util/helpers.dart';
 import 'package:flutter/material.dart';
@@ -20,7 +21,8 @@ Future<void> showReportContentDialog(
     context: context,
     builder: (BuildContext dialogContext) {
       return AlertDialog(
-        title: Text('$entityLabel melden?', style: theme.textTheme.titleMedium),
+        title: Text(context.l10n.reportTitle(entityLabel),
+            style: theme.textTheme.titleMedium),
         content: StatefulBuilder(
           builder: (context, setDialogState) {
             return Column(
@@ -28,9 +30,7 @@ Future<void> showReportContentDialog(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Melde diesen Inhalt, wenn er anstößig ist oder gegen die '
-                  'Nutzungsbedingungen verstößt. Der Entwickler wird '
-                  'benachrichtigt und prüft die Meldung.',
+                  context.l10n.reportHint,
                   style: theme.textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 16),
@@ -40,9 +40,9 @@ Future<void> showReportContentDialog(
                   maxLines: 3,
                   style: theme.primaryTextTheme.bodySmall,
                   decoration: InputDecoration(
-                    labelText: 'Grund (optional)',
+                    labelText: context.l10n.reportReason,
                     labelStyle: theme.primaryTextTheme.bodySmall,
-                    hintText: 'z.B. beleidigender Inhalt',
+                    hintText: context.l10n.reportReasonHint,
                     hintStyle: theme.primaryTextTheme.bodySmall,
                     border: const OutlineInputBorder(),
                   ),
@@ -67,13 +67,12 @@ Future<void> showReportContentDialog(
                       dense: true,
                       title: Text(
                         authorName != null
-                            ? '"$authorName" blockieren'
-                            : 'Nutzer blockieren',
+                            ? context.l10n.blockNamedUser(authorName)
+                            : context.l10n.blockUser,
                         style: theme.textTheme.bodyMedium,
                       ),
                       subtitle: Text(
-                        'Alle Inhalte dieses Nutzers werden für dich '
-                        'ausgeblendet.',
+                        context.l10n.blockUserSubtitle,
                         style: theme.textTheme.labelSmall,
                       ),
                     ),
@@ -85,12 +84,12 @@ Future<void> showReportContentDialog(
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Abbrechen'),
+            child: Text(context.l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
             child: Text(
-              'Melden',
+              context.l10n.report,
               style: TextStyle(color: theme.colorScheme.error),
             ),
           ),
@@ -110,8 +109,8 @@ Future<void> showReportContentDialog(
         SnackBar(
           content: Text(
             canBlock && alsoBlock
-                ? 'Meldung übermittelt und Nutzer blockiert.'
-                : 'Danke, deine Meldung wurde übermittelt.',
+                ? context.l10n.reportSentAndBlocked
+                : context.l10n.reportSent,
           ),
         ),
       );
@@ -119,7 +118,7 @@ Future<void> showReportContentDialog(
     if (canBlock && alsoBlock) onBlocked?.call();
   } catch (e) {
     if (context.mounted) {
-      await showBackendError(context, e, 'Meldung fehlgeschlagen');
+      await showBackendError(context, e, context.l10n.reportFailed);
     }
   }
 }

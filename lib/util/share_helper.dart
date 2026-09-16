@@ -1,3 +1,4 @@
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/models/calendar/calendar_event_model.dart';
 import 'package:ticktrack/models/note/note_api_model.dart';
 import 'package:ticktrack/util/calendar_export_helper.dart';
@@ -80,7 +81,7 @@ Future<void> shareText(
 
 void _showFailure(BuildContext context, Object error) {
   ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text('Teilen fehlgeschlagen: $error')),
+    SnackBar(content: Text(context.l10n.shareFailed('$error'))),
   );
 }
 

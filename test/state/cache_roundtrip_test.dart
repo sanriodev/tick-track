@@ -1,5 +1,8 @@
 import 'dart:convert';
 
+import 'package:flutter/widgets.dart';
+import 'package:ticktrack/l10n/l10n.dart';
+
 import 'package:ticktrack/enum/event_color_enum.dart';
 import 'package:ticktrack/enum/event_recurrence_enum.dart';
 import 'package:ticktrack/enum/privacy_mode_enum.dart';
@@ -40,6 +43,12 @@ CalendarEvent _event({
 }
 
 void main() {
+  late AppLocalizations l10n;
+
+  setUpAll(() async {
+    l10n = await AppLocalizations.delegate.load(const Locale('en'));
+  });
+
   group('CalendarEvent', () {
     test('übersteht den Roundtrip mit allen Feldern', () {
       final original = _event(
@@ -136,7 +145,7 @@ void main() {
       final restored = _throughJson(original, EventlogMessage.fromJson);
 
       expect(restored.group, isNull);
-      expect(restored.groupActivityText, isNull);
+      expect(restored.groupActivityText(l10n), isNull);
     });
   });
 
