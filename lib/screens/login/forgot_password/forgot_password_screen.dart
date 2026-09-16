@@ -2,8 +2,10 @@
 
 import 'dart:convert';
 
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/backend/service/backend_service.dart';
 import 'package:ticktrack/util/helpers.dart';
+import 'package:ticktrack/widgets/language_toggle.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:pinput/pinput.dart';
@@ -66,13 +68,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   Future<void> _showResponseError(Object e, String prefix) async {
     if (e is! Response) {
-      _showMessage('$prefix: $e');
+      _showMessage(context.l10n.errorPrefixed(prefix, '$e'));
       return;
     }
     final jsonData = await json.decode(utf8.decode(e.bodyBytes));
     final dynamic raw = jsonData['message'];
     final message = raw is List ? raw.join(', ') : (raw as String? ?? '$e');
-    _showMessage('$prefix: $message');
+    _showMessage(context.l10n.errorPrefixed(prefix, message));
   }
 
   void _showMessage(String message) {
@@ -106,7 +108,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       _codeCtrl.clear();
       setState(() => _step = _ForgotPasswordStep.code);
     } catch (e) {
-      await _showResponseError(e, 'Anfrage fehlgeschlagen');
+      await _showResponseError(e, context.l10n.forgotRequestFailed);
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -119,11 +121,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         email: _requestedEmail,
         username: _requestedUsername,
       );
-      _showMessage(
-        'Falls der Account existiert, wurde ein neuer Code per Email gesendet.',
-      );
+      _showMessage(context.l10n.forgotCodeResent);
     } catch (e) {
-      await _showResponseError(e, 'Senden fehlgeschlagen');
+      await _showResponseError(e, context.l10n.sendFailed);
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -148,7 +148,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         _step = _ForgotPasswordStep.newPassword;
       });
     } catch (e) {
-      await _showResponseError(e, 'Code ungültig');
+      await _showResponseError(e, context.l10n.forgotCodeInvalid);
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -166,7 +166,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       if (!mounted) return;
       setState(() => _step = _ForgotPasswordStep.success);
     } catch (e) {
-      await _showResponseError(e, 'Passwort konnte nicht gesetzt werden');
+      await _showResponseError(e, context.l10n.forgotPasswordSetFailed);
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -184,6 +184,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         ),
         backgroundColor: theme.scaffoldBackgroundColor,
         centerTitle: true,
+        actions: const [
+          Padding(
+            padding: EdgeInsets.only(right: 12),
+            child: Center(child: LanguageToggle(compact: true)),
+          ),
+        ],
         leading: _step == _ForgotPasswordStep.success
             ? null
             : Padding(
@@ -219,14 +225,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Passwort vergessen?',
+                  context.l10n.forgotTitle,
                   style: _titleStyle(theme),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Gib deinen Benutzernamen oder deine E-Mail-Adresse ein - '
-                  'wir schicken dir einen Code zum Zurücksetzen.',
+                  context.l10n.forgotHint,
                   style: theme.primaryTextTheme.bodySmall,
                   textAlign: TextAlign.center,
                 ),
@@ -237,8 +242,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   keyboardType: TextInputType.emailAddress,
                   style: theme.primaryTextTheme.bodySmall,
                   decoration: InputDecoration(
-                    labelText: 'Benutzername oder E-Mail',
-                    hintText: 'Benutzername oder E-Mail',
+                    labelText: context.l10n.usernameOrEmail,
+                    hintText: context.l10n.usernameOrEmail,
                     labelStyle: theme.primaryTextTheme.bodySmall,
                     hintStyle: theme.primaryTextTheme.bodySmall,
                     prefixIcon: const Icon(Icons.person_outline, size: 20),
@@ -249,13 +254,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     ),
                   ),
                   validator: (v) => (v == null || v.trim().isEmpty)
-                      ? 'Bitte Benutzername oder E-Mail eingeben'
+                      ? context.l10n.usernameOrEmailRequired
                       : null,
                   onFieldSubmitted: (_) => _requestCode(),
                 ),
                 const SizedBox(height: 24),
                 _buildSubmitButton(
-                  label: 'Code senden',
+                  label: context.l10n.forgotSendCode,
                   icon: Icons.mail_outline,
                   onPressed: _requestCode,
                 ),
@@ -293,14 +298,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Code eingeben',
+                  context.l10n.forgotEnterCode,
                   style: _titleStyle(theme),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Falls der Account existiert, haben wir dir einen '
-                  '$_codeLength-stelligen Code per Email geschickt.',
+                  context.l10n.forgotCodeSent(_codeLength),
                   style: theme.primaryTextTheme.bodySmall,
                   textAlign: TextAlign.center,
                 ),
@@ -332,13 +336,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   ),
                   validator: (v) => (v == null ||
                           v.trim().length != _codeLength)
-                      ? 'Bitte geben Sie den $_codeLength-stelligen Code ein'
+                      ? context.l10n.codeRequired(_codeLength)
                       : null,
                   onCompleted: (_) => _verifyCode(),
                 ),
                 const SizedBox(height: 24),
                 _buildSubmitButton(
-                  label: 'Bestätigen',
+                  label: context.l10n.confirm,
                   icon: Icons.verified_outlined,
                   onPressed: _verifyCode,
                 ),
@@ -346,7 +350,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 TextButton(
                   onPressed: _submitting ? null : _resendCode,
                   child: Text(
-                    'Code erneut senden',
+                    context.l10n.resendCode,
                     style: theme.primaryTextTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.primary,
                       decoration: TextDecoration.underline,
@@ -374,7 +378,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Neues Passwort',
+                  context.l10n.passwordNew,
                   style: _titleStyle(theme),
                   textAlign: TextAlign.center,
                 ),
@@ -389,14 +393,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   style: theme.primaryTextTheme.bodySmall,
                   decoration: _passwordDecoration(
                     theme,
-                    labelText: 'Neues Passwort',
-                    hintText: 'Mindestens 8 Zeichen',
+                    labelText: context.l10n.passwordNew,
+                    hintText: context.l10n.passwordMinLength,
                     obscured: _obscurePassword,
                     onToggleObscured: () =>
                         setState(() => _obscurePassword = !_obscurePassword),
                   ),
                   validator: (v) => (v == null || v.length < 8)
-                      ? 'Das Passwort muss mindestens 8 Zeichen haben'
+                      ? context.l10n.passwordMinLengthError
                       : null,
                   onFieldSubmitted: (_) => _passwordConfirmFocus.requestFocus(),
                 ),
@@ -411,21 +415,21 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   style: theme.primaryTextTheme.bodySmall,
                   decoration: _passwordDecoration(
                     theme,
-                    labelText: 'Passwort bestätigen',
-                    hintText: 'Passwort wiederholen',
+                    labelText: context.l10n.passwordConfirm,
+                    hintText: context.l10n.passwordRepeat,
                     obscured: _obscurePasswordConfirm,
                     onToggleObscured: () => setState(
                       () => _obscurePasswordConfirm = !_obscurePasswordConfirm,
                     ),
                   ),
                   validator: (v) => (v != _passwordCtrl.text)
-                      ? 'Passwörter stimmen nicht überein'
+                      ? context.l10n.passwordMismatch
                       : null,
                   onFieldSubmitted: (_) => _setNewPassword(),
                 ),
                 const SizedBox(height: 24),
                 _buildSubmitButton(
-                  label: 'Passwort setzen',
+                  label: context.l10n.forgotSetPassword,
                   icon: Icons.lock_reset,
                   onPressed: _setNewPassword,
                 ),
@@ -453,7 +457,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               ),
               const SizedBox(height: 32),
               Text(
-                'Dein Passwort wurde geändert.',
+                context.l10n.forgotSuccess,
                 style: theme.primaryTextTheme.displayLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                     ) ??
@@ -464,7 +468,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               ),
               const SizedBox(height: 48),
               _buildSubmitButton(
-                label: 'Zum Login',
+                label: context.l10n.toLogin,
                 icon: Icons.arrow_forward,
                 onPressed: () => navigateToRoute(context, 'login'),
               ),
@@ -525,7 +529,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         style: ButtonStyle(
           backgroundColor: WidgetStateProperty.all(Colors.transparent),
         ),
-        tooltip: obscured ? 'Passwort zeigen' : 'Passwort verstecken',
+        tooltip:
+            obscured ? context.l10n.passwordShow : context.l10n.passwordHide,
         iconSize: 20,
         icon: Icon(obscured ? Icons.visibility : Icons.visibility_off),
         onPressed: onToggle,

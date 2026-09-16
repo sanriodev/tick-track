@@ -1,3 +1,4 @@
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/models/tasklist/task_list_api_model.dart';
 import 'package:flutter/material.dart';
 
@@ -62,7 +63,7 @@ class _TodoPreviewWidgetState extends State<TodoPreviewWidget> {
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      'Aufgabenlisten',
+                      context.l10n.taskLists,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
@@ -98,7 +99,7 @@ class _TodoPreviewWidgetState extends State<TodoPreviewWidget> {
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6.0),
                 child: Text(
-                  'Keine Aufgabenlisten vorhanden',
+                  context.l10n.taskListsPreviewEmpty,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Colors.grey,
                       ),
@@ -128,7 +129,7 @@ class _TodoPreviewWidgetState extends State<TodoPreviewWidget> {
               child: TextButton(
                 onPressed: widget.onPressed,
                 child: Text(
-                  'Mehr anzeigen',
+                  context.l10n.showMore,
                   style: TextStyle(
                     color: Theme.of(context).primaryColor,
                     fontWeight: FontWeight.w600,

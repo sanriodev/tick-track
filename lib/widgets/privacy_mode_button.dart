@@ -1,4 +1,5 @@
 import 'package:ticktrack/enum/privacy_mode_enum.dart';
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/util/haptics.dart';
 import 'package:ticktrack/util/helpers.dart';
 import 'package:flutter/material.dart';
@@ -23,10 +24,11 @@ class PrivacyModeButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
 
     return PopupMenuButton<PrivacyMode>(
       enabled: enabled,
-      tooltip: enabled ? 'Privatsphäre ändern' : mode.label,
+      tooltip: enabled ? l10n.privacyChange : mode.label(l10n),
       icon: Icon(privacyIconFor(mode), size: 20),
       color: theme.cardColor,
       iconColor: color ?? theme.primaryIconTheme.color,
@@ -51,10 +53,10 @@ class PrivacyModeButton extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(entry.label,
+                      Text(entry.label(l10n),
                           style: theme.primaryTextTheme.bodySmall),
                       Text(
-                        entry.description,
+                        entry.description(l10n),
                         style: theme.primaryTextTheme.displayMedium,
                       ),
                     ],

@@ -1,3 +1,4 @@
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/enum/event_color_enum.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -33,33 +34,33 @@ class CalendarMonthGrid extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
       child: Column(
         children: [
-          _buildHeader(theme),
+          _buildHeader(context, theme),
           _buildWeekdayLabels(theme),
           const SizedBox(height: 4),
-          ..._buildWeeks(theme),
+          ..._buildWeeks(context, theme),
         ],
       ),
     );
   }
 
-  Widget _buildHeader(ThemeData theme) {
+  Widget _buildHeader(BuildContext context, ThemeData theme) {
     return Row(
       children: [
         IconButton(
-          tooltip: 'Vorheriger Monat',
+          tooltip: context.l10n.calendarPreviousMonth,
           icon: const PhosphorIcon(PhosphorIconsRegular.caretLeft),
           color: theme.primaryIconTheme.color,
           onPressed: onPreviousMonth,
         ),
         Expanded(
           child: Text(
-            DateFormat('MMMM y').format(visibleMonth),
+            DateFormat.yMMMM().format(visibleMonth),
             textAlign: TextAlign.center,
             style: theme.primaryTextTheme.displayLarge,
           ),
         ),
         IconButton(
-          tooltip: 'Nächster Monat',
+          tooltip: context.l10n.calendarNextMonth,
           icon: const PhosphorIcon(PhosphorIconsRegular.caretRight),
           color: theme.primaryIconTheme.color,
           onPressed: onNextMonth,
@@ -69,7 +70,13 @@ class CalendarMonthGrid extends StatelessWidget {
   }
 
   Widget _buildWeekdayLabels(ThemeData theme) {
-    const labels = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+    final firstMondayOfWeek = DateTime(2024);
+    final labels = List.generate(
+      7,
+      (index) => DateFormat.E().format(
+            firstMondayOfWeek.add(Duration(days: index)),
+          ),
+    );
     return Row(
       children: [
         for (final label in labels)
@@ -82,7 +89,7 @@ class CalendarMonthGrid extends StatelessWidget {
     );
   }
 
-  List<Widget> _buildWeeks(ThemeData theme) {
+  List<Widget> _buildWeeks(BuildContext context, ThemeData theme) {
     final first = DateTime(visibleMonth.year, visibleMonth.month);
     final leading = first.weekday - 1;
     final daysInMonth =
@@ -95,7 +102,13 @@ class CalendarMonthGrid extends StatelessWidget {
         children: [
           for (var weekday = 0; weekday < 7; weekday++)
             Expanded(
-              child: _buildCell(theme, first, leading, week * 7 + weekday),
+              child: _buildCell(
+                context,
+                theme,
+                first,
+                leading,
+                week * 7 + weekday,
+              ),
             ),
         ],
       ));
@@ -104,6 +117,7 @@ class CalendarMonthGrid extends StatelessWidget {
   }
 
   Widget _buildCell(
+    BuildContext context,
     ThemeData theme,
     DateTime firstOfMonth,
     int leading,
@@ -139,8 +153,11 @@ class CalendarMonthGrid extends StatelessWidget {
     return Semantics(
       button: true,
       selected: isSelected,
-      label: DateFormat('EEEE, d. MMMM').format(day) +
-          (hasEvents ? ', hat Kalenderevents' : ''),
+      label: hasEvents
+          ? context.l10n.calendarDayHasEvents(
+              DateFormat.MMMMEEEEd().format(day),
+            )
+          : DateFormat.MMMMEEEEd().format(day),
       excludeSemantics: true,
       child: InkWell(
         onTap: () => onDaySelected(day),

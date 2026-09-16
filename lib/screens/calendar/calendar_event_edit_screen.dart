@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:ticktrack/enum/event_color_enum.dart';
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/enum/event_recurrence_enum.dart';
 import 'package:ticktrack/enum/privacy_mode_enum.dart';
 import 'package:ticktrack/backend/service/backend_service.dart';
@@ -22,15 +23,15 @@ const double _labelWidth = 84;
 
 const List<int?> _reminderOffsets = [null, 0, 5, 15, 30, 60, 120, 1440, 2880];
 
-String _reminderLabel(int? minutes) {
+String _reminderLabel(AppLocalizations l10n, int? minutes) {
   return switch (minutes) {
-    null => 'Keine Erinnerung',
-    0 => 'Zum Beginn',
-    60 => '1 Stunde vorher',
-    120 => '2 Stunden vorher',
-    1440 => '1 Tag vorher',
-    2880 => '2 Tage vorher',
-    _ => '$minutes Minuten vorher',
+    null => l10n.reminderNone,
+    0 => l10n.reminderAtStart,
+    60 => l10n.reminderOneHour,
+    120 => l10n.reminderTwoHours,
+    1440 => l10n.reminderOneDay,
+    2880 => l10n.reminderTwoDays,
+    _ => l10n.reminderMinutes(minutes),
   };
 }
 
@@ -96,8 +97,7 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
     if (extra is! CalendarEditorArgs) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Fehlender Parameter für das Kalenderevent.')),
+          SnackBar(content: Text(context.l10n.eventMissingParameter)),
         );
         Navigator.of(context).pop();
       });
@@ -219,15 +219,13 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
     final title = _titleController.text.trim();
     if (title.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Bitte einen Titel eingeben.')),
+        SnackBar(content: Text(context.l10n.eventTitleRequired)),
       );
       return;
     }
     if (_endAt.isBefore(_startAt)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Das Ende darf nicht vor dem Beginn liegen.'),
-        ),
+        SnackBar(content: Text(context.l10n.eventEndBeforeStart)),
       );
       return;
     }
@@ -282,7 +280,7 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
       await showBackendError(
         context,
         e,
-        'Kalenderevent konnte nicht gespeichert werden',
+        context.l10n.eventSaveFailed,
       );
     }
   }
@@ -290,12 +288,13 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = context.l10n;
     final readOnly = !_isEditable || _busy;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          _isNew ? 'Neues Kalenderevent' : 'Kalenderevent bearbeiten',
+          _isNew ? l10n.eventNew : l10n.eventEdit,
           style: theme.primaryTextTheme.titleMedium,
         ),
         backgroundColor: theme.scaffoldBackgroundColor,
@@ -310,7 +309,7 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
             TextButton(
               onPressed: _busy ? null : _save,
               child: Text(
-                'Speichern',
+                l10n.save,
                 style: theme.primaryTextTheme.titleSmall
                     ?.copyWith(fontWeight: FontWeight.bold),
               ),
@@ -325,8 +324,9 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
               Padding(
                 padding: const EdgeInsets.only(bottom: 16),
                 child: Text(
-                  'Dieses Kalenderevent hat ${_event?.user?.username ?? 'jemand anderes'} '
-                  'erstellt, du kannst ihn nur ansehen.',
+                  l10n.eventReadOnlyHint(
+                    _event?.user?.username ?? l10n.someoneElse,
+                  ),
                   style: theme.primaryTextTheme.titleSmall,
                 ),
               ),
@@ -336,23 +336,24 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
               textCapitalization: TextCapitalization.sentences,
               style: theme.primaryTextTheme.bodySmall,
               decoration: InputDecoration(
-                labelText: 'Titel',
+                labelText: l10n.title,
                 labelStyle: theme.primaryTextTheme.bodySmall,
-                hintText: 'z.B. Müll rausbringen',
+                hintText: l10n.eventTitleHint,
                 hintStyle: theme.primaryTextTheme.displayMedium,
               ),
             ),
             const SizedBox(height: 20),
-            _buildAllDaySwitch(theme, readOnly),
-            _buildDateTimeRow(theme, readOnly, isStart: true),
-            _buildDateTimeRow(theme, readOnly, isStart: false),
+            _buildAllDaySwitch(theme, l10n, readOnly),
+            _buildDateTimeRow(theme, l10n, readOnly, isStart: true),
+            _buildDateTimeRow(theme, l10n, readOnly, isStart: false),
             const SizedBox(height: 8),
-            _buildRecurrenceRow(theme, readOnly),
-            if (_recurrence.repeats) _buildRecurrenceEndRow(theme, readOnly),
-            _buildReminderRow(theme, readOnly),
-            _buildColorRow(theme, readOnly),
+            _buildRecurrenceRow(theme, l10n, readOnly),
+            if (_recurrence.repeats)
+              _buildRecurrenceEndRow(theme, l10n, readOnly),
+            _buildReminderRow(theme, l10n, readOnly),
+            _buildColorRow(theme, l10n, readOnly),
             if (GroupContext().activeGroup != null)
-              _buildPrivacyRow(theme, readOnly),
+              _buildPrivacyRow(theme, l10n, readOnly),
             const SizedBox(height: 12),
             TextField(
               controller: _locationController,
@@ -360,7 +361,7 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
               textCapitalization: TextCapitalization.sentences,
               style: theme.primaryTextTheme.bodySmall,
               decoration: InputDecoration(
-                labelText: 'Ort (optional)',
+                labelText: l10n.eventLocation,
                 labelStyle: theme.primaryTextTheme.bodySmall,
                 prefixIcon: PhosphorIcon(
                   PhosphorIconsRegular.mapPin,
@@ -379,7 +380,7 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
               textCapitalization: TextCapitalization.sentences,
               style: theme.primaryTextTheme.bodySmall,
               decoration: InputDecoration(
-                labelText: 'Notiz (optional)',
+                labelText: l10n.eventNote,
                 labelStyle: theme.primaryTextTheme.bodySmall,
                 alignLabelWithHint: true,
                 border: const OutlineInputBorder(),
@@ -391,10 +392,14 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
     );
   }
 
-  Widget _buildAllDaySwitch(ThemeData theme, bool readOnly) {
+  Widget _buildAllDaySwitch(
+    ThemeData theme,
+    AppLocalizations l10n,
+    bool readOnly,
+  ) {
     return SwitchListTile(
       contentPadding: EdgeInsets.zero,
-      title: Text('Ganztägig', style: theme.primaryTextTheme.titleSmall),
+      title: Text(l10n.eventAllDay, style: theme.primaryTextTheme.titleSmall),
       value: _allDay,
       onChanged: readOnly
           ? null
@@ -415,6 +420,7 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
 
   Widget _buildDateTimeRow(
     ThemeData theme,
+    AppLocalizations l10n,
     bool readOnly, {
     required bool isStart,
   }) {
@@ -426,7 +432,7 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
           SizedBox(
             width: _labelWidth,
             child: Text(
-              isStart ? 'Beginn' : 'Ende',
+              isStart ? l10n.eventStart : l10n.eventEnd,
               style: theme.primaryTextTheme.titleSmall,
             ),
           ),
@@ -434,7 +440,7 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
             child: OutlinedButton(
               onPressed: readOnly ? null : () => _pickDate(isStart: isStart),
               child: Text(
-                DateFormat('EE, dd.MM.y').format(value),
+                DateFormat.yMEd().format(value),
                 style: theme.primaryTextTheme.titleSmall,
               ),
             ),
@@ -446,7 +452,7 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
               child: OutlinedButton(
                 onPressed: readOnly ? null : () => _pickTime(isStart: isStart),
                 child: Text(
-                  DateFormat('HH:mm').format(value),
+                  DateFormat.jm().format(value),
                   style: theme.primaryTextTheme.titleSmall,
                 ),
               ),
@@ -457,7 +463,11 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
     );
   }
 
-  Widget _buildRecurrenceRow(ThemeData theme, bool readOnly) {
+  Widget _buildRecurrenceRow(
+    ThemeData theme,
+    AppLocalizations l10n,
+    bool readOnly,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: DropdownButtonFormField<EventRecurrence>(
@@ -466,7 +476,7 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
         dropdownColor: theme.cardColor,
         style: theme.primaryTextTheme.titleSmall,
         decoration: InputDecoration(
-          labelText: 'Wiederholung',
+          labelText: l10n.eventRecurrence,
           labelStyle: theme.primaryTextTheme.bodySmall,
         ),
         items: [
@@ -474,7 +484,8 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
             DropdownMenuItem(
               value: value,
               child:
-                  Text(value.label, style: theme.primaryTextTheme.titleSmall),
+                  Text(value.label(l10n),
+                      style: theme.primaryTextTheme.titleSmall),
             ),
         ],
         onChanged: readOnly
@@ -493,7 +504,11 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
     );
   }
 
-  Widget _buildRecurrenceEndRow(ThemeData theme, bool readOnly) {
+  Widget _buildRecurrenceEndRow(
+    ThemeData theme,
+    AppLocalizations l10n,
+    bool readOnly,
+  ) {
     final end = _recurrenceEndDate;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -501,20 +516,21 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
         children: [
           SizedBox(
             width: _labelWidth,
-            child: Text('Endet am', style: theme.primaryTextTheme.titleSmall),
+            child: Text(l10n.eventRecurrenceEnd,
+                style: theme.primaryTextTheme.titleSmall),
           ),
           Expanded(
             child: OutlinedButton(
               onPressed: readOnly ? null : _pickRecurrenceEnd,
               child: Text(
-                end != null ? DateFormat('dd.MM.y').format(end) : 'Ohne Ende',
+                end != null ? DateFormat.yMd().format(end) : l10n.eventNoEnd,
                 style: theme.primaryTextTheme.titleSmall,
               ),
             ),
           ),
           if (end != null && !readOnly)
             IconButton(
-              tooltip: 'Enddatum entfernen',
+              tooltip: l10n.eventRemoveEndDate,
               icon: PhosphorIcon(
                 PhosphorIconsRegular.x,
                 size: 16,
@@ -527,13 +543,17 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
     );
   }
 
-  Widget _buildColorRow(ThemeData theme, bool readOnly) {
+  Widget _buildColorRow(
+    ThemeData theme,
+    AppLocalizations l10n,
+    bool readOnly,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Farbe', style: theme.primaryTextTheme.titleSmall),
+          Text(l10n.eventColor, style: theme.primaryTextTheme.titleSmall),
           const SizedBox(height: 8),
           LayoutBuilder(
             builder: (BuildContext context, BoxConstraints constraints) {
@@ -547,7 +567,7 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   for (final value in swatches)
-                    _buildSwatch(theme, readOnly, value, diameter),
+                    _buildSwatch(theme, l10n, readOnly, value, diameter),
                 ],
               );
             },
@@ -569,6 +589,7 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
 
   Widget _buildSwatch(
     ThemeData theme,
+    AppLocalizations l10n,
     bool readOnly,
     EventColor? value,
     double diameter,
@@ -579,10 +600,10 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
     return Semantics(
       button: true,
       selected: isSelected,
-      label: value?.label ?? 'Ohne Farbe',
+      label: value?.label(l10n) ?? l10n.eventNoColor,
       excludeSemantics: true,
       child: Tooltip(
-        message: value?.label ?? 'Ohne Farbe',
+        message: value?.label(l10n) ?? l10n.eventNoColor,
         child: InkWell(
           onTap: readOnly
               ? null
@@ -619,7 +640,11 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
     );
   }
 
-  Widget _buildReminderRow(ThemeData theme, bool readOnly) {
+  Widget _buildReminderRow(
+    ThemeData theme,
+    AppLocalizations l10n,
+    bool readOnly,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: DropdownButtonFormField<int?>(
@@ -628,9 +653,9 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
         dropdownColor: theme.cardColor,
         style: theme.primaryTextTheme.titleSmall,
         decoration: InputDecoration(
-          labelText: 'Erinnerung',
+          labelText: l10n.eventReminder,
           labelStyle: theme.primaryTextTheme.bodySmall,
-          helperText: 'Erinnerungen laufen nur auf diesem Gerät',
+          helperText: l10n.eventReminderDeviceOnly,
           helperStyle: theme.primaryTextTheme.displayMedium,
         ),
         items: [
@@ -638,7 +663,7 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
             DropdownMenuItem(
               value: value,
               child: Text(
-                _reminderLabel(value),
+                _reminderLabel(l10n, value),
                 style: theme.primaryTextTheme.titleSmall,
               ),
             ),
@@ -660,17 +685,15 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
       return;
     }
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Benachrichtigungen sind nicht erlaubt. Die Erinnerung wird '
-          'gespeichert, greift aber erst, wenn du sie in den '
-          'Systemeinstellungen zulässt.',
-        ),
-      ),
+      SnackBar(content: Text(context.l10n.eventNotificationsBlocked)),
     );
   }
 
-  Widget _buildPrivacyRow(ThemeData theme, bool readOnly) {
+  Widget _buildPrivacyRow(
+    ThemeData theme,
+    AppLocalizations l10n,
+    bool readOnly,
+  ) {
     final canChange = !readOnly && (_isNew || _isOwnEvent);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -680,9 +703,9 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
         dropdownColor: theme.cardColor,
         style: theme.primaryTextTheme.titleSmall,
         decoration: InputDecoration(
-          labelText: 'Sichtbarkeit',
+          labelText: l10n.eventVisibility,
           labelStyle: theme.primaryTextTheme.bodySmall,
-          helperText: _privacyMode.description,
+          helperText: _privacyMode.description(l10n),
           helperStyle: theme.primaryTextTheme.displayMedium,
           helperMaxLines: 2,
         ),
@@ -700,7 +723,7 @@ class _CalendarEventEditScreenState extends State<CalendarEventEditScreen> {
                   const SizedBox(width: 8),
                   Flexible(
                     child: Text(
-                      value.label,
+                      value.label(l10n),
                       overflow: TextOverflow.ellipsis,
                       style: theme.primaryTextTheme.titleSmall,
                     ),

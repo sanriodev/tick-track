@@ -1,3 +1,5 @@
+import 'package:ticktrack/l10n/l10n.dart';
+
 enum EventRecurrence {
   none,
   daily,
@@ -18,12 +20,12 @@ enum EventRecurrence {
     return EventRecurrence.none;
   }
 
-  String get label => switch (this) {
-        EventRecurrence.none => 'Einmalig',
-        EventRecurrence.daily => 'Täglich',
-        EventRecurrence.weekly => 'Wöchentlich',
-        EventRecurrence.monthly => 'Monatlich',
-        EventRecurrence.yearly => 'Jährlich',
+  String label(AppLocalizations l10n) => switch (this) {
+        EventRecurrence.none => l10n.recurrenceNone,
+        EventRecurrence.daily => l10n.recurrenceDaily,
+        EventRecurrence.weekly => l10n.recurrenceWeekly,
+        EventRecurrence.monthly => l10n.recurrenceMonthly,
+        EventRecurrence.yearly => l10n.recurrenceYearly,
       };
 
   bool get repeats => this != EventRecurrence.none;

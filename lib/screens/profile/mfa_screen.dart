@@ -5,6 +5,7 @@ import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/backend/service/mfa_service.dart';
 import 'package:ticktrack/util/haptics.dart';
 import 'package:ticktrack/util/helpers.dart';
@@ -54,7 +55,7 @@ class _MfaScreenState extends State<MfaScreen> {
       await showBackendError(
         context,
         e,
-        'MFA-Einstellungen konnten nicht geladen werden',
+        context.l10n.mfaLoadFailed,
       );
     }
   }
@@ -68,14 +69,14 @@ class _MfaScreenState extends State<MfaScreen> {
     try {
       await _mfaService.registerCredential(nickname: nickname);
       Haptics.tap();
-      _showMessage('Gerät registriert. MFA ist jetzt aktiv.');
+      _showMessage(context.l10n.mfaDeviceRegistered);
       await _load();
       if (wasFirstFactor) await _offerRecoveryCodes();
     } on MfaCancelledException {
       Haptics.warning();
     } catch (e) {
       Haptics.warning();
-      await showBackendError(context, e, 'Registrierung fehlgeschlagen');
+      await showBackendError(context, e, context.l10n.mfaRegistrationFailed);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -83,11 +84,9 @@ class _MfaScreenState extends State<MfaScreen> {
 
   Future<void> _deleteCredential(WebAuthnCredential credential) async {
     final confirmed = await _confirm(
-      title: 'Gerät entfernen',
-      message: 'Dieses Gerät kann sich dann nicht mehr als zweiter Faktor '
-          'anmelden. Ist es dein letzter Faktor, wird MFA '
-          'automatisch deaktiviert.',
-      confirmLabel: 'Entfernen',
+      title: context.l10n.mfaRemoveDevice,
+      message: context.l10n.mfaRemoveDeviceMessage,
+      confirmLabel: context.l10n.remove,
       destructive: true,
     );
     if (!confirmed) return;
@@ -96,11 +95,11 @@ class _MfaScreenState extends State<MfaScreen> {
     try {
       await AuthBackend().deleteMfaCredential(credential.credentialId);
       Haptics.tap();
-      _showMessage('Gerät entfernt.');
+      _showMessage(context.l10n.mfaDeviceRemoved);
       await _load();
     } catch (e) {
       Haptics.warning();
-      await showBackendError(context, e, 'Gerät konnte nicht entfernt werden');
+      await showBackendError(context, e, context.l10n.mfaDeviceRemoveFailed);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -108,9 +107,9 @@ class _MfaScreenState extends State<MfaScreen> {
 
   Future<void> _regenerateRecoveryCodes() async {
     final confirmed = await _confirm(
-      title: 'Neue Wiederherstellungscodes',
-      message: 'Deine bisherigen Codes werden dabei ungültig.',
-      confirmLabel: 'Erzeugen',
+      title: context.l10n.mfaNewRecoveryCodes,
+      message: context.l10n.mfaNewRecoveryCodesMessage,
+      confirmLabel: context.l10n.generate,
     );
     if (!confirmed) return;
 
@@ -119,10 +118,9 @@ class _MfaScreenState extends State<MfaScreen> {
 
   Future<void> _offerRecoveryCodes() async {
     final wanted = await _confirm(
-      title: 'Wiederherstellungscodes',
-      message: 'Damit kommst du auch ohne dein Gerät wieder in deinen Account. '
-          'Jetzt erzeugen?',
-      confirmLabel: 'Erzeugen',
+      title: context.l10n.mfaRecoveryCodes,
+      message: context.l10n.mfaRecoveryCodesOffer,
+      confirmLabel: context.l10n.generate,
     );
     if (!wanted) return;
 
@@ -138,7 +136,7 @@ class _MfaScreenState extends State<MfaScreen> {
       if (mounted) await showRecoveryCodesSheet(context, codes);
     } catch (e) {
       Haptics.warning();
-      await showBackendError(context, e, 'Codes konnten nicht erzeugt werden');
+      await showBackendError(context, e, context.l10n.mfaCodesFailed);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -149,14 +147,14 @@ class _MfaScreenState extends State<MfaScreen> {
     try {
       await AuthBackend().enableMfa();
       Haptics.tap();
-      _showMessage('MFA ist wieder aktiv.');
+      _showMessage(context.l10n.mfaEnabledMessage);
       await _load();
     } catch (e) {
       Haptics.warning();
       await showBackendError(
         context,
         e,
-        'MFA konnte nicht aktiviert werden',
+        context.l10n.mfaEnableFailed,
       );
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -171,14 +169,14 @@ class _MfaScreenState extends State<MfaScreen> {
     try {
       await AuthBackend().disableMfa(password: password);
       Haptics.tap();
-      _showMessage('MFA ist deaktiviert.');
+      _showMessage(context.l10n.mfaDisabledMessage);
       await _load();
     } catch (e) {
       Haptics.warning();
       await showBackendError(
         context,
         e,
-        'MFA konnte nicht deaktiviert werden',
+        context.l10n.mfaDisableFailed,
       );
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -192,27 +190,28 @@ class _MfaScreenState extends State<MfaScreen> {
     return showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text('Gerät benennen', style: theme.textTheme.titleMedium),
+        title:
+            Text(context.l10n.mfaNameDevice, style: theme.textTheme.titleMedium),
         content: TextField(
           controller: controller,
           autofocus: true,
           maxLength: 80,
           style: theme.primaryTextTheme.bodySmall,
           decoration: InputDecoration(
-            labelText: 'Name (optional)',
-            hintText: 'z.B. iPhone von mir',
+            labelText: context.l10n.nameOptional,
+            hintText: context.l10n.mfaDeviceNameHint,
             labelStyle: theme.primaryTextTheme.bodySmall,
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Abbrechen'),
+            child: Text(context.l10n.cancel),
           ),
           TextButton(
             onPressed: () =>
                 Navigator.of(dialogContext).pop(controller.text.trim()),
-            child: const Text('Weiter'),
+            child: Text(context.l10n.next),
           ),
         ],
       ),
@@ -226,12 +225,13 @@ class _MfaScreenState extends State<MfaScreen> {
     return showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text('Passwort bestätigen', style: theme.textTheme.titleMedium),
+        title: Text(context.l10n.mfaConfirmPassword,
+            style: theme.textTheme.titleMedium),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Zum Deaktivieren brauchen wir dein Passwort.',
+              context.l10n.mfaPasswordNeeded,
               style: theme.textTheme.bodySmall,
             ),
             const SizedBox(height: 16),
@@ -241,7 +241,7 @@ class _MfaScreenState extends State<MfaScreen> {
               autofocus: true,
               style: theme.primaryTextTheme.bodySmall,
               decoration: InputDecoration(
-                labelText: 'Passwort',
+                labelText: context.l10n.password,
                 labelStyle: theme.primaryTextTheme.bodySmall,
               ),
             ),
@@ -250,14 +250,14 @@ class _MfaScreenState extends State<MfaScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Abbrechen'),
+            child: Text(context.l10n.cancel),
           ),
           TextButton(
             onPressed: () {
               if (controller.text.isEmpty) return;
               Navigator.of(dialogContext).pop(controller.text);
             },
-            child: const Text('Deaktivieren'),
+            child: Text(context.l10n.disable),
           ),
         ],
       ),
@@ -280,7 +280,7 @@ class _MfaScreenState extends State<MfaScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Abbrechen'),
+            child: Text(context.l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
@@ -311,7 +311,7 @@ class _MfaScreenState extends State<MfaScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'MFA',
+          context.l10n.mfaShort,
           style: theme.primaryTextTheme.titleMedium,
         ),
         backgroundColor: theme.scaffoldBackgroundColor,
@@ -371,11 +371,11 @@ class _MfaScreenState extends State<MfaScreen> {
           color: theme.colorScheme.primary,
         ),
         title: Text(
-          'MFA wieder aktivieren',
+          context.l10n.mfaReEnable,
           style: theme.textTheme.titleSmall,
         ),
         subtitle: Text(
-          'Deine registrierten Geräte sind noch hinterlegt.',
+          context.l10n.mfaReEnableSubtitle,
           style: theme.textTheme.bodySmall,
         ),
         onTap: _busy ? null : _enableMfa,
@@ -397,14 +397,13 @@ class _MfaScreenState extends State<MfaScreen> {
           size: 28,
         ),
         title: Text(
-          active ? 'MFA ist aktiv' : 'MFA ist inaktiv',
+          active ? context.l10n.mfaActive : context.l10n.mfaInactive,
           style: theme.textTheme.titleSmall,
         ),
         subtitle: Text(
           active
-              ? 'Beim Anmelden fragen wir nach deinem Gerät oder einem '
-                  'Wiederherstellungscode.'
-              : 'Nur dein Passwort schützt deinen Account.',
+              ? context.l10n.mfaActiveSubtitle
+              : context.l10n.mfaInactiveSubtitle,
           style: theme.textTheme.bodySmall,
         ),
       ),
@@ -419,13 +418,11 @@ class _MfaScreenState extends State<MfaScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _cardTitle(theme, 'Einrichten'),
+            _cardTitle(theme, context.l10n.mfaSetup),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
               child: Text(
-                'Registriere dieses Gerät mit Face ID, Fingerabdruck oder '
-                'einem Sicherheitsschlüssel. Danach kannst du dir '
-                'Wiederherstellungscodes erzeugen.',
+                context.l10n.mfaSetupHint,
                 style: theme.textTheme.bodySmall,
               ),
             ),
@@ -435,13 +432,13 @@ class _MfaScreenState extends State<MfaScreen> {
                 color: theme.primaryIconTheme.color,
               ),
               title: Text(
-                'MFA aktivieren',
+                context.l10n.mfaEnable,
                 style: theme.textTheme.titleSmall,
               ),
               subtitle: _passkeySupported
                   ? null
                   : Text(
-                      'Dieses Gerät unterstützt keine Passkeys.',
+                      context.l10n.mfaErrorDeviceUnsupported,
                       style: theme.textTheme.bodySmall
                           ?.copyWith(color: theme.colorScheme.error),
                     ),
@@ -461,13 +458,12 @@ class _MfaScreenState extends State<MfaScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _cardTitle(theme, 'Registrierte Geräte'),
+            _cardTitle(theme, context.l10n.mfaRegisteredDevices),
             if (_credentials.isEmpty)
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                 child: Text(
-                  'Kein Gerät registriert. MFA läuft nur über '
-                  'Wiederherstellungscodes.',
+                  context.l10n.mfaNoDevice,
                   style: theme.textTheme.bodySmall,
                 ),
               ),
@@ -483,7 +479,7 @@ class _MfaScreenState extends State<MfaScreen> {
                 color: theme.primaryIconTheme.color,
               ),
               title: Text(
-                'Weiteres Gerät registrieren',
+                context.l10n.mfaRegisterAnother,
                 style: theme.textTheme.titleSmall,
               ),
               onTap: _canRegister ? _registerCredential : null,
@@ -502,18 +498,18 @@ class _MfaScreenState extends State<MfaScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _cardTitle(theme, 'Wiederherstellung'),
+            _cardTitle(theme, context.l10n.mfaRecovery),
             ListTile(
               leading: PhosphorIcon(
                 PhosphorIconsRegular.key,
                 color: theme.primaryIconTheme.color,
               ),
               title: Text(
-                'Neue Codes erzeugen',
+                context.l10n.mfaGenerateCodes,
                 style: theme.textTheme.titleSmall,
               ),
               subtitle: Text(
-                'Einmal-Codes für den Fall, dass du kein Gerät zur Hand hast.',
+                context.l10n.mfaGenerateCodesSubtitle,
                 style: theme.textTheme.bodySmall,
               ),
               onTap: _busy ? null : _regenerateRecoveryCodes,
@@ -536,14 +532,14 @@ class _MfaScreenState extends State<MfaScreen> {
           color: theme.colorScheme.error,
         ),
         title: Text(
-          'MFA deaktivieren',
+          context.l10n.mfaDisable,
           style: theme.textTheme.titleSmall?.copyWith(
             color: theme.colorScheme.error,
             fontWeight: FontWeight.w600,
           ),
         ),
         subtitle: Text(
-          'Danach schützt nur noch dein Passwort deinen Account.',
+          context.l10n.mfaDisableSubtitle,
           style: theme.textTheme.bodySmall,
         ),
         onTap: _busy ? null : _disableMfa,

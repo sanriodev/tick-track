@@ -1,3 +1,4 @@
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/widgets/user_avatar_widget.dart';
 import 'package:blvckleg_dart_core/models/user/user_model.dart';
 import 'package:flutter/material.dart';
@@ -39,15 +40,15 @@ class ContentMetaFooter extends StatelessWidget {
             radius: 9,
           ),
           icon: PhosphorIconsRegular.user,
-          tooltip: 'Erstellt von',
-          label: author?.username ?? 'unbekannt',
+          tooltip: context.l10n.createdBy,
+          label: author?.username ?? context.l10n.unknown,
           style: style,
           iconColor: iconColor,
         ),
         if (editedBySomebodyElse)
           _MetaItem(
             icon: PhosphorIconsRegular.pencil,
-            tooltip: 'Zuletzt bearbeitet von',
+            tooltip: context.l10n.lastEditedBy,
             label: editor.username,
             style: style,
             iconColor: iconColor,
@@ -82,9 +83,9 @@ class _MetaItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Tooltip(
-      message: '$tooltip $label',
+      message: context.l10n.metaItemLabel(tooltip, label),
       child: Semantics(
-        label: '$tooltip $label',
+        label: context.l10n.metaItemLabel(tooltip, label),
         excludeSemantics: true,
         child: Row(
           mainAxisSize: MainAxisSize.min,

@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:image_picker/image_picker.dart';
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/backend/service/backend_service.dart';
 import 'package:ticktrack/state/cache_store.dart';
 import 'package:ticktrack/state/avatar_store.dart';
@@ -55,7 +56,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _showUser(user);
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
-      await showBackendError(context, e, 'Profil konnte nicht geladen werden',
+      await showBackendError(context, e, context.l10n.profileLoadFailed,
           alertWhenOffline: false);
     }
   }
@@ -92,7 +93,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       Haptics.tap();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Benutzername ist jetzt "$stored".')),
+          SnackBar(content: Text(context.l10n.usernameChanged(stored))),
         );
       }
       await _load();
@@ -101,7 +102,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await showBackendError(
         context,
         e,
-        'Benutzername konnte nicht geändert werden',
+        context.l10n.usernameChangeFailed,
       );
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -123,7 +124,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Padding(
               padding: const EdgeInsets.all(16),
               child: Text(
-                'Profilbild',
+                context.l10n.avatar,
                 style: theme.primaryTextTheme.bodySmall,
               ),
             ),
@@ -132,7 +133,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 PhosphorIconsRegular.camera,
                 color: theme.primaryIconTheme.color,
               ),
-              title: Text('Foto aufnehmen',
+              title: Text(context.l10n.imageTakePhoto,
                   style: theme.primaryTextTheme.titleSmall),
               onTap: () {
                 Navigator.of(sheetContext).pop();
@@ -144,7 +145,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 PhosphorIconsRegular.image,
                 color: theme.primaryIconTheme.color,
               ),
-              title: Text('Aus Galerie wählen',
+              title: Text(context.l10n.imagePickFromGallery,
                   style: theme.primaryTextTheme.titleSmall),
               onTap: () {
                 Navigator.of(sheetContext).pop();
@@ -158,7 +159,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   color: theme.colorScheme.error,
                 ),
                 title: Text(
-                  'Profilbild entfernen',
+                  context.l10n.avatarRemove,
                   style: theme.primaryTextTheme.titleSmall
                       ?.copyWith(color: theme.colorScheme.error),
                 ),
@@ -187,12 +188,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       Haptics.warning();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Kein Zugriff auf Kamera oder Fotos. '
-              'Du kannst das in den Systemeinstellungen erlauben.',
-            ),
-          ),
+          SnackBar(content: Text(context.l10n.imagePermissionDenied)),
         );
       }
       return;
@@ -208,7 +204,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       Haptics.tap();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profilbild aktualisiert.')),
+          SnackBar(content: Text(context.l10n.avatarUpdated)),
         );
       }
     } catch (e) {
@@ -216,7 +212,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await showBackendError(
         context,
         e,
-        'Profilbild konnte nicht gespeichert werden',
+        context.l10n.avatarSaveFailed,
       );
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -234,7 +230,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       Haptics.tap();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profilbild entfernt.')),
+          SnackBar(content: Text(context.l10n.avatarRemoved)),
         );
       }
     } catch (e) {
@@ -242,7 +238,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await showBackendError(
         context,
         e,
-        'Profilbild konnte nicht entfernt werden',
+        context.l10n.avatarRemoveFailed,
       );
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -258,7 +254,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: Text('Passwort ändern', style: theme.textTheme.titleMedium),
+          title:
+              Text(context.l10n.passwordChange, style: theme.textTheme.titleMedium),
           content: StatefulBuilder(
             builder: (context, setDialogState) {
               final tooShort = newPassword.isNotEmpty && newPassword.length < 8;
@@ -273,9 +270,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     autofocus: true,
                     style: theme.primaryTextTheme.bodySmall,
                     decoration: InputDecoration(
-                      labelText: 'Neues Passwort',
+                      labelText: context.l10n.passwordNew,
                       labelStyle: theme.primaryTextTheme.bodySmall,
-                      errorText: tooShort ? 'Mindestens 8 Zeichen' : null,
+                      errorText:
+                          tooShort ? context.l10n.passwordMinLength : null,
                     ),
                     onChanged: (value) =>
                         setDialogState(() => newPassword = value),
@@ -285,10 +283,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     obscureText: true,
                     style: theme.primaryTextTheme.bodySmall,
                     decoration: InputDecoration(
-                      labelText: 'Passwort bestätigen',
+                      labelText: context.l10n.passwordConfirm,
                       labelStyle: theme.primaryTextTheme.bodySmall,
                       errorText:
-                          mismatch ? 'Passwörter stimmen nicht überein' : null,
+                          mismatch ? context.l10n.passwordMismatch : null,
                     ),
                     onChanged: (value) =>
                         setDialogState(() => newPasswordConfirm = value),
@@ -300,7 +298,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Abbrechen'),
+              child: Text(context.l10n.cancel),
             ),
             TextButton(
               onPressed: () {
@@ -310,7 +308,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 }
                 Navigator.of(dialogContext).pop(true);
               },
-              child: const Text('Bestätigen'),
+              child: Text(context.l10n.confirm),
             ),
           ],
         );
@@ -329,7 +327,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       Haptics.tap();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Passwort erfolgreich geändert.')),
+          SnackBar(content: Text(context.l10n.passwordChanged)),
         );
       }
     } catch (e) {
@@ -337,7 +335,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await showBackendError(
         context,
         e,
-        'Passwort ändern fehlgeschlagen',
+        context.l10n.passwordChangeFailed,
       );
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -359,7 +357,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await showBackendError(
         context,
         e,
-        'Einstellung konnte nicht gespeichert werden',
+        context.l10n.settingSaveFailed,
       );
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -372,20 +370,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (BuildContext dialogContext) {
         return AlertDialog(
-          title: Text('Account löschen?', style: theme.textTheme.titleMedium),
+          title: Text(context.l10n.accountDeleteTitle,
+              style: theme.textTheme.titleMedium),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Dein Account wird endgültig gelöscht. Alle deine Notizen, '
-                'Aufgabenlisten und Aufgaben gehen dabei unwiderruflich '
-                'verloren, und du wirst aus allen Gruppen entfernt.',
+                context.l10n.accountDeleteMessage,
                 style: theme.textTheme.bodyMedium,
               ),
               const SizedBox(height: 12),
               Text(
-                'Das kann nicht rückgängig gemacht werden.',
+                context.l10n.accountDeleteWarning,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontWeight: FontWeight.w700,
                   color: theme.colorScheme.error,
@@ -396,12 +393,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('Abbrechen'),
+              child: Text(context.l10n.cancel),
             ),
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
               child: Text(
-                'Endgültig löschen',
+                context.l10n.accountDeleteConfirm,
                 style: TextStyle(color: theme.colorScheme.error),
               ),
             ),
@@ -420,7 +417,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await Backend().deleteOwnAccount();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Dein Account wurde gelöscht.')),
+          SnackBar(content: Text(context.l10n.accountDeleted)),
         );
       }
       await deleteBoxAndNavigateToLogin(context);
@@ -428,7 +425,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await showBackendError(
         context,
         e,
-        'Account konnte nicht gelöscht werden',
+        context.l10n.accountDeleteFailed,
       );
     }
   }
@@ -439,7 +436,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Profil', style: theme.primaryTextTheme.titleMedium),
+        title: Text(context.l10n.profile, style: theme.primaryTextTheme.titleMedium),
         backgroundColor: theme.scaffoldBackgroundColor,
         centerTitle: false,
         leading: Padding(
@@ -506,13 +503,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    user?.username ?? 'unbekannt',
+                    user?.username ?? context.l10n.unknown,
                     style: theme.textTheme.titleMedium
                         ?.copyWith(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    user?.email ?? 'Keine E-Mail-Adresse hinterlegt',
+                    user?.email ?? context.l10n.noEmailOnFile,
                     style: theme.textTheme.bodySmall,
                   ),
                 ],
@@ -527,7 +524,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildAvatar(ThemeData theme, int? userId, String? username) {
     return Semantics(
       button: true,
-      label: 'Profilbild ändern',
+      label: context.l10n.avatarChange,
       child: InkWell(
         onTap: _busy ? null : _showAvatarSheet,
         customBorder: const CircleBorder(),
@@ -573,15 +570,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _cardTitle(theme, 'Konto'),
+            _cardTitle(theme, context.l10n.account),
             ListTile(
               leading: PhosphorIcon(
                 PhosphorIconsRegular.identificationCard,
                 color: theme.primaryIconTheme.color,
               ),
-              title: Text('Benutzername', style: theme.textTheme.bodySmall),
+              title: Text(context.l10n.username, style: theme.textTheme.bodySmall),
               subtitle: Text(
-                user?.username ?? 'unbekannt',
+                user?.username ?? context.l10n.unknown,
                 style: theme.textTheme.titleSmall,
               ),
               trailing: PhosphorIcon(
@@ -595,12 +592,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
               child: TextFormField(
                 enabled: false,
-                initialValue: user?.email ?? 'unbekannt',
+                initialValue: user?.email ?? context.l10n.unknown,
                 style: theme.primaryTextTheme.bodySmall,
                 decoration: InputDecoration(
-                  labelText: 'E-Mail-Adresse',
+                  labelText: context.l10n.email,
                   labelStyle: theme.primaryTextTheme.bodySmall,
-                  helperText: 'Die E-Mail-Adresse kann nicht geändert werden.',
+                  helperText: context.l10n.emailNotChangeable,
                   helperStyle: theme.primaryTextTheme.displayMedium,
                   prefixIcon: PhosphorIcon(
                     PhosphorIconsRegular.envelopeSimple,
@@ -626,7 +623,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _cardTitle(theme, 'Privatsphäre'),
+            _cardTitle(theme, context.l10n.privacy),
             SwitchListTile(
               value: isPublic,
               onChanged: _busy ? null : _setActivityPrivacy,
@@ -638,13 +635,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 color: theme.primaryIconTheme.color,
               ),
               title: Text(
-                'Aktivitäten teilen',
+                context.l10n.shareActivity,
                 style: theme.textTheme.titleSmall,
               ),
               subtitle: Text(
                 isPublic
-                    ? 'Andere sehen, wenn du Einträge erstellst, änderst oder löschst.'
-                    : 'Deine Aktivitäten bleiben privat.',
+                    ? context.l10n.shareActivityOn
+                    : context.l10n.shareActivityOff,
                 style: theme.textTheme.bodySmall,
               ),
             ),
@@ -662,13 +659,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _cardTitle(theme, 'Sicherheit'),
+            _cardTitle(theme, context.l10n.security),
             ListTile(
               leading: PhosphorIcon(
                 PhosphorIconsRegular.password,
                 color: theme.primaryIconTheme.color,
               ),
-              title: Text('Passwort ändern', style: theme.textTheme.titleSmall),
+              title:
+                  Text(context.l10n.passwordChange, style: theme.textTheme.titleSmall),
               trailing: PhosphorIcon(
                 PhosphorIconsRegular.caretRight,
                 color: theme.primaryIconTheme.color,
@@ -684,13 +682,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 color: theme.primaryIconTheme.color,
               ),
               title: Text(
-                'Multi-Faktor-Authentifizierung',
+                context.l10n.mfaTitle,
                 style: theme.textTheme.titleSmall,
               ),
               subtitle: Text(
                 _mfaEnabled
-                    ? 'Aktiv - Geräte und Wiederherstellungscodes verwalten.'
-                    : 'Schütze deinen Account mit MFA',
+                    ? context.l10n.mfaEnabledSubtitle
+                    : context.l10n.mfaDisabledSubtitle,
                 style: theme.textTheme.bodySmall,
               ),
               trailing: PhosphorIcon(
@@ -725,14 +723,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 color: theme.colorScheme.error,
               ),
               title: Text(
-                'Account löschen',
+                context.l10n.accountDelete,
                 style: theme.textTheme.titleSmall?.copyWith(
                   color: theme.colorScheme.error,
                   fontWeight: FontWeight.w600,
                 ),
               ),
               subtitle: Text(
-                'Löscht dein Konto und alle deine Inhalte unwiderruflich.',
+                context.l10n.accountDeleteSubtitle,
                 style: theme.textTheme.bodySmall,
               ),
               onTap: _showDeleteAccountDialog,
@@ -843,8 +841,8 @@ class _UsernameDialogState extends State<_UsernameDialog> {
 
   String? get _helperText {
     if (_value.isEmpty) return null;
-    if (_isUnchanged) return 'Das ist dein aktueller Benutzername.';
-    if (_available == true) return 'Der Name ist frei.';
+    if (_isUnchanged) return context.l10n.usernameCurrentHint;
+    if (_available == true) return context.l10n.usernameAvailable;
     return null;
   }
 
@@ -853,7 +851,8 @@ class _UsernameDialogState extends State<_UsernameDialog> {
     final theme = Theme.of(context);
 
     return AlertDialog(
-      title: Text('Benutzername ändern', style: theme.textTheme.titleMedium),
+      title:
+          Text(context.l10n.usernameChange, style: theme.textTheme.titleMedium),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -864,11 +863,11 @@ class _UsernameDialogState extends State<_UsernameDialog> {
             autocorrect: false,
             style: theme.primaryTextTheme.bodySmall,
             decoration: InputDecoration(
-              labelText: 'Benutzername',
+              labelText: context.l10n.username,
               labelStyle: theme.primaryTextTheme.bodySmall,
               suffixIcon: _suffixIcon(theme),
               errorText:
-                  _available == false ? 'Dieser Name ist schon vergeben' : null,
+                  _available == false ? context.l10n.usernameTaken : null,
               helperText: _helperText,
               helperStyle: theme.primaryTextTheme.displayMedium,
             ),
@@ -876,8 +875,7 @@ class _UsernameDialogState extends State<_UsernameDialog> {
           ),
           const SizedBox(height: 12),
           Text(
-            'Andere sehen diesen Namen an deinen Notizen und Aufgabenlisten. '
-            'Du meldest dich damit auch an.',
+            context.l10n.usernameHint,
             style: theme.primaryTextTheme.displayMedium,
           ),
         ],
@@ -885,12 +883,12 @@ class _UsernameDialogState extends State<_UsernameDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Abbrechen'),
+          child: Text(context.l10n.cancel),
         ),
         TextButton(
           onPressed:
               _canSubmit ? () => Navigator.of(context).pop(_value) : null,
-          child: const Text('Speichern'),
+          child: Text(context.l10n.save),
         ),
       ],
     );

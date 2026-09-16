@@ -4,6 +4,7 @@ import 'package:blvckleg_dart_core/models/auth/mfa_challenge_model.dart';
 import 'package:blvckleg_dart_core/service/auth_backend_service.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/backend/service/mfa_service.dart';
 import 'package:ticktrack/util/haptics.dart';
 import 'package:ticktrack/util/helpers.dart';
@@ -53,7 +54,7 @@ class _MfaChallengeScreenState extends State<MfaChallengeScreen> {
       Haptics.warning();
     } catch (e) {
       Haptics.warning();
-      await showBackendError(context, e, 'Anmeldung fehlgeschlagen');
+      await showBackendError(context, e, context.l10n.mfaLoginFailed);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -71,7 +72,7 @@ class _MfaChallengeScreenState extends State<MfaChallengeScreen> {
       await navigateAfterAuth(context);
     } catch (e) {
       Haptics.warning();
-      await showBackendError(context, e, 'Code wurde nicht akzeptiert');
+      await showBackendError(context, e, context.l10n.mfaCodeRejected);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -87,7 +88,8 @@ class _MfaChallengeScreenState extends State<MfaChallengeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Bestätigung', style: theme.primaryTextTheme.titleMedium),
+        title: Text(context.l10n.mfaConfirmation,
+            style: theme.primaryTextTheme.titleMedium),
         backgroundColor: theme.scaffoldBackgroundColor,
         centerTitle: true,
       ),
@@ -111,14 +113,14 @@ class _MfaChallengeScreenState extends State<MfaChallengeScreen> {
     return Column(
       children: [
         Text(
-          'Diese Anmeldung ist abgelaufen.',
+          context.l10n.mfaChallengeExpired,
           style: theme.textTheme.titleMedium,
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 16),
         FilledButton(
           onPressed: _backToLogin,
-          child: const Text('Zurück zur Anmeldung'),
+          child: Text(context.l10n.backToLogin),
         ),
       ],
     );
@@ -137,13 +139,13 @@ class _MfaChallengeScreenState extends State<MfaChallengeScreen> {
         ),
         const SizedBox(height: 16),
         Text(
-          'Noch ein Schritt',
+          context.l10n.mfaOneMoreStep,
           style: theme.textTheme.titleMedium,
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 8),
         Text(
-          'Bestätige die Anmeldung mit deinem registrierten Gerät.',
+          context.l10n.mfaConfirmWithDevice,
           style: theme.textTheme.bodySmall,
           textAlign: TextAlign.center,
         ),
@@ -153,7 +155,7 @@ class _MfaChallengeScreenState extends State<MfaChallengeScreen> {
         const SizedBox(height: 8),
         TextButton(
           onPressed: _busy ? null : _backToLogin,
-          child: const Text('Abbrechen'),
+          child: Text(context.l10n.cancel),
         ),
       ],
     );
@@ -164,7 +166,9 @@ class _MfaChallengeScreenState extends State<MfaChallengeScreen> {
       width: double.infinity,
       child: FilledButton.icon(
         icon: const PhosphorIcon(PhosphorIconsRegular.fingerprint),
-        label: Text(_busy ? 'Warte auf Gerät...' : 'Mit Gerät bestätigen'),
+        label: Text(_busy
+            ? context.l10n.mfaWaitingForDevice
+            : context.l10n.mfaConfirmWithDeviceButton),
         onPressed: _busy ? null : _verifyWithPasskey,
       ),
     );
@@ -176,7 +180,7 @@ class _MfaChallengeScreenState extends State<MfaChallengeScreen> {
         onPressed: _busy
             ? null
             : () => setState(() => _showRecoveryCodeInput = true),
-        child: const Text('Wiederherstellungscode nutzen'),
+        child: Text(context.l10n.mfaUseRecoveryCode),
       );
     }
 
@@ -189,7 +193,7 @@ class _MfaChallengeScreenState extends State<MfaChallengeScreen> {
           textCapitalization: TextCapitalization.characters,
           style: theme.primaryTextTheme.bodySmall,
           decoration: InputDecoration(
-            labelText: 'Wiederherstellungscode',
+            labelText: context.l10n.mfaRecoveryCode,
             hintText: 'ABCD-EF12',
             labelStyle: theme.primaryTextTheme.bodySmall,
           ),
@@ -200,7 +204,7 @@ class _MfaChallengeScreenState extends State<MfaChallengeScreen> {
           width: double.infinity,
           child: FilledButton(
             onPressed: _busy ? null : _verifyWithRecoveryCode,
-            child: const Text('Code bestätigen'),
+            child: Text(context.l10n.mfaConfirmCode),
           ),
         ),
       ],

@@ -1,5 +1,6 @@
 // ignore_for_file: use_build_context_synchronously, avoid_dynamic_calls
 
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/models/group/group_api_model.dart';
 import 'package:ticktrack/util/helpers.dart';
 import 'package:ticktrack/widgets/group/group_add_form.dart';
@@ -34,7 +35,7 @@ class _GroupOnboardingScreenState extends State<GroupOnboardingScreen> {
 
   void _goHomeAfterJoin(Group group) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Gruppe "${group.name}" beigetreten.')),
+      SnackBar(content: Text(context.l10n.groupJoined(group.name))),
     );
     navigateToRoute(context, 'home');
   }
@@ -124,7 +125,7 @@ class _GroupOnboardingScreenState extends State<GroupOnboardingScreen> {
                 style: theme.primaryTextTheme.bodySmall,
                 children: [
                   TextSpan(
-                    text: '$title: ',
+                    text: context.l10n.labelWithValue(title),
                     style: theme.primaryTextTheme.bodySmall?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -198,35 +199,33 @@ class _GroupOnboardingScreenState extends State<GroupOnboardingScreen> {
                   _buildInfoPage(
                     theme,
                     icon: PhosphorIconsRegular.usersThree,
-                    title: 'Gemeinsam organisiert',
-                    text:
-                        'In TickTrack passiert alles in Gruppen: Notizen, Aufgabenlisten und Aktivitäten teilst du nur mit den Mitgliedern deiner Gruppe – wie ein privater Space für Familie, WG oder Team. Du kannst in beliebig vielen Gruppen sein und oben in der App jederzeit zwischen ihnen wechseln.',
+                    title: context.l10n.groupOnboardingTitle,
+                    text: context.l10n.groupOnboardingText,
                   ),
                   _buildInfoPage(
                     theme,
                     icon: PhosphorIconsRegular.shieldCheck,
-                    title: 'Du bestimmst die Privatsphäre',
-                    text:
-                        'Für jede Notiz und Liste legst du fest, was deine Gruppe sehen darf:',
+                    title: context.l10n.privacyOnboardingTitle,
+                    text: context.l10n.privacyOnboardingText,
                     extra: Column(
                       children: [
                         _buildPrivacyRow(
                           theme,
                           PhosphorIconsRegular.lock,
-                          'Privat',
-                          'nur du kannst den Eintrag sehen.',
+                          context.l10n.privacyPrivate,
+                          context.l10n.privacyPrivateShort,
                         ),
                         _buildPrivacyRow(
                           theme,
                           PhosphorIconsRegular.shield,
-                          'Geschützt',
-                          'deine Gruppe kann den Eintrag sehen, aber nur du kannst ihn bearbeiten.',
+                          context.l10n.privacyProtected,
+                          context.l10n.privacyProtectedShort,
                         ),
                         _buildPrivacyRow(
                           theme,
                           PhosphorIconsRegular.eye,
-                          'Öffentlich',
-                          'deine Gruppe kann den Eintrag sehen und bearbeiten.',
+                          context.l10n.privacyPublic,
+                          context.l10n.privacyPublicShort,
                         ),
                       ],
                     ),
@@ -248,7 +247,7 @@ class _GroupOnboardingScreenState extends State<GroupOnboardingScreen> {
                     ? ElevatedButton(
                         onPressed: _nextPage,
                         child: Text(
-                          'Weiter',
+                          context.l10n.next,
                           style: theme.primaryTextTheme.displayLarge?.copyWith(
                             color: theme.brightness == Brightness.light
                                 ? Colors.white

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/util/haptics.dart';
 
 Future<void> showRecoveryCodesSheet(
@@ -34,13 +35,12 @@ class _RecoveryCodesSheet extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Deine Wiederherstellungscodes',
+              context.l10n.mfaYourRecoveryCodes,
               style: theme.textTheme.titleMedium,
             ),
             const SizedBox(height: 8),
             Text(
-              'Jeder Code funktioniert genau einmal. Wir zeigen sie dir nur '
-              'jetzt - bewahre sie an einem sicheren Ort auf.',
+              context.l10n.mfaRecoveryCodesHint,
               style: theme.textTheme.bodySmall,
             ),
             const SizedBox(height: 16),
@@ -51,7 +51,7 @@ class _RecoveryCodesSheet extends StatelessWidget {
                 Expanded(
                   child: OutlinedButton.icon(
                     icon: const PhosphorIcon(PhosphorIconsRegular.copy),
-                    label: const Text('Kopieren'),
+                    label: Text(context.l10n.copy),
                     onPressed: () => _copy(context),
                   ),
                 ),
@@ -59,7 +59,7 @@ class _RecoveryCodesSheet extends StatelessWidget {
                 Expanded(
                   child: OutlinedButton.icon(
                     icon: const PhosphorIcon(PhosphorIconsRegular.shareNetwork),
-                    label: const Text('Teilen'),
+                    label: Text(context.l10n.share),
                     onPressed: () => _share(context),
                   ),
                 ),
@@ -70,7 +70,7 @@ class _RecoveryCodesSheet extends StatelessWidget {
               width: double.infinity,
               child: TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Ich habe sie gesichert'),
+                child: Text(context.l10n.mfaCodesSecured),
               ),
             ),
           ],
@@ -102,7 +102,7 @@ class _RecoveryCodesSheet extends StatelessWidget {
     Haptics.tap();
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Codes in die Zwischenablage kopiert.')),
+      SnackBar(content: Text(context.l10n.mfaCodesCopied)),
     );
   }
 
@@ -111,7 +111,7 @@ class _RecoveryCodesSheet extends StatelessWidget {
     await SharePlus.instance.share(
       ShareParams(
         text: codes.join('\n'),
-        subject: 'TickTrack Wiederherstellungscodes',
+        subject: context.l10n.mfaRecoveryCodesSubject,
         sharePositionOrigin: box == null
             ? null
             : box.localToGlobal(Offset.zero) & box.size,

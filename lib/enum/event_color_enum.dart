@@ -1,3 +1,4 @@
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 
 enum EventColor {
@@ -23,15 +24,15 @@ enum EventColor {
     return null;
   }
 
-  String get label => switch (this) {
-        EventColor.blue => 'Blau',
-        EventColor.teal => 'Türkis',
-        EventColor.green => 'Grün',
-        EventColor.yellow => 'Gelb',
-        EventColor.orange => 'Orange',
-        EventColor.red => 'Rot',
-        EventColor.purple => 'Lila',
-        EventColor.pink => 'Pink',
+  String label(AppLocalizations l10n) => switch (this) {
+        EventColor.blue => l10n.colorBlue,
+        EventColor.teal => l10n.colorTeal,
+        EventColor.green => l10n.colorGreen,
+        EventColor.yellow => l10n.colorYellow,
+        EventColor.orange => l10n.colorOrange,
+        EventColor.red => l10n.colorRed,
+        EventColor.purple => l10n.colorPurple,
+        EventColor.pink => l10n.colorPink,
       };
 
   Color resolve(Brightness brightness) {

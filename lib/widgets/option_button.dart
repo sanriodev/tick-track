@@ -1,3 +1,4 @@
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
@@ -16,9 +17,9 @@ class OptionButton extends StatelessWidget {
       ),
       child: IconButton(
         color: Theme.of(context).iconTheme.color,
-        icon: const PhosphorIcon(
+        icon: PhosphorIcon(
           PhosphorIconsRegular.gear,
-          semanticLabel: 'Einstellungen',
+          semanticLabel: context.l10n.settings,
         ),
         onPressed: onPressed,
       ),

@@ -1,3 +1,4 @@
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/enum/privacy_mode_enum.dart';
 import 'package:ticktrack/models/tasklist/task_list_api_model.dart';
 import 'package:ticktrack/state/pin_store.dart';
@@ -104,7 +105,8 @@ class _TaskListWidgetState extends State<TaskListWidget>
                   icon: _isPinned
                       ? PhosphorIconsFill.pushPin
                       : PhosphorIconsRegular.pushPin,
-                  label: _isPinned ? 'Loslösen' : 'Anpinnen',
+                  label:
+                      _isPinned ? context.l10n.unpin : context.l10n.pin,
                 ),
               ],
             ),
@@ -130,7 +132,7 @@ class _TaskListWidgetState extends State<TaskListWidget>
                       context,
                       entityType: 'task_list',
                       entityId: widget.taskList.id,
-                      entityLabel: 'Aufgabenliste',
+                      entityLabel: context.l10n.taskList,
                       authorId: widget.taskList.user?.id,
                       authorName: widget.taskList.user?.username,
                       onBlocked: widget.onBlocked,
@@ -138,7 +140,7 @@ class _TaskListWidgetState extends State<TaskListWidget>
                     backgroundColor: Colors.red,
                     foregroundColor: Colors.white,
                     icon: Icons.flag,
-                    label: 'Melden',
+                    label: context.l10n.report,
                   ),
               ],
             ),
@@ -184,8 +186,11 @@ class _TaskListWidgetState extends State<TaskListWidget>
                     children: [
                       Text(
                         widget.totalTasks == 0
-                            ? 'Noch keine Einträge'
-                            : '${widget.completedTasks} von ${widget.totalTasks} erledigt',
+                            ? context.l10n.taskListNoEntries
+                            : context.l10n.taskListProgress(
+                                widget.completedTasks,
+                                widget.totalTasks,
+                              ),
                         style: theme.primaryTextTheme.displayMedium
                             ?.copyWith(color: headerFg.withValues(alpha: 0.85)),
                       ),
@@ -212,7 +217,7 @@ class _TaskListWidgetState extends State<TaskListWidget>
           ),
           if (_isPinned)
             IconButton(
-              tooltip: 'Angepinnt - tippen zum Loslösen',
+              tooltip: context.l10n.pinnedTapToUnpin,
               onPressed: _togglePin,
               visualDensity: VisualDensity.compact,
               icon: PhosphorIcon(
@@ -244,19 +249,19 @@ class _TaskListWidgetState extends State<TaskListWidget>
               children: [
                 _StatChip(
                   color: theme.primaryColor,
-                  label: 'Gesamt',
+                  label: context.l10n.statTotal,
                   value: widget.totalTasks,
                 ),
                 const SizedBox(width: 18),
                 _StatChip(
                   color: Colors.green,
-                  label: 'Erledigt',
+                  label: context.l10n.statDone,
                   value: widget.completedTasks,
                 ),
                 const SizedBox(width: 18),
                 _StatChip(
                   color: Colors.red,
-                  label: 'Offen',
+                  label: context.l10n.statOpen,
                   value: widget.openTasks,
                 ),
               ],
@@ -270,7 +275,7 @@ class _TaskListWidgetState extends State<TaskListWidget>
             Row(
               children: [
                 Text(
-                  'Einträge öffnen',
+                  context.l10n.openEntries,
                   style: theme.primaryTextTheme.displaySmall,
                 ),
                 const SizedBox(width: 4),

@@ -1,3 +1,4 @@
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/models/group/group_api_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -17,7 +18,7 @@ class GroupCreatedSuccess extends StatelessWidget {
     await Clipboard.setData(ClipboardData(text: group.joinCode));
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Einladungscode kopiert.')),
+      SnackBar(content: Text(context.l10n.joinCodeCopied)),
     );
   }
 
@@ -35,7 +36,7 @@ class GroupCreatedSuccess extends StatelessWidget {
         ),
         const SizedBox(height: 24),
         Text(
-          'Gruppe "${group.name}" erstellt!',
+          context.l10n.groupCreatedTitle(group.name),
           style: theme.primaryTextTheme.displayLarge?.copyWith(
             fontWeight: FontWeight.w600,
           ),
@@ -43,7 +44,7 @@ class GroupCreatedSuccess extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         Text(
-          'Mit diesem Einladungscode können andere deiner Gruppe beitreten:',
+          context.l10n.groupCreatedHint,
           style: theme.primaryTextTheme.bodySmall,
           textAlign: TextAlign.center,
         ),
@@ -54,7 +55,7 @@ class GroupCreatedSuccess extends StatelessWidget {
           onPressed: onContinue,
           icon: Icon(Icons.arrow_forward, color: theme.primaryIconTheme.color),
           label: Text(
-            'Los geht\'s',
+            context.l10n.letsGo,
             style: theme.primaryTextTheme.displayLarge?.copyWith(
               color: theme.brightness == Brightness.light
                   ? Colors.white
@@ -90,7 +91,7 @@ class GroupCreatedSuccess extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             IconButton(
-              tooltip: 'Code kopieren',
+              tooltip: context.l10n.copyCode,
               icon: PhosphorIcon(
                 PhosphorIconsRegular.copy,
                 color: theme.primaryIconTheme.color,

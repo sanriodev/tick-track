@@ -1,0 +1,986 @@
+{
+  "@@locale": "en",
+  "privacyPrivate": "Private",
+  "privacyProtected": "Protected",
+  "privacyPublic": "Public",
+  "privacyPrivateDescription": "Only you can see and edit it",
+  "privacyProtectedDescription": "Everyone can see it, only you can edit it",
+  "privacyPublicDescription": "Everyone can see and edit it",
+  "recurrenceNone": "One-off",
+  "recurrenceDaily": "Daily",
+  "recurrenceWeekly": "Weekly",
+  "recurrenceMonthly": "Monthly",
+  "recurrenceYearly": "Yearly",
+  "colorBlue": "Blue",
+  "colorTeal": "Teal",
+  "colorGreen": "Green",
+  "colorYellow": "Yellow",
+  "colorOrange": "Orange",
+  "colorRed": "Red",
+  "colorPurple": "Purple",
+  "colorPink": "Pink",
+  "privacyChange": "Change privacy",
+  "settings": "Settings",
+  "offline": "Offline",
+  "navHome": "Home",
+  "navLists": "Lists",
+  "navNotes": "Notes",
+  "navCalendar": "Calendar",
+  "navActivity": "Activity",
+  "errorOffline": "{message}: TickTrack is offline.",
+  "@errorOffline": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "errorWithDetail": "{message}: {detail}",
+  "@errorWithDetail": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      },
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionExpired": "Please sign in again.",
+  "errorStatusCode": "Status {code}",
+  "@errorStatusCode": {
+    "placeholders": {
+      "code": {
+        "type": "int"
+      }
+    }
+  },
+  "optionsTitle": "Options",
+  "optionsChangeTheme": "Change theme",
+  "optionsEditProfile": "Edit profile",
+  "optionsGroupOverview": "Group overview",
+  "optionsSignOut": "Sign out",
+  "language": "Language",
+  "privacyPolicy": "Privacy",
+  "support": "Support",
+  "versionLabel": "Version: {version}",
+  "@versionLabel": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "copyrightLabel": "Copyright: MATTEO JUEN",
+  "developedBy": "Developed by:",
+  "loginWelcomeBack": "Welcome back.",
+  "username": "Username",
+  "password": "Password",
+  "loginPasswordHint": "your password",
+  "loginUsernameRequired": "Please enter a username",
+  "loginPasswordRequired": "Please enter a password",
+  "passwordShow": "Show password",
+  "passwordHide": "Hide password",
+  "loginForgotPassword": "Forgot password?",
+  "loginNoAccount": "No account yet?",
+  "loginSubmit": "Sign in",
+  "loginFailed": "Login failed: {detail}",
+  "@loginFailed": {
+    "placeholders": {
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "loginAccountUnconfirmed": "Your account has not been confirmed yet - we have sent you a new code.",
+  "reminderNone": "No reminder",
+  "reminderAtStart": "At the start",
+  "reminderOneHour": "1 hour before",
+  "reminderTwoHours": "2 hours before",
+  "reminderOneDay": "1 day before",
+  "reminderTwoDays": "2 days before",
+  "reminderMinutes": "{minutes} minutes before",
+  "@reminderMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "eventMissingParameter": "Missing parameter for the calendar event.",
+  "eventTitleRequired": "Please enter a title.",
+  "eventEndBeforeStart": "The end must not be before the start.",
+  "eventSaveFailed": "Calendar event could not be saved",
+  "eventNew": "New calendar event",
+  "eventEdit": "Edit calendar event",
+  "save": "Save",
+  "someoneElse": "someone else",
+  "eventReadOnlyHint": "This calendar event was created by {username}, you can only view it.",
+  "@eventReadOnlyHint": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "title": "Title",
+  "eventTitleHint": "e.g. take out the bins",
+  "eventLocation": "Location (optional)",
+  "eventNote": "Note (optional)",
+  "eventAllDay": "All day",
+  "eventStart": "Start",
+  "eventEnd": "End",
+  "eventRecurrence": "Repeat",
+  "eventRecurrenceEnd": "Ends on",
+  "eventNoEnd": "No end",
+  "eventRemoveEndDate": "Remove end date",
+  "eventColor": "Colour",
+  "eventNoColor": "No colour",
+  "eventReminder": "Reminder",
+  "eventReminderDeviceOnly": "Reminders run on this device only",
+  "eventNotificationsBlocked": "Notifications are not allowed. The reminder is saved but only works once you allow them in your system settings.",
+  "eventVisibility": "Visibility",
+  "eventAllDayRange": "All day, {from} - {to}",
+  "@eventAllDayRange": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
+  "timeRange": "{start} - {end}",
+  "@timeRange": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarEvent": "Calendar event",
+  "report": "Report",
+  "eventReminderActive": "Reminder active",
+  "calendarNameOfYear": "TickTrack calendar {year}",
+  "@calendarNameOfYear": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "calendarNameOfGroupYear": "TickTrack calendar {group} {year}",
+  "@calendarNameOfGroupYear": {
+    "placeholders": {
+      "group": {
+        "type": "String"
+      },
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "eventsLoadFailed": "Calendar events could not be loaded",
+  "calendarNothingToExport": "No calendar events in {year} to export.",
+  "@calendarNothingToExport": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
+  "calendarExportFailed": "Calendar could not be exported",
+  "eventDeleteTitle": "Delete calendar event?",
+  "eventDeleteSeriesMessage": "\"{title}\" will be deleted together with all its repeats.",
+  "@eventDeleteSeriesMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "eventDeleteMessage": "\"{title}\" will be deleted.",
+  "@eventDeleteMessage": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "eventDeleteFailed": "Calendar event could not be deleted",
+  "calendarJumpToToday": "Jump to today",
+  "calendarExport": "Export calendar as iCalendar",
+  "calendarNothingOn": "Nothing on {date}",
+  "@calendarNothingOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "calendarEmptyMessage": "Bin day, cleaning day, visitors - add whatever the group should know about.",
+  "calendarPreviousMonth": "Previous month",
+  "calendarNextMonth": "Next month",
+  "calendarDayHasEvents": "{date}, has calendar events",
+  "@calendarDayHasEvents": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "today": "Today",
+  "tomorrow": "Tomorrow",
+  "calendarPreviewTitle": "Calendar events",
+  "calendarPreviewEmpty": "No calendar events in the next few days",
+  "showMore": "Show more",
+  "dayWithTime": "{day}, {time}",
+  "@dayWithTime": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "actionFailed": "Action failed",
+  "privacyOwnContentOnly": "You can only change the privacy of your own entries.",
+  "taskListNew": "New list",
+  "taskListName": "List name",
+  "nameRequired": "Please enter a name.",
+  "create": "Create",
+  "taskLists": "Task lists",
+  "taskListsEmptyTitle": "No task lists yet",
+  "taskListsEmptyMessage": "Bundle tasks into lists and keep track of what is already done. Swipe a list to the right to pin it.",
+  "sectionPinned": "Pinned",
+  "sectionYourLists": "Your lists",
+  "sectionSharedLists": "Shared lists",
+  "taskListMissingParameter": "Missing parameter for the task list.",
+  "task": "Task",
+  "taskNew": "New entry",
+  "taskListEmptyTitle": "This list is empty",
+  "taskListEmptyMessage": "Add the first entry - completed tasks move to the bottom automatically.",
+  "sectionOpenTasks": "Open tasks",
+  "sectionCompletedTasks": "Completed tasks",
+  "taskNameTitle": "Task name",
+  "contentOptional": "Content (optional)",
+  "titleRequired": "Please enter a title.",
+  "unpin": "Unpin",
+  "pin": "Pin",
+  "taskList": "Task list",
+  "taskListNoEntries": "No entries yet",
+  "taskListProgress": "{completed} of {total} done",
+  "@taskListProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "pinnedTapToUnpin": "Pinned - tap to unpin",
+  "statTotal": "Total",
+  "statDone": "Done",
+  "statOpen": "Open",
+  "openEntries": "Open entries",
+  "taskListsPreviewEmpty": "No task lists yet",
+  "noteNew": "New note",
+  "noteName": "Note name",
+  "notes": "Notes",
+  "notesEmptyTitle": "No notes yet",
+  "notesEmptyMessage": "Keep thoughts, ideas and agreements here. Swipe a note to the right to pin or share it.",
+  "sectionYourNotes": "Your notes",
+  "sectionSharedNotes": "Shared notes",
+  "note": "Note",
+  "share": "Share",
+  "notesPreviewEmpty": "No notes yet",
+  "noteMissingParameter": "Missing parameter for the note.",
+  "imageUploadFailed": "Image could not be uploaded",
+  "imageTakePhoto": "Take photo",
+  "imagePickFromGallery": "Pick from gallery",
+  "imagePermissionDenied": "No access to the camera or your photos. You can allow it in your system settings.",
+  "saveStateUnsaved": "Not saved",
+  "saveStateSaving": "Saving …",
+  "saveStateSaved": "Saved",
+  "saveStateFailed": "Saving failed",
+  "noteEdit": "Edit note",
+  "noteShare": "Share note",
+  "editorRichText": "Rich text",
+  "editorMarkdown": "Markdown",
+  "noteMarkdownHint": "Note in Markdown...",
+  "linkInsertTitle": "Insert link",
+  "linkTextOptional": "Text (optional)",
+  "linkAddress": "Address",
+  "insert": "Insert",
+  "mdImage": "Image",
+  "mdLink": "Link",
+  "mdBold": "Bold",
+  "mdItalic": "Italic",
+  "mdStrikethrough": "Strikethrough",
+  "mdHeading": "Heading",
+  "mdList": "List",
+  "mdNumbered": "Numbered",
+  "mdCheckbox": "Checkbox",
+  "mdQuote": "Quote",
+  "mdCode": "Code",
+  "mdCodeBlock": "Code block",
+  "noteEmpty": "This note is still empty.",
+  "imageUnavailable": "Image unavailable",
+  "groupLoadFailed": "Group could not be loaded",
+  "groupTransferFirst": "Transfer group ownership to another member first.",
+  "groupLeaveTitle": "Leave group?",
+  "groupLeaveLastMember": "You are the last member - the group \"{group}\" will be deleted as a result. All entries in this group will be lost.",
+  "@groupLeaveLastMember": {
+    "placeholders": {
+      "group": {
+        "type": "String"
+      }
+    }
+  },
+  "groupLeaveConfirm": "Do you really want to leave the group \"{group}\"? You will lose access to all entries in this group.",
+  "@groupLeaveConfirm": {
+    "placeholders": {
+      "group": {
+        "type": "String"
+      }
+    }
+  },
+  "leave": "Leave",
+  "groupLeaveFailed": "Group could not be left",
+  "groupTransferTitle": "Transfer ownership?",
+  "groupTransferMessage": "\"{member}\" becomes the new owner of the group \"{group}\".",
+  "@groupTransferMessage": {
+    "placeholders": {
+      "member": {
+        "type": "String"
+      },
+      "group": {
+        "type": "String"
+      }
+    }
+  },
+  "groupTransferWarning": "You give up your owner rights and will no longer be able to remove members or pass on ownership.",
+  "transfer": "Transfer",
+  "groupTransferFailed": "Ownership could not be transferred",
+  "groupTransferDone": "\"{member}\" is now the group owner.",
+  "@groupTransferDone": {
+    "placeholders": {
+      "member": {
+        "type": "String"
+      }
+    }
+  },
+  "groupRemoveMemberTitle": "Remove member?",
+  "groupRemoveMemberMessage": "\"{member}\" will be removed from the group \"{group}\".",
+  "@groupRemoveMemberMessage": {
+    "placeholders": {
+      "member": {
+        "type": "String"
+      },
+      "group": {
+        "type": "String"
+      }
+    }
+  },
+  "groupRemoveMemberWarning": "All notes, task lists and tasks that \"{member}\" created in this group will be irrevocably deleted in the process.",
+  "@groupRemoveMemberWarning": {
+    "placeholders": {
+      "member": {
+        "type": "String"
+      }
+    }
+  },
+  "remove": "Remove",
+  "groupRemoveMemberFailed": "Member could not be removed",
+  "groupRemoveMemberDone": "\"{member}\" has been removed.",
+  "@groupRemoveMemberDone": {
+    "placeholders": {
+      "member": {
+        "type": "String"
+      }
+    }
+  },
+  "blockUserTitle": "Block user?",
+  "blockUserMessage": "Content and activity from \"{member}\" will disappear from your view immediately. You can lift the block at any time.",
+  "@blockUserMessage": {
+    "placeholders": {
+      "member": {
+        "type": "String"
+      }
+    }
+  },
+  "block": "Block",
+  "blockUserFailed": "User could not be blocked",
+  "blockUserDone": "\"{member}\" has been blocked.",
+  "@blockUserDone": {
+    "placeholders": {
+      "member": {
+        "type": "String"
+      }
+    }
+  },
+  "unblockFailed": "Block could not be lifted",
+  "unblockDone": "\"{member}\" is no longer blocked.",
+  "@unblockDone": {
+    "placeholders": {
+      "member": {
+        "type": "String"
+      }
+    }
+  },
+  "groupDetails": "Group details",
+  "groupNone": "You are not in any group.",
+  "groupAdd": "Add group",
+  "groupAddAnother": "Add another group",
+  "groupLeave": "Leave group",
+  "groupOwnerMustTransfer": "As the owner you have to transfer group ownership before you can leave the group.",
+  "memberCount": "{count, plural, =1{1 member} other{{count} members}}",
+  "@memberCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "groupOwnerIs": "Owner: {username}",
+  "@groupOwnerIs": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "groupOwnerIsYou": "Owner: {username} (you)",
+  "@groupOwnerIsYou": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "groupNoOwner": "No owner",
+  "members": "Members",
+  "owner": "Owner",
+  "makeOwner": "Make owner",
+  "unblock": "Lift block",
+  "blockUser": "Block user",
+  "removeFromGroup": "Remove from group",
+  "blockedUsers": "Blocked users",
+  "blockedUsersHint": "Content and activity from these users are hidden from you.",
+  "unblockShort": "Unblock",
+  "joinCode": "Invite code",
+  "joinCodeHint": "Others can use this code to join the group.",
+  "copyCode": "Copy code",
+  "joinCodeCopied": "Invite code copied.",
+  "groupJoined": "Joined the group \"{group}\".",
+  "@groupJoined": {
+    "placeholders": {
+      "group": {
+        "type": "String"
+      }
+    }
+  },
+  "joinCodeRequired": "Please enter an invite code.",
+  "groupJoinFailed": "Joining failed",
+  "groupCreateFailed": "Group could not be created",
+  "groupJoin": "Join group",
+  "groupJoinHint": "Got an invite code? Then join an existing group.",
+  "joinCodeHintExample": "e.g. A2B3C4D5",
+  "groupCreateTitle": "Create a new group",
+  "groupCreateHint": "You share notes, task lists and activity only with the members of your group.",
+  "groupName": "Group name",
+  "groupNameHint": "e.g. Family, Flat, Team",
+  "groupNameRequired": "Please enter a group name",
+  "groupCreate": "Create group",
+  "groupCreatedTitle": "Group \"{group}\" created!",
+  "@groupCreatedTitle": {
+    "placeholders": {
+      "group": {
+        "type": "String"
+      }
+    }
+  },
+  "groupCreatedHint": "Others can use this invite code to join your group:",
+  "letsGo": "Let's go",
+  "groups": "Groups",
+  "groupsPreviewEmpty": "You are not in a group yet.",
+  "groupSelected": "Group {group}, currently selected",
+  "@groupSelected": {
+    "placeholders": {
+      "group": {
+        "type": "String"
+      }
+    }
+  },
+  "groupSwitchTo": "Switch to group {group}",
+  "@groupSwitchTo": {
+    "placeholders": {
+      "group": {
+        "type": "String"
+      }
+    }
+  },
+  "active": "Active",
+  "groupAddNew": "Add new group",
+  "groupSwitch": "Switch group",
+  "joinCodeCopy": "Copy invite code",
+  "joinCodeCopiedWithCode": "Invite code \"{code}\" copied.",
+  "@joinCodeCopiedWithCode": {
+    "placeholders": {
+      "code": {
+        "type": "String"
+      }
+    }
+  },
+  "group": "Group",
+  "labelWithValue": "{label}: ",
+  "@labelWithValue": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "groupOnboardingTitle": "Organised together",
+  "groupOnboardingText": "In TickTrack everything happens in groups: you share notes, task lists and activity only with the members of your group - like a private space for a family, flatshare or team. You can be in as many groups as you like and switch between them at any time at the top of the app.",
+  "privacyOnboardingTitle": "You decide on privacy",
+  "privacyOnboardingText": "For every note and list you decide what your group may see:",
+  "privacyPrivateShort": "only you can see the entry.",
+  "privacyProtectedShort": "your group can see the entry, but only you can edit it.",
+  "privacyPublicShort": "your group can see and edit the entry.",
+  "next": "Next",
+  "profileLoadFailed": "Profile could not be loaded",
+  "usernameChanged": "Username is now \"{username}\".",
+  "@usernameChanged": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "usernameChangeFailed": "Username could not be changed",
+  "avatar": "Profile picture",
+  "avatarRemove": "Remove profile picture",
+  "avatarUpdated": "Profile picture updated.",
+  "avatarSaveFailed": "Profile picture could not be saved",
+  "avatarRemoved": "Profile picture removed.",
+  "avatarRemoveFailed": "Profile picture could not be removed",
+  "passwordChange": "Change password",
+  "passwordNew": "New password",
+  "passwordMinLength": "At least 8 characters",
+  "passwordConfirm": "Confirm password",
+  "passwordMismatch": "Passwords do not match",
+  "confirm": "Confirm",
+  "passwordChanged": "Password changed successfully.",
+  "passwordChangeFailed": "Changing the password failed",
+  "settingSaveFailed": "Setting could not be saved",
+  "accountDeleteTitle": "Delete account?",
+  "accountDeleteMessage": "Your account will be deleted permanently. All your notes, task lists and tasks will be irrevocably lost, and you will be removed from all groups.",
+  "accountDeleteWarning": "This cannot be undone.",
+  "accountDeleteConfirm": "Delete permanently",
+  "accountDeleted": "Your account has been deleted.",
+  "accountDeleteFailed": "Account could not be deleted",
+  "profile": "Profile",
+  "unknown": "unknown",
+  "noEmailOnFile": "No email address on file",
+  "avatarChange": "Change profile picture",
+  "account": "Account",
+  "email": "Email address",
+  "emailNotChangeable": "The email address cannot be changed.",
+  "privacy": "Privacy",
+  "shareActivity": "Share activity",
+  "shareActivityOn": "Others see when you create, change or delete entries.",
+  "shareActivityOff": "Your activity stays private.",
+  "security": "Security",
+  "mfaTitle": "Multi-factor authentication",
+  "mfaEnabledSubtitle": "Active - manage devices and recovery codes.",
+  "mfaDisabledSubtitle": "Protect your account with MFA",
+  "accountDelete": "Delete account",
+  "accountDeleteSubtitle": "Irrevocably deletes your account and all your content.",
+  "usernameCurrentHint": "That is your current username.",
+  "usernameAvailable": "The name is available.",
+  "usernameChange": "Change username",
+  "usernameTaken": "This name is already taken",
+  "usernameHint": "Others see this name on your notes and task lists. You also sign in with it.",
+  "welcomeBackName": "Welcome back,",
+  "yourProfile": "Your profile",
+  "profileLoading": "Loading profile …",
+  "mfaErrorDeviceUnsupported": "This device does not support passkeys.",
+  "mfaErrorDomainNotAssociated": "This app is not enabled for passkeys. Please contact support.",
+  "mfaErrorGoogleAccountMissing": "Passkeys on Android need a configured Google account.",
+  "mfaErrorPasswordManagerMissing": "No password manager for passkeys is set up on this device.",
+  "mfaErrorCredentialAlreadyRegistered": "This device is already registered.",
+  "mfaErrorNoMatchingPasskey": "There is no matching passkey on this device. Use a registered device or a recovery code.",
+  "mfaErrorRequestTimeout": "The request timed out. Please try again.",
+  "mfaErrorMalformedServerRequest": "The server sent an unusable request.",
+  "mfaLoadFailed": "MFA settings could not be loaded",
+  "mfaDeviceRegistered": "Device registered. MFA is now active.",
+  "mfaRegistrationFailed": "Registration failed",
+  "mfaRemoveDevice": "Remove device",
+  "mfaRemoveDeviceMessage": "This device will no longer be able to sign in as a second factor. If it is your last factor, MFA is disabled automatically.",
+  "mfaDeviceRemoved": "Device removed.",
+  "mfaDeviceRemoveFailed": "Device could not be removed",
+  "mfaNewRecoveryCodes": "New recovery codes",
+  "mfaNewRecoveryCodesMessage": "Your existing codes will become invalid.",
+  "generate": "Generate",
+  "mfaRecoveryCodes": "Recovery codes",
+  "mfaRecoveryCodesOffer": "They get you back into your account even without your device. Generate them now?",
+  "mfaCodesFailed": "Codes could not be generated",
+  "mfaEnabledMessage": "MFA is active again.",
+  "mfaEnableFailed": "MFA could not be enabled",
+  "mfaDisabledMessage": "MFA is disabled.",
+  "mfaDisableFailed": "MFA could not be disabled",
+  "mfaNameDevice": "Name device",
+  "nameOptional": "Name (optional)",
+  "mfaDeviceNameHint": "e.g. My iPhone",
+  "mfaConfirmPassword": "Confirm password",
+  "mfaPasswordNeeded": "We need your password to disable it.",
+  "disable": "Disable",
+  "mfaShort": "MFA",
+  "mfaReEnable": "Re-enable MFA",
+  "mfaReEnableSubtitle": "Your registered devices are still on file.",
+  "mfaActive": "MFA is active",
+  "mfaInactive": "MFA is inactive",
+  "mfaActiveSubtitle": "When you sign in we ask for your device or a recovery code.",
+  "mfaInactiveSubtitle": "Only your password protects your account.",
+  "mfaSetup": "Set up",
+  "mfaSetupHint": "Register this device with Face ID, a fingerprint or a security key. Afterwards you can generate recovery codes.",
+  "mfaEnable": "Enable MFA",
+  "mfaRegisteredDevices": "Registered devices",
+  "mfaNoDevice": "No device registered. MFA works through recovery codes only.",
+  "mfaRegisterAnother": "Register another device",
+  "mfaRecovery": "Recovery",
+  "mfaGenerateCodes": "Generate new codes",
+  "mfaGenerateCodesSubtitle": "One-time codes for when you do not have a device to hand.",
+  "mfaDisable": "Disable MFA",
+  "mfaDisableSubtitle": "Afterwards only your password protects your account.",
+  "mfaLoginFailed": "Sign-in failed",
+  "mfaCodeRejected": "Code was not accepted",
+  "mfaConfirmation": "Confirmation",
+  "mfaChallengeExpired": "This sign-in has expired.",
+  "backToLogin": "Back to sign-in",
+  "mfaOneMoreStep": "One more step",
+  "mfaConfirmWithDevice": "Confirm the sign-in with your registered device.",
+  "mfaWaitingForDevice": "Waiting for device...",
+  "mfaConfirmWithDeviceButton": "Confirm with device",
+  "mfaUseRecoveryCode": "Use recovery code",
+  "mfaRecoveryCode": "Recovery code",
+  "mfaConfirmCode": "Confirm code",
+  "mfaThisDevice": "This device",
+  "mfaSecurityKey": "Security key",
+  "mfaSynced": "synced",
+  "mfaRegisteredOn": "registered on {date}",
+  "@mfaRegisteredOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "mfaLastUsedOn": "last used on {date}",
+  "@mfaLastUsedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "mfaRegisteredFactor": "Registered factor",
+  "mfaYourRecoveryCodes": "Your recovery codes",
+  "mfaRecoveryCodesHint": "Each code works exactly once. We only show them to you now - keep them somewhere safe.",
+  "copy": "Copy",
+  "mfaCodesSecured": "I have saved them",
+  "mfaCodesCopied": "Codes copied to the clipboard.",
+  "mfaRecoveryCodesSubject": "TickTrack recovery codes",
+  "errorPrefixed": "{prefix}: {detail}",
+  "@errorPrefixed": {
+    "placeholders": {
+      "prefix": {
+        "type": "String"
+      },
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "termsAcceptRequired": "Please accept the privacy policy and the terms of use",
+  "signupBothTaken": "Username and email address are already taken",
+  "signupUsernameTaken": "This username is already taken",
+  "signupEmailTaken": "This email address is already registered",
+  "signupFailed": "Registration failed",
+  "signupAccountExists": "This account already exists, please sign in.",
+  "signupNeverConfirmed": "This registration was never confirmed - we have sent you a new code.",
+  "signupConfirmFailed": "Confirmation failed",
+  "codeResent": "Code has been sent again",
+  "sendFailed": "Sending failed",
+  "signupLoginFailed": "Login failed",
+  "signupSuccess": "Your account has been confirmed and is ready to go!",
+  "signupConfirmEmail": "Confirm email",
+  "signupCodeSentTo": "We have sent a {length}-digit code to {target}.",
+  "@signupCodeSentTo": {
+    "placeholders": {
+      "length": {
+        "type": "int"
+      },
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "codeRequired": "Please enter the {length}-digit code",
+  "@codeRequired": {
+    "placeholders": {
+      "length": {
+        "type": "int"
+      }
+    }
+  },
+  "resendCode": "Resend code",
+  "signupCreateAccount": "Create account",
+  "signupUsernameHint": "Preferred username",
+  "signupUsernameFree": "Username is available",
+  "signupUsernameTakenHint": "Username is already taken",
+  "signupUsernameRequired": "Please enter a username",
+  "signupEmailHint": "your.email@example.com",
+  "signupEmailFree": "Email address is available",
+  "signupEmailTakenHint": "Email address is already registered",
+  "signupEmailRequired": "Please enter an email address",
+  "signupEmailInvalid": "Please enter a valid email address",
+  "passwordMinLengthError": "The password must be at least 8 characters",
+  "termsPrefix": "I agree to the ",
+  "termsPrivacyPolicy": "privacy policy",
+  "termsAnd": " and the ",
+  "termsOfUse": "terms of use",
+  "termsSuffix": "",
+  "signupSubmit": "Sign up",
+  "forgotRequestFailed": "Request failed",
+  "forgotCodeResent": "If the account exists, a new code has been sent by email.",
+  "forgotCodeInvalid": "Code invalid",
+  "forgotPasswordSetFailed": "Password could not be set",
+  "forgotTitle": "Forgot password?",
+  "forgotHint": "Enter your username or your email address - we will send you a code to reset it.",
+  "usernameOrEmail": "Username or email",
+  "usernameOrEmailRequired": "Please enter a username or email",
+  "forgotSendCode": "Send code",
+  "forgotEnterCode": "Enter code",
+  "forgotCodeSent": "If the account exists, we have sent you a {length}-digit code by email.",
+  "@forgotCodeSent": {
+    "placeholders": {
+      "length": {
+        "type": "int"
+      }
+    }
+  },
+  "passwordRepeat": "Repeat password",
+  "forgotSetPassword": "Set password",
+  "forgotSuccess": "Your password has been changed.",
+  "toLogin": "To sign-in",
+  "loadFailed": "Loading failed",
+  "activities": "Activity",
+  "yourActivity": "Your activity",
+  "recentActivity": "Recent activity",
+  "filterOwn": "Own",
+  "filterAll": "All",
+  "activityEmpty": "No activity yet",
+  "entityNote": "note",
+  "entityTask": "task",
+  "entityTaskList": "task list",
+  "entityCalendarEvent": "calendar event",
+  "actionCreated": "created",
+  "actionUpdated": "updated",
+  "actionDeleted": "deleted",
+  "activityDescription": "{username} {action} a {entity}",
+  "@activityDescription": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      },
+      "entity": {
+        "type": "String"
+      },
+      "action": {
+        "type": "String"
+      }
+    }
+  },
+  "activityDescriptionInGroup": "{username} {action} a {entity} in \"{group}\"",
+  "@activityDescriptionInGroup": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      },
+      "entity": {
+        "type": "String"
+      },
+      "action": {
+        "type": "String"
+      },
+      "group": {
+        "type": "String"
+      }
+    }
+  },
+  "timeAgoDays": "{count, plural, =1{1 day ago} other{{count} days ago}}",
+  "@timeAgoDays": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeAgoHours": "{count, plural, =1{1 hour ago} other{{count} hours ago}}",
+  "@timeAgoHours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeAgoMinutes": "{count, plural, =1{1 minute ago} other{{count} minutes ago}}",
+  "@timeAgoMinutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "timeAgoJustNow": "just now",
+  "activityGroupCreated": "{username} created the group {group}",
+  "@activityGroupCreated": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      },
+      "group": {
+        "type": "String"
+      }
+    }
+  },
+  "activityGroupLeft": "{username} left the group {group}",
+  "@activityGroupLeft": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      },
+      "group": {
+        "type": "String"
+      }
+    }
+  },
+  "activityGroupJoined": "{username} joined the group {group}",
+  "@activityGroupJoined": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      },
+      "group": {
+        "type": "String"
+      }
+    }
+  },
+  "reportTitle": "Report {entity}?",
+  "@reportTitle": {
+    "placeholders": {
+      "entity": {
+        "type": "String"
+      }
+    }
+  },
+  "reportHint": "Report this content if it is offensive or breaches the terms of use. The developer is notified and reviews the report.",
+  "reportReason": "Reason (optional)",
+  "reportReasonHint": "e.g. offensive content",
+  "blockNamedUser": "Block \"{name}\"",
+  "@blockNamedUser": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "blockUserSubtitle": "All content from this user will be hidden from you.",
+  "reportSentAndBlocked": "Report submitted and user blocked.",
+  "reportSent": "Thanks, your report has been submitted.",
+  "reportFailed": "Report failed",
+  "createdBy": "Created by",
+  "lastEditedBy": "Last edited by",
+  "metaItemLabel": "{tooltip} {label}",
+  "@metaItemLabel": {
+    "placeholders": {
+      "tooltip": {
+        "type": "String"
+      },
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "reminderChannelName": "Reminders",
+  "reminderChannelDescription": "Reminders for upcoming calendar events",
+  "reminderTodayAt": "Today at {time}",
+  "@reminderTodayAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "reminderOnDateAt": "{date} at {time}",
+  "@reminderOnDateAt": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "home": "Home",
+  "shareFailed": "Sharing failed: {error}",
+  "@shareFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "avatarOf": "Profile picture of {username}",
+  "@avatarOf": {
+    "placeholders": {
+      "username": {
+        "type": "String"
+      }
+    }
+  },
+  "activityCount": "{count, plural, =1{1 activity} other{{count} activities}}",
+  "@activityCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "activityOnDay": "{date}\n{count}",
+  "@activityOnDay": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "you": "(you)",
+  "or": "or"
+}

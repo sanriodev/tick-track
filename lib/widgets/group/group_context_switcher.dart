@@ -1,3 +1,4 @@
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/models/group/group_api_model.dart';
 import 'package:ticktrack/state/group_context.dart';
 import 'package:flutter/material.dart';
@@ -20,7 +21,7 @@ class GroupContextSwitcher extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                 child: Text(
-                  'Gruppe wechseln',
+                  context.l10n.groupSwitch,
                   style: Theme.of(context).primaryTextTheme.titleSmall,
                 ),
               ),
@@ -45,7 +46,7 @@ class GroupContextSwitcher extends StatelessWidget {
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                       trailing: IconButton(
-                        tooltip: 'Einladungscode kopieren',
+                        tooltip: context.l10n.joinCodeCopy,
                         icon: PhosphorIcon(
                           PhosphorIconsRegular.copy,
                           size: 20,
@@ -62,7 +63,8 @@ class GroupContextSwitcher extends StatelessWidget {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
-                                  'Einladungscode "${group.joinCode}" kopiert.',
+                                  context.l10n
+                                      .joinCodeCopiedWithCode(group.joinCode),
                                 ),
                               ),
                             );
@@ -124,7 +126,7 @@ class GroupContextSwitcher extends StatelessWidget {
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 110),
                   child: Text(
-                    groupContext.activeGroup?.name ?? 'Gruppe',
+                    groupContext.activeGroup?.name ?? context.l10n.group,
                     overflow: TextOverflow.ellipsis,
                     maxLines: 1,
                     style: Theme.of(context).textTheme.bodySmall,

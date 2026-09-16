@@ -1,3 +1,5 @@
+import 'package:ticktrack/l10n/l10n.dart';
+
 enum PrivacyMode {
   private,
   protected,
@@ -12,15 +14,15 @@ enum PrivacyMode {
     return PrivacyMode.private;
   }
 
-  String get label => switch (this) {
-        PrivacyMode.private => 'Privat',
-        PrivacyMode.protected => 'Geschützt',
-        PrivacyMode.public => 'Öffentlich',
+  String label(AppLocalizations l10n) => switch (this) {
+        PrivacyMode.private => l10n.privacyPrivate,
+        PrivacyMode.protected => l10n.privacyProtected,
+        PrivacyMode.public => l10n.privacyPublic,
       };
 
-  String get description => switch (this) {
-        PrivacyMode.private => 'Nur du kannst sehen und bearbeiten',
-        PrivacyMode.protected => 'Alle können sehen, bearbeiten nur du',
-        PrivacyMode.public => 'Alle können sehen und bearbeiten',
+  String description(AppLocalizations l10n) => switch (this) {
+        PrivacyMode.private => l10n.privacyPrivateDescription,
+        PrivacyMode.protected => l10n.privacyProtectedDescription,
+        PrivacyMode.public => l10n.privacyPublicDescription,
       };
 }

@@ -1,3 +1,4 @@
+import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/models/activity/activity_model.dart';
 import 'package:ticktrack/ui/theme.dart';
 import 'package:flutter/material.dart';
@@ -125,8 +126,10 @@ class ActivityGraphWidget extends StatelessWidget {
     final bucket = _bucketForCount(count, maxCount);
     final color = heatmap[bucket];
     final dayKey = DateFormat('yyyy-MM-dd').format(day);
-    final tooltip =
-        '${DateFormat.yMMMEd().format(day)}\n$count activit${count == 1 ? 'y' : 'ies'}';
+    final tooltip = context.l10n.activityOnDay(
+      DateFormat.yMMMEd().format(day),
+      context.l10n.activityCount(count),
+    );
     final radius = BorderRadius.only(
       topLeft: isTop && isLeft
           ? Radius.circular(cornerRadius)
