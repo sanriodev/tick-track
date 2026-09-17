@@ -89,28 +89,11 @@ class _AppOptionsSheetState extends State<_AppOptionsSheet> {
 
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 8, 8, 24),
+        padding: const EdgeInsets.fromLTRB(8, 4, 8, 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              child: Text(
-                context.l10n.optionsTitle,
-                style: theme.primaryTextTheme.titleSmall,
-              ),
-            ),
-            _buildOptionTile(
-              theme,
-              icon: _isDarkTheme
-                  ? PhosphorIconsRegular.sun
-                  : PhosphorIconsRegular.moon,
-              title: context.l10n.optionsChangeTheme,
-              onTap: _toggleTheme,
-            ),
-            _buildLanguageTile(theme),
-            const Divider(height: 1),
             _buildOptionTile(
               theme,
               icon: PhosphorIconsRegular.userCircle,
@@ -123,6 +106,16 @@ class _AppOptionsSheetState extends State<_AppOptionsSheet> {
               title: context.l10n.optionsGroupOverview,
               onTap: () => _selectOption(_AppOption.groupDetails),
             ),
+            const Divider(height: 1),
+            _buildOptionTile(
+              theme,
+              icon: _isDarkTheme
+                  ? PhosphorIconsRegular.sun
+                  : PhosphorIconsRegular.moon,
+              title: context.l10n.optionsChangeTheme,
+              onTap: _toggleTheme,
+            ),
+            _buildLanguageTile(theme),
             const Divider(height: 1),
             _buildOptionTile(
               theme,
@@ -169,7 +162,8 @@ class _AppOptionsSheetState extends State<_AppOptionsSheet> {
       alignment: WrapAlignment.center,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        _buildLinkButton(theme, label: context.l10n.privacyPolicy, url: _privacyUrl),
+        _buildLinkButton(theme,
+            label: context.l10n.privacyPolicy, url: _privacyUrl),
         _buildLinkButton(theme, label: context.l10n.support, url: _supportUrl),
         TextButton(
           style: TextButton.styleFrom(
