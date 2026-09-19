@@ -77,7 +77,7 @@
   "username": "Username or E-Mail",
   "password": "Password",
   "loginPasswordHint": "your password",
-  "loginUsernameRequired": "Please enter a username",
+  "loginUsernameRequired": "Please enter your username or e-mail",
   "loginPasswordRequired": "Please enter a password",
   "passwordShow": "Show password",
   "passwordHide": "Hide password",

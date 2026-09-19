@@ -46,7 +46,7 @@
   "username": "Benutzername oder E-Mail",
   "password": "Passwort",
   "loginPasswordHint": "dein Passwort",
-  "loginUsernameRequired": "Bitte Benutzernamen eingeben",
+  "loginUsernameRequired": "Bitte Benutzernamen oder E-Mail eingeben",
   "loginPasswordRequired": "Bitte Passwort eingeben",
   "passwordShow": "Passwort zeigen",
   "passwordHide": "Passwort verstecken",

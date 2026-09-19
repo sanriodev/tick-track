@@ -6,6 +6,7 @@ import 'package:ticktrack/backend/service/backend_service.dart';
 import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/screens/login/onboarding/onboarding_screen.dart';
 import 'package:ticktrack/util/helpers.dart';
+import 'package:ticktrack/util/login_name.dart';
 import 'package:ticktrack/widgets/language_toggle.dart';
 import 'package:blvckleg_dart_core/exception/mfa_required.dart';
 import 'package:blvckleg_dart_core/models/settings/settings_model.dart';
@@ -93,22 +94,19 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<bool> _handleUnconfirmedAccount(
-    String loginName,
+    LoginName loginName,
     String password,
   ) async {
-    final email = loginName.contains('@') ? loginName : null;
-    final username = email == null ? loginName : null;
-
     try {
       final availability = await Backend().checkAvailability(
-        username: loginName,
-        email: email,
+        username: loginName.username,
+        email: loginName.email,
       );
       if (availability.available || availability.confirmed) return false;
 
       final maskedEmail = await Backend().resendConfirmationCode(
-        email: email,
-        username: username,
+        email: loginName.email,
+        username: loginName.username,
       );
       if (!mounted) return true;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -119,8 +117,8 @@ class _LoginScreenState extends State<LoginScreen> {
         'onboarding',
         backEnabled: true,
         extra: PendingConfirmation(
-          loginName: loginName,
-          email: email,
+          loginName: loginName.value,
+          email: loginName.email,
           password: password,
           maskedEmail: maskedEmail,
         ),
@@ -138,13 +136,13 @@ class _LoginScreenState extends State<LoginScreen> {
     FocusScope.of(context).unfocus();
     setState(() => _submitting = true);
 
-    final loginName = _usernameCtrl.text.trim();
+    final loginName = LoginName.of(_usernameCtrl.text);
 
     try {
       if (await _handleUnconfirmedAccount(loginName, _passwordCtrl.text)) {
         return;
       }
-      await login(loginName, _passwordCtrl.text);
+      await login(loginName.value, _passwordCtrl.text);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
