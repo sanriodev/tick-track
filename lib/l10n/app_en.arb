@@ -74,7 +74,7 @@
   "copyrightLabel": "Copyright: MATTEO JUEN",
   "developedBy": "Developed by:",
   "loginWelcomeBack": "Welcome back.",
-  "username": "Username",
+  "username": "Username or E-Mail",
   "password": "Password",
   "loginPasswordHint": "your password",
   "loginUsernameRequired": "Please enter a username",
