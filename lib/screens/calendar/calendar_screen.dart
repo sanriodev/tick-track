@@ -3,9 +3,11 @@
 import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/backend/service/backend_service.dart';
 import 'package:ticktrack/state/cache_store.dart';
+import 'package:ticktrack/enum/calendar_view_mode_enum.dart';
 import 'package:ticktrack/enum/event_color_enum.dart';
 import 'package:ticktrack/models/calendar/calendar_event_model.dart';
 import 'package:ticktrack/state/avatar_store.dart';
+import 'package:ticktrack/state/calendar_view_store.dart';
 import 'package:ticktrack/state/group_context.dart';
 import 'package:ticktrack/state/reminder_sync.dart';
 import 'package:ticktrack/util/calendar_export_helper.dart';
@@ -15,6 +17,7 @@ import 'package:ticktrack/util/share_helper.dart';
 import 'package:ticktrack/widgets/app_options_sheet.dart';
 import 'package:ticktrack/widgets/calendar/calendar_month_grid.dart';
 import 'package:ticktrack/widgets/calendar/calendar_occurrence_tile.dart';
+import 'package:ticktrack/widgets/calendar/calendar_week_grid.dart';
 import 'package:ticktrack/widgets/empty_state_widget.dart';
 import 'package:ticktrack/widgets/group/group_context_switcher.dart';
 import 'package:ticktrack/widgets/navigation/bottom_menu.dart';
@@ -35,6 +38,7 @@ class CalendarScreen extends StatefulWidget {
 class _CalendarScreenState extends State<CalendarScreen> {
   late DateTime _visibleMonth;
   late DateTime _selectedDay;
+  late CalendarViewMode _viewMode;
 
   Map<DateTime, List<CalendarOccurrence>> _byDay = {};
   bool _isLoading = true;
@@ -53,6 +57,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     final now = DateTime.now();
     _visibleMonth = DateTime(now.year, now.month);
     _selectedDay = DateTime(now.year, now.month, now.day);
+    _viewMode = CalendarViewStore().read();
     GroupContext().addListener(_onGroupContextChanged);
     _load();
   }
@@ -167,6 +172,50 @@ class _CalendarScreenState extends State<CalendarScreen> {
       );
     });
     _load();
+  }
+
+  void _changeWeek(int delta) {
+    final shifted = DateTime(
+      _selectedDay.year,
+      _selectedDay.month,
+      _selectedDay.day + delta * 7,
+    );
+    Haptics.tick();
+    _moveTo(shifted);
+  }
+
+  void _moveTo(DateTime day) {
+    final leavesVisibleMonth = !_isInVisibleMonth(day);
+    setState(() {
+      _selectedDay = day;
+      _visibleMonth = DateTime(day.year, day.month);
+    });
+    if (leavesVisibleMonth) {
+      _load();
+    }
+  }
+
+  bool _isInVisibleMonth(DateTime day) =>
+      day.year == _visibleMonth.year && day.month == _visibleMonth.month;
+
+  DateTime _weekStartOf(DateTime day) =>
+      DateTime(day.year, day.month, day.day - (day.weekday - 1));
+
+  void _selectDay(DateTime day) {
+    Haptics.tick();
+    setState(() => _selectedDay = day);
+  }
+
+  void _selectWeekDay(DateTime day) {
+    Haptics.tick();
+    _moveTo(day);
+  }
+
+  Future<void> _toggleViewMode() async {
+    final nextMode = _viewMode.toggled;
+    Haptics.tick();
+    setState(() => _viewMode = nextMode);
+    await CalendarViewStore().save(nextMode);
   }
 
   void _jumpToToday() {
@@ -306,6 +355,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
         backgroundColor: theme.scaffoldBackgroundColor,
         actions: [
           IconButton(
+            tooltip: _viewMode == CalendarViewMode.week
+                ? context.l10n.calendarShowMonthView
+                : context.l10n.calendarShowWeekView,
+            icon: PhosphorIcon(_viewMode.toggled.icon),
+            color: theme.primaryIconTheme.color,
+            onPressed: _toggleViewMode,
+          ),
+          IconButton(
             tooltip: context.l10n.calendarJumpToToday,
             icon: const PhosphorIcon(PhosphorIconsRegular.calendarDot),
             color: theme.primaryIconTheme.color,
@@ -342,24 +399,35 @@ class _CalendarScreenState extends State<CalendarScreen> {
         child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
-            SliverToBoxAdapter(
-              child: CalendarMonthGrid(
-                visibleMonth: _visibleMonth,
-                selectedDay: _selectedDay,
-                eventColorsByDay: _colorsByDay(),
-                onDaySelected: (day) {
-                  Haptics.tick();
-                  setState(() => _selectedDay = day);
-                },
-                onPreviousMonth: () => _changeMonth(-1),
-                onNextMonth: () => _changeMonth(1),
-              ),
-            ),
+            SliverToBoxAdapter(child: _buildGrid()),
             const SliverToBoxAdapter(child: Divider(height: 1)),
             ..._buildDaySlivers(theme, selected),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildGrid() {
+    if (_viewMode == CalendarViewMode.week) {
+      return CalendarWeekGrid(
+        weekStart: _weekStartOf(_selectedDay),
+        selectedDay: _selectedDay,
+        occurrencesByDay: _byDay,
+        onDaySelected: _selectWeekDay,
+        onOccurrenceTap: (occurrence) => _openEditor(event: occurrence.event),
+        onPreviousWeek: () => _changeWeek(-1),
+        onNextWeek: () => _changeWeek(1),
+      );
+    }
+
+    return CalendarMonthGrid(
+      visibleMonth: _visibleMonth,
+      selectedDay: _selectedDay,
+      eventColorsByDay: _colorsByDay(),
+      onDaySelected: _selectDay,
+      onPreviousMonth: () => _changeMonth(-1),
+      onNextMonth: () => _changeMonth(1),
     );
   }
 
