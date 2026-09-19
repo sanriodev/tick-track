@@ -227,6 +227,23 @@
   "calendarEmptyMessage": "Bin day, cleaning day, visitors - add whatever the group should know about.",
   "calendarPreviousMonth": "Previous month",
   "calendarNextMonth": "Next month",
+  "calendarViewMonth": "Month",
+  "calendarViewWeek": "Week",
+  "calendarShowWeekView": "Switch to week view",
+  "calendarShowMonthView": "Switch to month view",
+  "calendarPreviousWeek": "Previous week",
+  "calendarNextWeek": "Next week",
+  "calendarWeekRange": "{start} - {end}",
+  "@calendarWeekRange": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
   "calendarDayHasEvents": "{date}, has calendar events",
   "@calendarDayHasEvents": {
     "placeholders": {
