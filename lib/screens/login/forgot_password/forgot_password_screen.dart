@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:ticktrack/l10n/l10n.dart';
 import 'package:ticktrack/backend/service/backend_service.dart';
 import 'package:ticktrack/util/helpers.dart';
+import 'package:ticktrack/util/login_name.dart';
 import 'package:ticktrack/widgets/language_toggle.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
@@ -56,15 +57,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     super.dispose();
   }
 
-  String? get _requestedEmail {
-    final loginName = _loginNameCtrl.text.trim();
-    return loginName.contains('@') ? loginName : null;
-  }
-
-  String? get _requestedUsername {
-    final loginName = _loginNameCtrl.text.trim();
-    return loginName.contains('@') ? null : loginName;
-  }
+  LoginName get _loginName => LoginName.of(_loginNameCtrl.text);
 
   Future<void> _showResponseError(Object e, String prefix) async {
     if (e is! Response) {
@@ -101,8 +94,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
     try {
       await Backend().requestPasswordReset(
-        email: _requestedEmail,
-        username: _requestedUsername,
+        email: _loginName.email,
+        username: _loginName.username,
       );
       if (!mounted) return;
       _codeCtrl.clear();
@@ -118,8 +111,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     setState(() => _submitting = true);
     try {
       await Backend().requestPasswordReset(
-        email: _requestedEmail,
-        username: _requestedUsername,
+        email: _loginName.email,
+        username: _loginName.username,
       );
       _showMessage(context.l10n.forgotCodeResent);
     } catch (e) {
@@ -139,8 +132,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     try {
       final resetToken = await Backend().verifyPasswordResetCode(
         _codeCtrl.text.trim(),
-        email: _requestedEmail,
-        username: _requestedUsername,
+        email: _loginName.email,
+        username: _loginName.username,
       );
       if (!mounted) return;
       setState(() {
